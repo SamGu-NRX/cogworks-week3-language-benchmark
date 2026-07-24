@@ -313,6 +313,20 @@ def _ensure_glove(root: Path) -> Path:
     return target
 
 
+def _missing_message(target: Path) -> str:
+    """Distinguish "no file" from "file exists but fails its checksum"."""
+
+    if target.is_file():
+        return (
+            "{} exists but does not match its checksum pin (wrong or corrupted "
+            "copy). Delete it and run `cogworks test` to fetch a clean one.".format(target)
+        )
+    return (
+        "{} is not cached. Run `cogworks test` to fetch it, or point {} at a "
+        "directory that already has the course files.".format(target, DATA_ENV)
+    )
+
+
 def ensure_artifact(name: str, download: bool = True) -> Path:
     root = cache_root()
     if name == "glove":
@@ -326,23 +340,14 @@ def ensure_artifact(name: str, download: bool = True) -> Path:
         ):
             return target
         if not download:
-            raise DatasetError(
-                "GloVe embeddings are not cached at {}. Run `cogworks test` to fetch "
-                "them, or point {} at a directory that already has the course "
-                "files.".format(target, DATA_ENV)
-            )
+            raise DatasetError(_missing_message(target))
         return _ensure_glove(root)
     spec = ARTIFACTS[name]
     target = root / str(spec["filename"])
     if _verify(target, int(spec["size"]), str(spec["sha256"]), root, name):
         return target
     if not download:
-        raise DatasetError(
-            "{} is not cached at {}. Run `cogworks test` to fetch it, or point {} at "
-            "a directory that already has the course files.".format(
-                spec["filename"], target, DATA_ENV
-            )
-        )
+        raise DatasetError(_missing_message(target))
     if _adopt_from_course_cache(
         str(spec["filename"]), target, int(spec["size"]), str(spec["sha256"])
     ) and _verify(target, int(spec["size"]), str(spec["sha256"]), root, name):
