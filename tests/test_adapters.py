@@ -49,6 +49,31 @@ def test_unmappable_object_gets_actionable_report():
     assert "benchmark_adapter.py" in report
 
 
+def test_batch_error_leads_when_retry_iterates_strings():
+    """A real student case: batch embed_text raises KeyError on an OOV word,
+    the per-item retry then iterates each caption string character-wise and
+    produces ragged garbage. The report must lead with the KeyError."""
+
+    class OovCrasher:
+        def embed_text(self, captions):
+            if isinstance(captions, str):
+                # per-item retry path: characters, ragged widths
+                return np.zeros((len(captions), 4)).reshape(-1)
+            raise KeyError("skateboarder")
+
+        def embed_images(self, descriptors):
+            return np.zeros((len(descriptors), 8))
+
+    adapter = adapt_search(OovCrasher())
+    from language_search_benchmark.checks import CheckFailure
+
+    with pytest.raises(CheckFailure) as info:
+        adapter.embed_text(["a person on a skateboard", "two dogs"])
+    message = str(info.value)
+    assert "skateboarder" in message
+    assert message.index("skateboarder") < message.index("per-item")
+
+
 def test_inconsistent_widths_fail_loudly(universe):
     class Ragged:
         def embed_text(self, caption):
@@ -62,4 +87,6 @@ def test_inconsistent_widths_fail_loudly(universe):
 
     with pytest.raises(CheckFailure) as info:
         adapter.embed_text(["picture number one", "picture number two"])
-    assert "inconsistent widths" in str(info.value)
+    # The batch call returned the wrong shape; that authoritative story wins
+    # over the per-item retry's ragged-width detail.
+    assert "2-D" in str(info.value)

@@ -87,16 +87,15 @@ class AdaptedSearchAdapter:
     def _batch_or_loop(self, fn: Callable[..., Any], items: Any, name: str) -> np.ndarray:
         expected = len(items)
         try:
-            result = coerce_matrix(fn(items), expected, name)
-            return result
-        except (CheckFailure, Exception) as batch_error:  # noqa: BLE001 - deliberate: retry per item
+            return coerce_matrix(fn(items), expected, name)
+        except Exception as batch_error:  # noqa: BLE001 - deliberate: retry per item
             try:
                 rows = [np.asarray(fn(item), dtype=np.float64).reshape(-1) for item in items]
                 widths = {row.shape[0] for row in rows}
                 if len(widths) != 1:
                     raise CheckFailure(
                         "{} returned inconsistent widths per item: {}.".format(
-                            name, sorted(widths)
+                            name, sorted(widths)[:8]
                         )
                     )
                 note = "called {} once per item (batch call failed: {})".format(
@@ -105,14 +104,18 @@ class AdaptedSearchAdapter:
                 if note not in self.mappings:
                     self.mappings.append(note)
                 return coerce_matrix(np.stack(rows), expected, name)
-            except CheckFailure:
-                raise
-            except Exception:
-                # The batch failure is the more informative of the two.
+            except Exception as loop_error:  # noqa: BLE001 - compose the report
                 if isinstance(batch_error, CheckFailure):
+                    # The batch call produced output of the wrong shape; that
+                    # story is authoritative, the retry was best-effort.
                     raise batch_error
+                # The batch call raised from inside the submission; lead with
+                # that error, the per-item retry failure is secondary (a
+                # string iterated per character is noise, not signal).
                 raise CheckFailure(
-                    "{} failed on its inputs: {}".format(name, _first_line(batch_error))
+                    "{} raised: {}. A per-item retry also failed: {}.".format(
+                        name, _first_line(batch_error), _first_line(loop_error)
+                    )
                 ) from batch_error
 
 
