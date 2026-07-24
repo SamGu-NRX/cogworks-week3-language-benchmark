@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "note": "Staff-written demo captions; none of these appear in COCO, so lookup cannot answer them.",
+  "captions": [
+    "two dogs running on a sandy beach",
+    "a red double decker bus on a city street",
+    "a bowl of soup on a wooden table",
+    "a person riding a skateboard down a ramp",
+    "a group of people playing frisbee in a park",
+    "a cat sleeping on a laptop keyboard",
+    "a plate of pizza next to a glass of soda",
+    "an airplane taking off over the ocean",
+    "a child flying a kite on a windy day",
+    "a kitchen counter cluttered with dishes"
+  ]
+}
