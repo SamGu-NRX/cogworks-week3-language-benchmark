@@ -41,34 +41,50 @@ CACHE_APP = "cogworks-language-search"
 CACHE_VERSION = "v1"
 DATA_ENV = "COGWORKS_LANGUAGE_DATA"
 
-#: Pinned 2026-07-24 against the live CogWeb SemanticImageSearch page
-#: downloads; sizes and sha256 computed from the fetched files.
+#: Sizes and sha256 pinned 2026-07-24 from the fetched files; the GitHub
+#: release assets and the CogWeb Dropbox links carry byte-identical files
+#: (verified by hash from both sources). GitHub releases lead because the
+#: course's own cogworks-data package fetches from them and Dropbox links
+#: are unversioned.
+_RELEASE = "https://github.com/rsokl/cog_data/releases/download/language-files/"
+
 ARTIFACTS: Dict[str, Dict[str, Any]] = {
     "captions": {
         "filename": "captions_train2014.json",
-        "urls": ["https://www.dropbox.com/s/0e4fpk8wppyojyk/captions_train2014.json?dl=1"],
+        "urls": [
+            _RELEASE + "captions_train2014.json",
+            "https://www.dropbox.com/s/0e4fpk8wppyojyk/captions_train2014.json?dl=1",
+        ],
         "size": 66782097,
         "sha256": "dd8c9636dc11740f956e36728866ea0c4ebe4988dcbdc5e712b7c2267f152d12",
     },
     "descriptors": {
         "filename": "resnet18_features.pkl",
-        "urls": ["https://www.dropbox.com/s/5gklm1ar3tz84rm/resnet18_features.pkl?dl=1"],
+        "urls": [
+            _RELEASE + "resnet18_features.pkl",
+            "https://www.dropbox.com/s/5gklm1ar3tz84rm/resnet18_features.pkl?dl=1",
+        ],
         "size": 174540061,
         "sha256": "d56e267dacd39608b4aae581595f8fa8ec55457ab59b713df1eafa93e1023450",
     },
     "glove": {
         "filename": "glove.6B.200d.txt.w2v",
-        "urls": ["https://www.dropbox.com/s/3clt5qi13fxkg3g/glove.6B.200d.txt.w2v.zip?dl=1"],
+        "urls": [_RELEASE + "glove.6B.200d.txt.w2v"],
         "size": 693432839,
         "sha256": "dcee6ecdefebb5a884b23f2353561cc5f0527e59592525c0e3f4a31d81d91272",
         "archive": {
             "filename": "glove.6B.200d.txt.w2v.zip",
+            "urls": ["https://www.dropbox.com/s/3clt5qi13fxkg3g/glove.6B.200d.txt.w2v.zip?dl=1"],
             "size": 264337080,
             "sha256": "6cbe88628045658c4175c50121b9ad6c61c39777ee42bdb19a255d26b0472b3a",
             "member": "glove.6B.200d.txt.w2v",
         },
     },
 }
+
+#: Where the course's cogworks-data package caches the same files; adopted
+#: (after hash verification) so students never download twice.
+COURSE_CACHE_APP = "cog_data"
 
 GLOVE_KV_FILENAME = "glove.6B.200d.kv"
 
@@ -232,16 +248,49 @@ def _download(urls: Sequence[str], dest: Path, size: int, sha256: str) -> None:
     ) from last_error
 
 
+def _adopt_from_course_cache(filename: str, dest: Path, size: int, sha256: str) -> bool:
+    """Take a byte-identical file from the cogworks-data cache if present."""
+
+    import platformdirs
+
+    candidate = Path(platformdirs.user_cache_path(COURSE_CACHE_APP)) / filename
+    if not candidate.is_file() or candidate.stat().st_size != size:
+        return False
+    if _sha256_file(candidate) != sha256:
+        return False
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        os.link(str(candidate), str(dest))
+    except OSError:
+        shutil.copyfile(str(candidate), str(dest))
+    return True
+
+
 def _ensure_glove(root: Path) -> Path:
     spec = ARTIFACTS["glove"]
     target = root / str(spec["filename"])
     if _verify(target, int(spec["size"]), str(spec["sha256"]), root, "glove"):
         return target
+    if _adopt_from_course_cache(
+        str(spec["filename"]), target, int(spec["size"]), str(spec["sha256"])
+    ) and _verify(target, int(spec["size"]), str(spec["sha256"]), root, "glove"):
+        return target
+    try:
+        _download(
+            [str(url) for url in spec["urls"]],
+            target,
+            int(spec["size"]),
+            str(spec["sha256"]),
+        )
+        if _verify(target, int(spec["size"]), str(spec["sha256"]), root, "glove"):
+            return target
+    except DatasetError:
+        pass  # fall through to the zipped Dropbox copy
     archive = spec["archive"]
     zip_path = root / str(archive["filename"])
     if not _verify(zip_path, int(archive["size"]), str(archive["sha256"]), root, "glove-zip"):
         _download(
-            [str(url) for url in spec["urls"]],
+            [str(url) for url in archive["urls"]],
             zip_path,
             int(archive["size"]),
             str(archive["sha256"]),
@@ -294,6 +343,10 @@ def ensure_artifact(name: str, download: bool = True) -> Path:
                 spec["filename"], target, DATA_ENV
             )
         )
+    if _adopt_from_course_cache(
+        str(spec["filename"]), target, int(spec["size"]), str(spec["sha256"])
+    ) and _verify(target, int(spec["size"]), str(spec["sha256"]), root, name):
+        return target
     _download([str(url) for url in spec["urls"]], target, int(spec["size"]), str(spec["sha256"]))
     if not _verify(target, int(spec["size"]), str(spec["sha256"]), root, name):
         raise DatasetError("{} failed verification after download.".format(spec["filename"]))

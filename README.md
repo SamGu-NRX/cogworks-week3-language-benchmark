@@ -64,9 +64,10 @@ telling you what to add, never a guess.
 
 The three course files you already have are the only inputs: the COCO 2014
 captions, the ResNet-18 descriptor pickle, and the 200-d GloVe embeddings.
-The benchmark verifies them by checksum and caches them; point
-`COGWORKS_LANGUAGE_DATA` at the folder that already holds them to skip any
-re-download. No image files are needed to score a run.
+The benchmark verifies them by checksum and caches them. Files the course's
+`cogworks-data` package already fetched are found and reused automatically;
+you can also point `COGWORKS_LANGUAGE_DATA` at a folder that holds them.
+No image files are needed to score a run.
 
 The evaluation splits are fixed files in `language_search_benchmark/manifests/`,
 built once with a recorded seed. The official run on the portal uses a
