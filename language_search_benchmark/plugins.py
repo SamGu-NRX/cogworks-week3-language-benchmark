@@ -113,8 +113,8 @@ class LanguageSearchBenchmark:
         "text_chance": (
             "The floor for text MRR specifically, which is a different number "
             "from the image floor above: this one ranks captions among "
-            "captions. On the evaluation tier the two differ by roughly four "
-            "times, so reading text MRR against the image floor flatters it."
+            "captions. The two differ by roughly four times on the hidden set, "
+            "so reading text MRR against the image floor flatters it."
         ),
         "search_mrr_keywords": (
             "The same queries with the stopwords removed, which is what "
