@@ -3,8 +3,8 @@
 import numpy as np
 import pytest
 
-from language_search_benchmark.datasets import SEARCH_K
-from language_search_benchmark.drivers import run_cases
+from language_search_benchmark.datasets import SEARCH_K, SearchCase
+from language_search_benchmark.drivers import run_cases, run_with_adapter
 from language_search_benchmark.metrics import chance_mrr, component_scores
 from language_search_benchmark.plugins import LanguageSearchBenchmark
 
@@ -93,6 +93,65 @@ def test_component_isolation_d_mismatch(universe, cases):
     assert metrics["retrieval_mrr"] == 0.0
     assert metrics["search_mrr"] == 0.0
     assert any("share one space" in note for note in diagnostics)
+
+
+def test_prepare_database_runs_once_for_a_shared_pool(universe):
+    """The rung cases share the verbatim case's pool objects, and a student
+    index need not survive being rebuilt (an append-style prepare grows it).
+    The driver must build once for the shared set and again only when the
+    pool objects actually change."""
+
+    from language_search_benchmark.adapters import adapt_search
+
+    from .fixtures.synthetic import PerfectAdapter
+
+    class CountingAdapter(PerfectAdapter):
+        def __init__(self, inner_universe):
+            super().__init__(inner_universe)
+            self.prepare_calls = []
+
+        def prepare_database(self, image_ids, descriptors):
+            self.prepare_calls.append(list(image_ids))
+            super().prepare_database(image_ids, descriptors)
+
+    def search_case(queries, image_ids, descriptors, gold, rung="verbatim"):
+        return SearchCase(
+            kind="search",
+            queries=queries,
+            image_ids=image_ids,
+            descriptors=descriptors,
+            gold_image_ids=gold,
+            k=10,
+            tie_break_seed=7,
+            rung=rung,
+        )
+
+    pool_indices = list(range(10, 40))
+    shared_ids = [universe.image_ids[i] for i in pool_indices]
+    shared_descriptors = universe.descriptors[pool_indices].copy()
+    queries = [universe.captions_of[i][0] for i in pool_indices[:5]]
+    gold = [universe.image_ids[i] for i in pool_indices[:5]]
+    other_indices = list(range(0, 10))
+    other_ids = [universe.image_ids[i] for i in other_indices]
+    other_descriptors = universe.descriptors[other_indices].copy()
+    other_queries = [universe.captions_of[i][0] for i in other_indices[:3]]
+    other_gold = [universe.image_ids[i] for i in other_indices[:3]]
+
+    cases = [
+        search_case(queries, shared_ids, shared_descriptors, gold),
+        search_case(queries, shared_ids, shared_descriptors, gold, rung="keywords"),
+        search_case(queries, shared_ids, shared_descriptors, gold, rung="typo"),
+        search_case(other_queries, other_ids, other_descriptors, other_gold),
+    ]
+    counting = CountingAdapter(universe)
+    outputs = run_with_adapter(adapt_search(counting), cases)
+    assert all(output["ok"] for output in outputs)
+    # Once for the three shared-pool cases, once for the distinct pool.
+    assert counting.prepare_calls == [shared_ids, other_ids]
+    # The single build still serves every shared-pool case: the verbatim
+    # queries hit gold at rank 1 across all of them.
+    assert outputs[0]["rankings"][0][0] == gold[0]
+    assert outputs[3]["rankings"][0][0] == other_gold[0]
 
 
 def test_outputs_are_json_serializable(universe, cases):

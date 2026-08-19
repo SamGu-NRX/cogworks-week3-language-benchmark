@@ -3,15 +3,18 @@
 import numpy as np
 import pytest
 
+from language_search_benchmark.datasets import SEARCH_K, TextCase
 from language_search_benchmark.metrics import (
     chance_mrr,
     chance_mrr_first_relevant,
+    component_scores,
     mrr,
     mrr_with_misses,
     rank_matrix,
     ranks_of_gold,
     recall_at,
     search_ranks,
+    text_chance_floor,
     text_first_relevant_ranks,
 )
 
@@ -57,6 +60,61 @@ def test_chance_mrr_first_relevant_matches_simulation():
         first = np.min(np.where(order < relevant)[0]) + 1
         simulated.append(1.0 / first)
     assert analytic == pytest.approx(np.mean(simulated), rel=0.02)
+
+
+def test_text_chance_floor_weights_uneven_groups_by_query():
+    """Two uneven groups: the floor is the mean over queries, not the floor
+    of the rounded mean group size.
+
+    Groups of 3 and 2 (N=5): each of the 3 queries in the big group faces a
+    pool of 4 with 2 relevant items, each of the 2 in the small group faces
+    the same pool with 1 relevant. Hand value: (3*(13/18) + 2*(25/48))/5 =
+    77/120. The old collapsed-mean floor rounded the mean group size 2.5 to
+    2 and reported chance_mrr_first_relevant(4, 1), understating it.
+    """
+
+    group_rows = [0, 0, 0, 1, 1]
+    expected = (
+        3 * chance_mrr_first_relevant(4, 2) + 2 * chance_mrr_first_relevant(4, 1)
+    ) / 5
+    assert text_chance_floor(group_rows) == pytest.approx(expected)
+    assert text_chance_floor(group_rows) == pytest.approx(77 / 120)
+    assert text_chance_floor(group_rows) > chance_mrr_first_relevant(4, 1)
+
+
+def test_text_chance_floor_is_bit_identical_on_uniform_groups():
+    """Both shipped manifests are uniform size-5 groups, and published
+    text_chance values must not move: on uniform groups the weighted floor
+    must reproduce the single-size value exactly, not approximately."""
+
+    for n_groups, size in ((15, 5), (100, 5), (12, 3)):
+        group_rows = [group for group in range(n_groups) for _ in range(size)]
+        pool = n_groups * size - 1
+        assert repr(text_chance_floor(group_rows)) == repr(
+            chance_mrr_first_relevant(pool, size - 1)
+        )
+
+
+def test_text_chance_floor_skips_singletons_like_the_rank_function():
+    # A singleton has no relevant item; it enlarges the pool every query
+    # faces but contributes no query of its own.
+    assert text_chance_floor([0, 0, 1]) == chance_mrr_first_relevant(2, 1)
+    assert text_chance_floor([0, 1, 2]) == 0.0
+    assert text_chance_floor([]) == 0.0
+
+
+def test_component_scores_reports_the_query_weighted_text_floor():
+    """text_chance in the metrics dict comes from the weighted floor."""
+
+    case = TextCase(
+        kind="text",
+        captions=["a", "b", "c", "d", "e"],
+        group_rows=[0, 0, 0, 1, 1],
+        tie_break_seed=1,
+    )
+    outputs = [{"ok": False, "kind": "text", "error": "unused"}]
+    metrics, _ = component_scores(outputs, [case], SEARCH_K)
+    assert metrics["text_chance"] == text_chance_floor([0, 0, 0, 1, 1])
 
 
 def test_text_first_relevant_ranks_hand_case():

@@ -62,6 +62,14 @@ def run_cases(factory: Any, resources: Any, cases: Sequence[Any]) -> List[Dict[s
 
 def run_with_adapter(adapter: Any, cases: Sequence[Any]) -> List[Dict[str, Any]]:
     outputs: List[Dict[str, Any]] = []
+    # The (image_ids, descriptors) pair of the previous successful
+    # prepare_database call. The rung cases share the verbatim case's pool
+    # objects (materialize_cases builds them that way), and a student index
+    # need not be idempotent: rebuilding it once per rung made the rung
+    # scores measure the rebuild instead of the rewrite. Object identity is
+    # the comparison because shared pools share objects and distinct pools
+    # never do.
+    prepared_pool: Any = None
     for case in cases:
         kind = getattr(case, "kind", "?")
         try:
@@ -92,7 +100,16 @@ def run_with_adapter(adapter: Any, cases: Sequence[Any]) -> List[Dict[str, Any]]
                         "the submission exposes no search(query, k) surface; the search "
                         "component scores zero until one is added."
                     )
-                adapter.prepare_database(case.image_ids, case.descriptors)
+                if (
+                    prepared_pool is None
+                    or prepared_pool[0] is not case.image_ids
+                    or prepared_pool[1] is not case.descriptors
+                ):
+                    # A raising prepare must not leave the stale pair cached,
+                    # so clear before the call and record after it succeeds.
+                    prepared_pool = None
+                    adapter.prepare_database(case.image_ids, case.descriptors)
+                    prepared_pool = (case.image_ids, case.descriptors)
                 rankings = [adapter.search(query, case.k) for query in case.queries]
                 validated = validate_rankings(
                     rankings, len(case.queries), case.image_ids, case.k, "search"

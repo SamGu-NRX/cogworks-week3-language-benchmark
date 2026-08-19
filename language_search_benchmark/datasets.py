@@ -505,6 +505,13 @@ def materialize_cases(
             )
         )
 
+    # One id list and one descriptor copy shared by every search case (the
+    # copy keeps a mutating submission away from the retrieval case's matrix).
+    # Sharing the objects is what lets the driver see, by identity, that the
+    # rung cases use the verbatim pool and skip rebuilding the database.
+    search_image_ids = list(pool_image_ids)
+    search_descriptors = matrix.copy()
+
     return [
         TextCase(
             kind="text",
@@ -522,21 +529,22 @@ def materialize_cases(
         SearchCase(
             kind="search",
             queries=queries,
-            image_ids=list(pool_image_ids),
-            descriptors=matrix.copy(),
+            image_ids=search_image_ids,
+            descriptors=search_descriptors,
             gold_image_ids=gold_image_ids,
             k=SEARCH_K,
             tie_break_seed=seed,
         ),
     ] + [
         # One case per rewrite. The pool, the gold, and the descriptors are
-        # identical; only the query strings change, so any difference in score
-        # is the submission's response to the rewrite and nothing else.
+        # the same objects; only the query strings change, so any difference
+        # in score is the submission's response to the rewrite and nothing
+        # else.
         SearchCase(
             kind="search",
             queries=perturb.rewrite_all(queries, rung),
-            image_ids=list(pool_image_ids),
-            descriptors=matrix.copy(),
+            image_ids=search_image_ids,
+            descriptors=search_descriptors,
             gold_image_ids=gold_image_ids,
             k=SEARCH_K,
             tie_break_seed=seed,

@@ -110,6 +110,39 @@ def chance_mrr_first_relevant(pool_size: int, relevant: int) -> float:
     return float(total)
 
 
+def text_chance_floor(group_rows: Sequence[int]) -> float:
+    """Query-weighted chance floor matching ``text_first_relevant_ranks``.
+
+    Each caption in a group of size ``g`` queries the other ``N - 1``
+    captions with ``g - 1`` relevant, so the exact floor is the mean of
+    ``chance_mrr_first_relevant(N - 1, g - 1)`` over the scored queries.
+    Singleton groups contribute no queries, exactly as the rank function
+    skips them. This replaced a collapse to the rounded mean group size,
+    which understated the floor on uneven groups (sizes [6, 2, 2, 2]
+    reported 0.4040 against a true 0.4717). Each size's weight is computed
+    as its fraction of the scored queries so that a uniform pool -- both
+    shipped manifests are uniform size-5 groups -- multiplies the single
+    per-size value by exactly 1.0 and reproduces the previous float bit for
+    bit; summing per-group terms and dividing at the end does not guarantee
+    that.
+    """
+
+    groups = np.asarray(list(group_rows), dtype=np.int64)
+    if groups.size == 0:
+        return 0.0
+    counts = np.bincount(groups)
+    sizes = counts[counts > 1]
+    scored_queries = int(sizes.sum())
+    if scored_queries == 0:
+        return 0.0
+    pool = groups.size - 1
+    floor = 0.0
+    for size in np.unique(sizes):
+        queries = int(size) * int(np.sum(sizes == size))
+        floor += (queries / scored_queries) * chance_mrr_first_relevant(pool, int(size) - 1)
+    return float(floor)
+
+
 def search_ranks(
     rankings: Sequence[Sequence[int]],
     gold_image_ids: Sequence[int],
@@ -204,11 +237,7 @@ def component_scores(
         groups = case.group_rows
         if groups is None:
             raise ValueError("Text case has no gold groups; scoring requires the controller copy.")
-        counts = np.bincount(np.asarray(groups))
-        mean_group = float(counts.mean()) if counts.size else 0.0
-        text_chance = chance_mrr_first_relevant(
-            max(len(groups) - 1, 0), max(int(round(mean_group)) - 1, 1)
-        )
+        text_chance = text_chance_floor(groups)
         if output.get("ok"):
             embeddings = np.asarray(output["embeddings"], dtype=np.float64)
             note = summarize_norms(embeddings, "text embeddings")
