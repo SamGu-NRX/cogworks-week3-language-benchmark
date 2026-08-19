@@ -35,6 +35,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
 import numpy as np
 
+from . import perturb
 from .contracts import Resources
 
 CACHE_APP = "cogworks-language-search"
@@ -141,7 +142,14 @@ class RetrievalCase:
 
 @dataclass
 class SearchCase:
-    """The same queries driven through the submission's own search path."""
+    """The same queries driven through the submission's own search path.
+
+    ``rung`` names the rewrite applied to the queries. ``"verbatim"`` is the
+    caption unchanged and is what ``overall`` scores, so adding rungs does not
+    move any existing number. The others are reported beside it and say
+    whether the submission learned an embedding space or leaned on the exact
+    caption strings; see ``perturb.py`` for what each one predicts.
+    """
 
     kind: str
     queries: List[str]
@@ -150,6 +158,7 @@ class SearchCase:
     gold_image_ids: Optional[List[int]]
     k: int
     tie_break_seed: int
+    rung: str = "verbatim"
 
 
 # --------------------------------------------------------------------------
@@ -519,6 +528,22 @@ def materialize_cases(
             k=SEARCH_K,
             tie_break_seed=seed,
         ),
+    ] + [
+        # One case per rewrite. The pool, the gold, and the descriptors are
+        # identical; only the query strings change, so any difference in score
+        # is the submission's response to the rewrite and nothing else.
+        SearchCase(
+            kind="search",
+            queries=perturb.rewrite_all(queries, rung),
+            image_ids=list(pool_image_ids),
+            descriptors=matrix.copy(),
+            gold_image_ids=gold_image_ids,
+            k=SEARCH_K,
+            tie_break_seed=seed,
+            rung=rung,
+        )
+        for rung in perturb.RUNGS
+        if rung != "verbatim"
     ]
 
 

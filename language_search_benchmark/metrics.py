@@ -184,7 +184,18 @@ def component_scores(
     """
 
     diagnostics: List[str] = []
-    by_kind = {getattr(case, "kind", "?"): (case, output) for case, output in zip(cases, outputs)}
+    # Keyed by kind, and for search by kind AND rung. Several search cases now
+    # share one kind, one per query rewrite, and a plain by-kind dict would
+    # keep whichever came last: the scored search component would silently
+    # become the typo rung. The verbatim case is the one `overall` counts.
+    by_kind: Dict[str, Tuple] = {}
+    rung_cases: List[Tuple] = []
+    for case, output in zip(cases, outputs):
+        kind = getattr(case, "kind", "?")
+        if kind == "search" and getattr(case, "rung", "verbatim") != "verbatim":
+            rung_cases.append((case, output))
+            continue
+        by_kind[kind] = (case, output)
 
     text_score = 0.0
     text_chance = 0.0
@@ -247,6 +258,24 @@ def component_scores(
                 "retrieval component scored 0: {}".format(output.get("error", "no output"))
             )
 
+    # Each rewrite, reported next to the components and deliberately outside
+    # `overall`. Adding a rung must not move a number a team already published
+    # against, and a rung is diagnostic anyway: it says which part of the
+    # capstone is load-bearing, not how good the submission is.
+    rung_scores: Dict[str, float] = {}
+    for case, output in rung_cases:
+        rung = getattr(case, "rung", "?")
+        if not output.get("ok"):
+            diagnostics.append(
+                "the {} query rung scored 0: {}".format(rung, output.get("error", "no output"))
+            )
+            rung_scores[rung] = 0.0
+            continue
+        ranks, _ = search_ranks(
+            output.get("rankings", []), case.gold_image_ids, k_search, case.image_ids
+        )
+        rung_scores[rung] = mrr_with_misses(ranks)
+
     search_score = 0.0
     if "search" in by_kind:
         case, output = by_kind["search"]
@@ -280,7 +309,36 @@ def component_scores(
         "retrieval_recall_at_10": retrieval["recall_at_10"],
         "retrieval_median_rank": retrieval["median_rank"],
         "chance_mrr": retrieval_chance,
+        # The floor for `text_mrr`, which is a different floor from
+        # `chance_mrr`: one ranks captions among captions, the other images
+        # among images, and on the evaluation tier they differ by about 4x.
+        # This was computed and then dropped into a diagnostic string, so a
+        # reader comparing `text_mrr` against the one published floor was
+        # comparing against the wrong number.
+        "text_chance": text_chance,
     }
+    for rung, value in sorted(rung_scores.items()):
+        metrics["search_mrr_{}".format(rung)] = value
+
+    # What the rewrites revealed, in one sentence, only when they revealed
+    # something. A submission that holds across every rung gets no note.
+    if rung_scores and search_score:
+        keywords = rung_scores.get("keywords")
+        if keywords is not None and keywords < search_score * 0.75:
+            diagnostics.append(
+                "Dropping stopwords from the queries cost {:.0%} of the search score. "
+                "IDF weighting is what should make those words nearly free, so this "
+                "points at the weighting rather than at the embedding.".format(
+                    1 - keywords / search_score
+                )
+            )
+        typo = rung_scores.get("typo")
+        if typo is not None and typo < search_score * 0.5:
+            diagnostics.append(
+                "One mistyped character per query cost {:.0%} of the search score. "
+                "An unseen word should contribute a zero vector rather than "
+                "dominating or raising.".format(1 - typo / search_score)
+            )
     if text_chance:
         diagnostics.append(
             "chance baselines: text_mrr {:.4f}, retrieval/search mrr {:.4f}.".format(

@@ -31,7 +31,7 @@ class LanguageSearchBenchmark:
     contract_version = "cogworks.submissions.v2"
     plugin_version = __version__
     dataset_version = "coco-glove-manifests-v1"
-    scorer_version = "retrieval-v1"
+    scorer_version = "retrieval-v2"
     primary_metric = "overall"
 
     metric_labels = {
@@ -44,6 +44,10 @@ class LanguageSearchBenchmark:
         "retrieval_recall_at_10": "Recall@10",
         "retrieval_median_rank": "Median rank",
         "chance_mrr": "Chance MRR",
+        "text_chance": "Text chance MRR",
+        "search_mrr_keywords": "Search MRR, keywords only",
+        "search_mrr_truncated": "Search MRR, first three words",
+        "search_mrr_typo": "Search MRR, one typo",
     }
     lower_is_better = {"retrieval_median_rank"}
 
@@ -105,6 +109,33 @@ class LanguageSearchBenchmark:
         "chance_mrr": (
             "What ranking the images at random scores. The floor every number "
             "above should be read against."
+        ),
+        "text_chance": (
+            "The floor for text MRR specifically, which is a different number "
+            "from the image floor above: this one ranks captions among "
+            "captions. On the evaluation tier the two differ by roughly four "
+            "times, so reading text MRR against the image floor flatters it."
+        ),
+        "search_mrr_keywords": (
+            "The same queries with the stopwords removed, which is what "
+            "someone actually types into a search box. IDF weighting is what "
+            "should make those words nearly free, so this number sitting well "
+            "below the plain search MRR points at the weighting rather than "
+            "at the embedding. Measured on the reference it comes out "
+            "slightly higher, because those words were adding noise."
+        ),
+        "search_mrr_truncated": (
+            "Only the first three content words of each query. Tests whether "
+            "the score falls off gradually as signal is removed or drops off "
+            "a cliff. Expected to be the weakest rung; a short query genuinely "
+            "carries less information."
+        ),
+        "search_mrr_typo": (
+            "One mistyped character per query, on the longest content word. "
+            "The word becomes one your vocabulary has never seen, which the "
+            "course says should contribute a zero vector rather than raising. "
+            "A large drop here means an unseen word is dominating the sum; an "
+            "error rather than a low score means it raised."
         ),
     }
 
