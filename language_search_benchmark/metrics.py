@@ -111,12 +111,25 @@ def chance_mrr_first_relevant(pool_size: int, relevant: int) -> float:
 
 
 def search_ranks(
-    rankings: Sequence[Sequence[int]], gold_image_ids: Sequence[int], k: int, pool_size: int
+    rankings: Sequence[Sequence[int]],
+    gold_image_ids: Sequence[int],
+    k: int,
+    pool: Optional[Sequence[int]] = None,
 ) -> Tuple[np.ndarray, int]:
-    """1-based rank of gold per query; absent within top-``k`` scores 0 MRR.
+    """1-based rank of gold per query, plus how many returned ids were foreign.
 
-    Returns ranks (0 marks "not found", handled by ``mrr_with_misses``) and
-    the count of returned ids that were outside the pinned pool.
+    ``ranks[i]`` is 0 when gold is absent from the first ``k`` results, which
+    ``mrr_with_misses`` scores as a miss rather than as rank 1.
+
+    The second return value is the count of returned image ids that are not in
+    ``pool``. It is 0 when no pool is given. Previously this parameter was
+    ``pool_size: int``, was never read, and the function returned
+    ``len(gold_image_ids)`` -- the query count -- under a docstring promising a
+    foreign-id count. The caller then recomputed the real count itself and used
+    the wrong value only as a truthiness guard, so the bug was invisible: a
+    non-empty query list is truthy in exactly the cases a real foreign count
+    would be. Returning what the docstring says removes the duplicate loop and
+    the trap.
     """
 
     ranks = np.zeros(len(gold_image_ids), dtype=np.int64)
@@ -125,7 +138,13 @@ def search_ranks(
             if int(image_id) == int(gold):
                 ranks[index] = position + 1
                 break
-    return ranks, len(gold_image_ids)
+    if pool is None:
+        return ranks, 0
+    allowed = {int(image_id) for image_id in pool}
+    foreign = sum(
+        1 for row in rankings for image_id in row if int(image_id) not in allowed
+    )
+    return ranks, foreign
 
 
 def mrr_with_misses(ranks: np.ndarray) -> float:
@@ -235,15 +254,11 @@ def component_scores(
             raise ValueError("Search case has no gold ids; scoring requires the controller copy.")
         if output.get("ok"):
             rankings = output.get("rankings", [])
-            ranks, total = search_ranks(rankings, case.gold_image_ids, k_search, len(case.image_ids))
-            search_score = mrr_with_misses(ranks)
-            foreign = sum(
-                1
-                for row in rankings
-                for image_id in row
-                if int(image_id) not in set(case.image_ids)
+            ranks, foreign = search_ranks(
+                rankings, case.gold_image_ids, k_search, case.image_ids
             )
-            if foreign and total:
+            search_score = mrr_with_misses(ranks)
+            if foreign:
                 diagnostics.append(
                     "search returned {} ids outside the pinned pool (they cannot match).".format(
                         foreign

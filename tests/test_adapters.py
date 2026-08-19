@@ -6,7 +6,12 @@ import pytest
 from language_search_benchmark.adapters import adapt_search
 from language_search_benchmark.contracts import AdapterContractError
 
-from .fixtures.synthetic import CourseStyleAdapter, PerfectAdapter, Universe
+from .fixtures.synthetic import (
+    CourseStyleAdapter,
+    PerfectAdapter,
+    UnmappedPrepareAdapter,
+    Universe,
+)
 
 
 @pytest.fixture(scope="module")
@@ -47,6 +52,33 @@ def test_unmappable_object_gets_actionable_report():
     assert "Mystery" in report
     assert "embed_text" in report
     assert "benchmark_adapter.py" in report
+
+
+def test_unmapped_prepare_is_reported_not_silently_zeroed(universe):
+    """A prepare method named outside PREPARE_ALIASES used to cost the whole
+    search component with no diagnostic anywhere: every output said ok, and
+    the student saw a third of the score missing for no stated reason."""
+
+    from language_search_benchmark.drivers import run_with_adapter
+
+    adapter = adapt_search(UnmappedPrepareAdapter(universe))
+    assert adapter.has_search
+    assert not adapter.has_prepare
+    note = " ".join(adapter.mappings)
+    assert "prepare_database" in note
+    assert "build_index" in note, "the report should name the method we found"
+
+    outputs = run_with_adapter(adapter, universe.cases())
+    search_output = next(o for o in outputs if o["kind"] == "search")
+    assert search_output["ok"] is False, "a zeroed component must say why"
+    message = search_output["error"]
+    assert "never built" in message
+    assert "prepare_database(image_ids, descriptors)" in message, (
+        "the actionable rename must survive the 200-character truncation in "
+        "_error_output"
+    )
+    # The components that did work still score.
+    assert all(o["ok"] for o in outputs if o["kind"] != "search")
 
 
 def test_batch_error_leads_when_retry_iterates_strings():

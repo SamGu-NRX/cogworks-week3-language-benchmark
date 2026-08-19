@@ -13,9 +13,11 @@ Three rungs, none of which guesses:
    object is, which protocol members are missing, the closest names it does
    have, and the ten-line escape hatch.
 
-``prepare_database``/``search`` are adapted the same way but their absence
-is not an error here; the search component simply scores zero with a note
-(the driver handles that).
+``search`` and ``prepare_database`` are adapted the same way, but a missing
+one is not raised here. The driver turns a missing ``search`` into a scored
+zero with a diagnostic. An unmapped ``prepare_database`` is recorded in the
+mapping log, because a submission whose index is never built would otherwise
+lose the whole search component with nothing to read.
 """
 
 from __future__ import annotations
@@ -66,6 +68,16 @@ class AdaptedSearchAdapter:
     @property
     def has_search(self) -> bool:
         return self._search_fn is not None
+
+    @property
+    def has_prepare(self) -> bool:
+        """Whether a database-building surface was found under a known name.
+
+        The driver reads this so that an unbuilt database explains itself
+        rather than showing up as a zero search score.
+        """
+
+        return self._prepare_fn is not None
 
     def embed_text(self, captions: Sequence[str]) -> np.ndarray:
         return self._batch_or_loop(self._text_fn, list(captions), "embed_text")
@@ -182,4 +194,33 @@ def adapt_search(target: Any) -> AdaptedSearchAdapter:
         raise AdapterContractError(
             "The submission does not expose the search adapter protocol.", report
         )
+    if search_fn is not None and prepare_fn is None:
+        # Only exact documented names are mapped, so a student who named this
+        # step something else would otherwise search a database that was never
+        # built and lose the component with nothing to read.
+        mappings.append(_unmapped_prepare_note(target))
     return AdaptedSearchAdapter(target, text_fn, image_fn, search_fn, prepare_fn, mappings)
+
+
+#: Substrings that suggest a method builds the searchable database. Used only
+#: to name candidates back to the student, never to map one, so being generous
+#: here cannot mis-score a submission.
+_PREPARE_HINTS = ("prepare", "build", "create", "index", "database")
+
+
+def _unmapped_prepare_note(target: Any) -> str:
+    available = _public_callables(target)
+    close = [name for name in available if any(h in name.lower() for h in _PREPARE_HINTS)]
+    if not close:
+        for alias in PREPARE_ALIASES:
+            close = difflib.get_close_matches(alias, available, n=3, cutoff=0.4)
+            if close:
+                break
+    note = (
+        "no prepare_database surface found, so the image database is never "
+        "built; rename your index-building method to one of: {}, or build the "
+        "index inside search".format(", ".join(PREPARE_ALIASES))
+    )
+    if close:
+        note += ". Closest names found: {}".format(", ".join(close[:3]))
+    return note

@@ -68,6 +68,32 @@ def test_text_first_relevant_ranks_hand_case():
 
 def test_search_ranks_and_misses():
     rankings = [[7, 8, 9], [1, 2, 3], []]
-    ranks, _ = search_ranks(rankings, gold_image_ids=[9, 5, 4], k=3, pool_size=10)
+    ranks, foreign = search_ranks(
+        rankings, gold_image_ids=[9, 5, 4], k=3, pool=[1, 2, 3, 4, 5, 7, 8, 9]
+    )
     assert ranks.tolist() == [3, 0, 0]
     assert mrr_with_misses(ranks) == pytest.approx((1 / 3) / 3)
+    # Every returned id is in the pool here, so nothing is foreign. The old
+    # version of this test discarded the second value with `_`, which is how
+    # it went unnoticed that the function returned the query count under a
+    # docstring promising a foreign-id count.
+    assert foreign == 0
+
+
+def test_search_ranks_counts_ids_outside_the_pool():
+    """The second return value is what the docstring says it is."""
+
+    rankings = [[99, 1], [2, 100]]
+    ranks, foreign = search_ranks(
+        rankings, gold_image_ids=[1, 2], k=2, pool=[1, 2, 3]
+    )
+    assert ranks.tolist() == [2, 1]
+    assert foreign == 2  # 99 and 100
+
+
+def test_search_ranks_without_a_pool_reports_no_foreign_ids():
+    """Omitting the pool means "do not check", not "everything is foreign"."""
+
+    ranks, foreign = search_ranks([[5]], gold_image_ids=[5], k=1)
+    assert ranks.tolist() == [1]
+    assert foreign == 0

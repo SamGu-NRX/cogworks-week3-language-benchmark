@@ -97,6 +97,18 @@ def run_with_adapter(adapter: Any, cases: Sequence[Any]) -> List[Dict[str, Any]]
                 validated = validate_rankings(
                     rankings, len(case.queries), case.image_ids, case.k, "search"
                 )
+                # An unmapped prepare_database is a no-op, so an unbuilt
+                # database returns nothing for every query. Say that instead of
+                # letting the component score zero with no explanation.
+                if not getattr(adapter, "has_prepare", True) and not any(validated):
+                    # Keep this under the 200-character truncation in
+                    # _error_output so the instruction survives.
+                    raise CheckFailure(
+                        "search returned nothing for every query and no "
+                        "prepare_database surface was found, so the database was "
+                        "never built. Rename your index-building method to "
+                        "prepare_database(image_ids, descriptors)."
+                    )
                 outputs.append({"ok": True, "kind": kind, "rankings": validated})
             else:
                 raise CheckFailure("unknown case kind {!r}.".format(kind))

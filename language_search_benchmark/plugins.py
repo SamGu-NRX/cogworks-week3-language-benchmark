@@ -47,6 +47,67 @@ class LanguageSearchBenchmark:
     }
     lower_is_better = {"retrieval_median_rank"}
 
+    #: What each metric measures, in the course's own vocabulary, and which
+    #: part of the capstone it comes from.
+    #:
+    #: A number a student cannot trace back to something they were taught is a
+    #: black box, and a black box teaches nothing. Every entry names the piece
+    #: of the assignment it corresponds to, using the words CogWeb uses --
+    #: "IDF-weighted GloVe", "W_embed", "margin ranking loss", "confusor" --
+    #: rather than ours. Source:
+    #: docs/cogweb/pages/Language/SemanticImageSearch.md.
+    metric_help = {
+        "overall": (
+            "The mean of the three component scores below, which are weighted "
+            "equally on purpose: the capstone is three pieces that must agree on "
+            "one embedding space, and a submission strong at two of them has not "
+            "built the thing. This is the leaderboard number."
+        ),
+        "text_mrr": (
+            "Given one caption, how highly does another caption of the same image "
+            "rank against captions of other images? This tests the IDF-weighted "
+            "GloVe sum on its own, before any image is involved. Weak here means "
+            "the caption embedding is the problem -- check that IDF is computed "
+            "across every caption in the dataset and that an unseen word gets IDF 0."
+        ),
+        "retrieval_mrr": (
+            "Given a caption embedding, how highly does its own image rank among "
+            "all images by cosine similarity? This is what W_embed was trained "
+            "for: the margin ranking loss pushes a true image's embedding toward "
+            "its caption's and a confusor's away. Weak here with strong text MRR "
+            "means the two embeddings are not living in the same space."
+        ),
+        "search_mrr": (
+            "The application end to end: a query string in, ranked image ids out, "
+            "through whatever database the submission built. Weak here while the "
+            "two above are strong points at the plumbing -- the database, the id "
+            "mapping, or the query path -- not at the embeddings."
+        ),
+        "retrieval_recall_at_1": (
+            "How often the caption's own image is the single top match. The "
+            "strictest reading of the retrieval task."
+        ),
+        "retrieval_recall_at_5": (
+            "How often the caption's own image is in the top five. A search "
+            "interface shows several results, so this is closer to what a user "
+            "of the finished application experiences."
+        ),
+        "retrieval_recall_at_10": (
+            "How often the caption's own image is in the top ten. Read alongside "
+            "recall@1: a large gap means the right image is being found but not "
+            "ranked first, which is a margin problem rather than an embedding one."
+        ),
+        "retrieval_median_rank": (
+            "The middle rank of the correct image across all queries. Reported "
+            "because a mean is dominated by a handful of catastrophic misses, "
+            "while the median says what a typical query does."
+        ),
+        "chance_mrr": (
+            "What ranking the images at random scores. The floor every number "
+            "above should be read against."
+        ),
+    }
+
     def __init__(self) -> None:
         self.last_diagnostics: List[str] = []
 

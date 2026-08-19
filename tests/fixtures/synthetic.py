@@ -130,6 +130,30 @@ class CourseStyleAdapter:
         return self._inner.search(caption, k)
 
 
+class UnmappedPrepareAdapter:
+    """Correct in every way except that the prepare step has a name we don't map.
+
+    ``build_index`` is outside ``PREPARE_ALIASES``, so the database is never
+    built and every search comes back empty. This is the shape that used to
+    score zero on the search component with nothing to read.
+    """
+
+    def __init__(self, universe: Universe) -> None:
+        self._inner = PerfectAdapter(universe)
+
+    def embed_text(self, captions: Sequence[str]) -> np.ndarray:
+        return self._inner.embed_text(captions)
+
+    def embed_images(self, descriptors: np.ndarray) -> np.ndarray:
+        return self._inner.embed_images(descriptors)
+
+    def build_index(self, image_ids: Sequence[int], descriptors: np.ndarray) -> None:
+        self._inner.prepare_database(image_ids, descriptors)
+
+    def search(self, query: str, k: int) -> List[int]:
+        return self._inner.search(query, k)
+
+
 class InertAdapter:
     def embed_text(self, captions: Sequence[str]) -> np.ndarray:
         return np.zeros((len(captions), 64))
