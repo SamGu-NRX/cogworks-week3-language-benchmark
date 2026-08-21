@@ -14,6 +14,8 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
+from . import perturb
+
 
 def tie_break_permutation(size: int, seed: int) -> np.ndarray:
     return np.random.RandomState(seed).permutation(size)
@@ -58,12 +60,37 @@ def median_rank(ranks: np.ndarray) -> float:
     return float(np.median(ranks))
 
 
-def chance_mrr(pool_size: int) -> float:
-    """Expected MRR of a uniformly random ranking over ``pool_size`` items."""
+def chance_mrr_at_k(pool_size: int, k: int) -> float:
+    """Expected MRR when only the top ``k`` of a random ranking are returned.
 
-    if pool_size <= 0:
+    The search component asks for ``k`` ids and scores gold beyond that depth
+    as a miss, so its floor is not the whole-pool floor. Gold lands at rank
+    ``r`` with probability ``1/pool_size`` for each ``r``, and only the first
+    ``k`` of those contribute, which gives ``H_k / pool_size`` where ``H_k``
+    is the k-th harmonic number.
+
+    Checked against a 400,000-trial simulation at pool 700, k 50: simulated
+    0.006331, exact 0.006427. The gap is simulation noise at that trial
+    count, not a disagreement about the formula.
+    """
+
+    if pool_size <= 0 or k <= 0:
         return 0.0
-    return float(np.sum(1.0 / np.arange(1, pool_size + 1)) / pool_size)
+    depth = min(int(k), int(pool_size))
+    return float(np.sum(1.0 / np.arange(1, depth + 1)) / pool_size)
+
+
+def chance_mrr(pool_size: int) -> float:
+    """Expected MRR of a uniformly random ranking over ``pool_size`` items.
+
+    The whole-pool case of ``chance_mrr_at_k``. Written as a delegation so
+    the two published floors cannot drift apart; with ``k == pool_size`` the
+    two functions evaluate the identical numpy expression, and the returned
+    floats were confirmed equal under ``==`` at pool sizes 3, 10, 100, and
+    700, so this did not move the number any existing run reported.
+    """
+
+    return chance_mrr_at_k(pool_size, pool_size)
 
 
 def text_first_relevant_ranks(
@@ -209,18 +236,22 @@ def summarize_norms(matrix: np.ndarray, name: str) -> Optional[str]:
 def component_scores(
     outputs: Sequence[Dict], cases: Sequence, k_search: int
 ) -> Tuple[Dict[str, float], List[str]]:
-    """All metrics plus diagnostics from the three component outputs.
+    """All metrics plus diagnostics from the component outputs.
 
     ``outputs[i]`` is the driver's dict for ``cases[i]``; a failed component
     carries ``{"ok": False, "error": ...}`` and scores zero with a
     diagnostic, leaving the other components intact.
+
+    ``search_mrr`` is the mean over the whole rewrite grid, so several of the
+    cases feed one component score; ``k_search`` is the depth the search
+    component was asked for, and gold below it counts as a miss.
     """
 
     diagnostics: List[str] = []
-    # Keyed by kind, and for search by kind AND rung. Several search cases now
+    # Keyed by kind, and for search by kind AND rung. Several search cases
     # share one kind, one per query rewrite, and a plain by-kind dict would
-    # keep whichever came last: the scored search component would silently
-    # become the typo rung. The verbatim case is the one `overall` counts.
+    # keep whichever came last, so the reported verbatim rung would silently
+    # become the typo rung.
     by_kind: Dict[str, Tuple] = {}
     rung_cases: List[Tuple] = []
     for case, output in zip(cases, outputs):
@@ -287,45 +318,93 @@ def component_scores(
                 "retrieval component scored 0: {}".format(output.get("error", "no output"))
             )
 
-    # Each rewrite, reported next to the components and deliberately outside
-    # `overall`. Adding a rung must not move a number a team already published
-    # against, and a rung is diagnostic anyway: it says which part of the
-    # capstone is load-bearing, not how good the submission is.
+    # Every rung, scored the same way, verbatim included. `search_mrr` is the
+    # mean across all four.
+    #
+    # Until scorer version retrieval-v3 this loop only ran on the rewritten
+    # rungs and `search_mrr` was the verbatim rung alone. That made
+    # `search_mrr` a second reading of `retrieval_mrr`: both take the same
+    # query list over the same pool, so on a correct submission the only way
+    # they can differ is a query whose gold sits past the k-th result.
+    # Measured on the reference: on the test tier (pool 100, k 50) they were
+    # equal under `==`, and on the evaluation tier (pool 700, k 50) they
+    # differed by 0.00137, every bit of which came from 15 of 150 queries
+    # whose gold fell beyond rank 50. A student reading meaning into that gap
+    # was reading the payload depth cap.
+    #
+    # Averaging the grid gives the two metrics different questions to answer.
+    # `retrieval_mrr` asks whether the embedding space is aligned. `search_mrr`
+    # asks whether end-to-end search survives the queries a person actually
+    # types, which is the question the application is for. Both rest on
+    # predictions the course material makes (IDF weighting should make
+    # stopwords nearly free; an unseen word should contribute a zero vector),
+    # so a submission that follows the course scores well on all four.
+    #
+    # Equal weight, not a weighting that favors verbatim. A weighting would be
+    # a claim about how much each rewrite matters, and we have no measurement
+    # supporting any particular set of weights.
+    scored_rungs: List[Tuple] = []
+    if "search" in by_kind:
+        scored_rungs.append(by_kind["search"])
+    scored_rungs.extend(rung_cases)
+
     rung_scores: Dict[str, float] = {}
-    for case, output in rung_cases:
-        rung = getattr(case, "rung", "?")
+    for case, output in scored_rungs:
+        rung = getattr(case, "rung", "verbatim")
+        if case.gold_image_ids is None:
+            raise ValueError("Search case has no gold ids; scoring requires the controller copy.")
         if not output.get("ok"):
             diagnostics.append(
                 "the {} query rung scored 0: {}".format(rung, output.get("error", "no output"))
             )
             rung_scores[rung] = 0.0
             continue
-        ranks, _ = search_ranks(
+        ranks, foreign = search_ranks(
             output.get("rankings", []), case.gold_image_ids, k_search, case.image_ids
         )
         rung_scores[rung] = mrr_with_misses(ranks)
-
-    search_score = 0.0
-    if "search" in by_kind:
-        case, output = by_kind["search"]
-        if case.gold_image_ids is None:
-            raise ValueError("Search case has no gold ids; scoring requires the controller copy.")
-        if output.get("ok"):
-            rankings = output.get("rankings", [])
-            ranks, foreign = search_ranks(
-                rankings, case.gold_image_ids, k_search, case.image_ids
-            )
-            search_score = mrr_with_misses(ranks)
-            if foreign:
-                diagnostics.append(
-                    "search returned {} ids outside the pinned pool (they cannot match).".format(
-                        foreign
-                    )
-                )
-        else:
+        if foreign:
             diagnostics.append(
-                "search component scored 0: {}".format(output.get("error", "no output"))
+                "the {} query rung returned {} ids outside the pinned pool "
+                "(they cannot match).".format(rung, foreign)
             )
+
+    # An incomplete grid refuses rather than averaging over what happened to
+    # arrive. Dividing the rungs present by four would under-report, and
+    # dividing by however many showed up would make `search_mrr` mean a
+    # different thing per run with nothing on the page to say so. Both are
+    # plausible wrong numbers, and this is a construction error rather than
+    # anything a submission can cause: `materialize_cases` and the sandbox's
+    # `decode_payload` both build the grid from this same `RUNGS` tuple, so
+    # they can only disagree with it if one side was edited alone.
+    #
+    # A rung that ran and failed is not missing. It is in `rung_scores` at
+    # 0.0 with a diagnostic, and it pulls the mean down as it should.
+    search_score = 0.0
+    search_chance = 0.0
+    if rung_scores:
+        present = set(rung_scores)
+        expected = set(perturb.RUNGS)
+        if present != expected:
+            raise ValueError(
+                "The search grid is incomplete: expected the rungs {} but the "
+                "cases carry {}. Scoring an incomplete grid would report a "
+                "search MRR that is not the average it claims to be.".format(
+                    sorted(expected), sorted(present)
+                )
+            )
+        search_score = float(
+            sum(rung_scores[rung] for rung in perturb.RUNGS) / len(perturb.RUNGS)
+        )
+        # The pool is one shared object across the grid, so any rung gives the
+        # same size; max() is here so a hand-built case list with a ragged
+        # pool reports the more conservative (lower) floor rather than one
+        # that flatters the score.
+        pool_sizes = [
+            len(case.image_ids) for case, _ in scored_rungs if case.image_ids is not None
+        ]
+        if pool_sizes:
+            search_chance = chance_mrr_at_k(max(pool_sizes), k_search)
 
     overall = (text_score + retrieval["mrr"] + search_score) / 3.0
     metrics = {
@@ -345,33 +424,49 @@ def component_scores(
         # reader comparing `text_mrr` against the one published floor was
         # comparing against the wrong number.
         "text_chance": text_chance,
+        # And a third floor, for `search_mrr`. Search returns only k ids, so
+        # gold beyond rank k scores 0 and its floor sits below the whole-pool
+        # floor: 0.006427 against 0.010184 at the evaluation pool of 700 with
+        # k 50, a factor of 1.58. Reading search against `chance_mrr`
+        # understates how far above chance it is.
+        "search_chance": search_chance,
     }
     for rung, value in sorted(rung_scores.items()):
         metrics["search_mrr_{}".format(rung)] = value
 
     # What the rewrites revealed, in one sentence, only when they revealed
     # something. A submission that holds across every rung gets no note.
-    if rung_scores and search_score:
+    #
+    # Each rung is compared against the verbatim rung, not against the
+    # averaged `search_mrr`. Verbatim is the control the rewrite is a
+    # departure from, and it is also the only comparison that stays stable:
+    # `search_mrr` now contains the rung being tested, so a large drop would
+    # pull the thing it is measured against down with it and understate
+    # itself.
+    verbatim = rung_scores.get("verbatim", 0.0)
+    if verbatim:
         keywords = rung_scores.get("keywords")
-        if keywords is not None and keywords < search_score * 0.75:
+        if keywords is not None and keywords < verbatim * 0.75:
             diagnostics.append(
-                "Dropping stopwords from the queries cost {:.0%} of the search score. "
-                "IDF weighting is what should make those words nearly free, so this "
-                "points at the weighting rather than at the embedding.".format(
-                    1 - keywords / search_score
-                )
+                "Dropping stopwords from the queries cost {:.0%} against the "
+                "unchanged captions. IDF weighting is what should make those words "
+                "nearly free, so this points at the weighting rather than at the "
+                "embedding.".format(1 - keywords / verbatim)
             )
         typo = rung_scores.get("typo")
-        if typo is not None and typo < search_score * 0.5:
+        if typo is not None and typo < verbatim * 0.5:
             diagnostics.append(
-                "One mistyped character per query cost {:.0%} of the search score. "
-                "An unseen word should contribute a zero vector rather than "
-                "dominating or raising.".format(1 - typo / search_score)
+                "One mistyped character per query cost {:.0%} against the unchanged "
+                "captions. An unseen word should contribute a zero vector rather "
+                "than dominating or raising.".format(1 - typo / verbatim)
             )
-    if text_chance:
+    if text_chance or search_chance:
+        # Three floors, named separately. They are not interchangeable: on the
+        # evaluation tier text_chance is about 4x chance_mrr and search_chance
+        # is about 0.63x it, so a reader who picks the wrong one is off by
+        # more than the differences between submissions.
         diagnostics.append(
-            "chance baselines: text_mrr {:.4f}, retrieval/search mrr {:.4f}.".format(
-                text_chance, retrieval_chance
-            )
+            "chance baselines: text_mrr {:.4f}, retrieval_mrr {:.4f}, "
+            "search_mrr {:.4f}.".format(text_chance, retrieval_chance, search_chance)
         )
     return metrics, diagnostics

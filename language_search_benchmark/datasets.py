@@ -145,10 +145,12 @@ class SearchCase:
     """The same queries driven through the submission's own search path.
 
     ``rung`` names the rewrite applied to the queries. ``"verbatim"`` is the
-    caption unchanged and is what ``overall`` scores, so adding rungs does not
-    move any existing number. The others are reported beside it and say
-    whether the submission learned an embedding space or leaned on the exact
-    caption strings; see ``perturb.py`` for what each one predicts.
+    caption unchanged; the others rewrite it the way a person would type it.
+    Since scorer version retrieval-v3 every rung is scored and ``search_mrr``
+    is their mean, so the search component measures whether end-to-end search
+    survives the queries a user writes rather than only whether it reproduces
+    a caption it was handed. Each rung is still reported on its own as
+    ``search_mrr_<rung>``; see ``perturb.py`` for what each one predicts.
     """
 
     kind: str

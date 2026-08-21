@@ -5,11 +5,18 @@ latent in the first 8 columns plus seeded noise. Captions are strings that
 name their image index in words, so a "perfect" adapter can invert them
 exactly. This gives the full spectrum of submissions:
 
-- ``PerfectAdapter`` — recovers latents from both sides; near-perfect scores.
-- ``CourseStyleAdapter`` — same behavior behind the documented course names
+- ``PerfectAdapter``: recovers latents from both sides; near-perfect scores.
+- ``CourseStyleAdapter``: same behavior behind the documented course names
   (exercises auto-adaptation rung 2).
-- ``InertAdapter`` — constant embeddings; must land at chance.
-- ``BrokenAdapter`` — raises from every method.
+- ``MemorizedCaptionAdapter``: correct embeddings, but a search path that only
+  recognizes caption strings it has already seen.
+- ``InertAdapter``: constant embeddings; must land at chance.
+- ``BrokenAdapter``: raises from every method.
+
+The captions are built so that every query rewrite in ``perturb.py`` leaves
+the image index recoverable, which lets ``PerfectAdapter`` score 1.0 across
+the whole grid. See the comment on ``captions_of`` for the word order that
+makes that true.
 """
 
 from __future__ import annotations
@@ -18,6 +25,7 @@ from typing import List, Sequence
 
 import numpy as np
 
+from language_search_benchmark import perturb
 from language_search_benchmark.datasets import RetrievalCase, SearchCase, TextCase
 
 LATENT = 8
@@ -44,9 +52,23 @@ class Universe:
         self.descriptors = np.zeros((n_images, DESC), dtype=np.float32)
         self.descriptors[:, :LATENT] = self.latents + rng.normal(scale=0.01, size=(n_images, LATENT))
         self.image_ids = [1000 + index for index in range(n_images)]
+        # The index words come first, and two stopwords follow them, so that
+        # every query rewrite leaves the index recoverable:
+        #
+        #   verbatim   "one zero in a picture take 0"
+        #   keywords   "one zero picture take 0"      (in, a dropped)
+        #   truncated  "one zero picture"             (first three content words)
+        #   typo       "one zero in a pucture take 0" (longest word is "picture")
+        #
+        # That matters because the course predicts a correct submission
+        # survives these rewrites, so the fixture's "does everything right"
+        # adapter has to be able to. Under the older "picture number one zero
+        # take 0" wording, truncated kept "picture number one" and threw away
+        # the second digit, which made PerfectAdapter look broken on a rung
+        # that was really testing our caption format.
         self.captions_of = {
             index: [
-                "picture number {} take {}".format(_index_words(index), copy)
+                "{} in a picture take {}".format(_index_words(index), copy)
                 for copy in range(captions_per_image)
             ]
             for index in range(n_images)
@@ -66,6 +88,13 @@ class Universe:
         queries = [self.captions_of[index][0] for index in query_indices]
         gold_rows = [pool_indices.index(index) for index in query_indices]
         gold_image_ids = [self.image_ids[index] for index in query_indices]
+        # The whole rewrite grid, built the way `materialize_cases` builds it:
+        # one shared id list and one shared descriptor copy across every rung,
+        # since the driver uses object identity to decide whether the pool
+        # changed. Scoring refuses an incomplete grid, so a fixture that
+        # shipped only the verbatim case could not be scored at all.
+        search_ids = list(pool_image_ids)
+        search_descriptors = descriptors.copy()
         return [
             TextCase(kind="text", captions=text_captions, group_rows=group_rows, tie_break_seed=seed),
             RetrievalCase(
@@ -75,15 +104,18 @@ class Universe:
                 gold_rows=gold_rows,
                 tie_break_seed=seed,
             ),
+        ] + [
             SearchCase(
                 kind="search",
-                queries=queries,
-                image_ids=pool_image_ids,
-                descriptors=descriptors.copy(),
+                queries=perturb.rewrite_all(queries, rung),
+                image_ids=search_ids,
+                descriptors=search_descriptors,
                 gold_image_ids=gold_image_ids,
                 k=10,
                 tie_break_seed=seed,
-            ),
+                rung=rung,
+            )
+            for rung in perturb.RUNGS
         ]
 
 
@@ -152,6 +184,49 @@ class UnmappedPrepareAdapter:
 
     def search(self, query: str, k: int) -> List[int]:
         return self._inner.search(query, k)
+
+
+class MemorizedCaptionAdapter:
+    """Both embedding towers are right; search recognizes caption strings only.
+
+    This is the submission ``perturb.py`` exists to detect. It builds a
+    lookup from the exact caption text to the image it belongs to, so a query
+    it has seen before is answered perfectly and anything else falls back to
+    pool order. The embeddings are the real ones, so ``text_mrr`` and
+    ``retrieval_mrr`` are unaffected: the failure is in the search path alone.
+
+    Under scorer version retrieval-v2, which scored the verbatim rung only,
+    this was indistinguishable from a correct submission on every published
+    number. It is what makes the rewrite grid worth scoring.
+    """
+
+    def __init__(self, universe: Universe) -> None:
+        self._inner = PerfectAdapter(universe)
+        self._universe = universe
+        self._db_ids: List[int] = []
+        self._known: dict = {}
+
+    def embed_text(self, captions: Sequence[str]) -> np.ndarray:
+        return self._inner.embed_text(captions)
+
+    def embed_images(self, descriptors: np.ndarray) -> np.ndarray:
+        return self._inner.embed_images(descriptors)
+
+    def prepare_database(self, image_ids: Sequence[int], descriptors: np.ndarray) -> None:
+        self._inner.prepare_database(image_ids, descriptors)
+        self._db_ids = list(image_ids)
+        position = {image_id: index for index, image_id in enumerate(self._universe.image_ids)}
+        self._known = {
+            caption: image_id
+            for image_id in self._db_ids
+            for caption in self._universe.captions_of[position[image_id]]
+        }
+
+    def search(self, query: str, k: int) -> List[int]:
+        hit = self._known.get(query)
+        if hit is None:
+            return self._db_ids[:k]
+        return ([hit] + [i for i in self._db_ids if i != hit])[:k]
 
 
 class InertAdapter:

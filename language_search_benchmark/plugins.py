@@ -31,7 +31,17 @@ class LanguageSearchBenchmark:
     contract_version = "cogworks.submissions.v2"
     plugin_version = __version__
     dataset_version = "coco-glove-manifests-v1"
-    scorer_version = "retrieval-v2"
+    #: retrieval-v3: `search_mrr` changed meaning, and `search_chance` is new.
+    #:
+    #: Under retrieval-v2 `search_mrr` scored the verbatim rung alone, which
+    #: made it a second reading of `retrieval_mrr`: same queries, same pool,
+    #: differing only where gold fell past the k-th result. Measured on the
+    #: reference, that was exact equality on the test tier and 0.00137 on the
+    #: evaluation tier. It now averages all four query rewrites, so it
+    #: measures whether search survives the queries a person types. `overall`
+    #: moves as a result. This is not backward compatible, and the version is
+    #: what keeps a v2 run from being read as if it reported the same thing.
+    scorer_version = "retrieval-v3"
     primary_metric = "overall"
 
     metric_labels = {
@@ -45,6 +55,8 @@ class LanguageSearchBenchmark:
         "retrieval_median_rank": "Median rank",
         "chance_mrr": "Chance MRR",
         "text_chance": "Text chance MRR",
+        "search_chance": "Search chance MRR",
+        "search_mrr_verbatim": "Search MRR, caption unchanged",
         "search_mrr_keywords": "Search MRR, keywords only",
         "search_mrr_truncated": "Search MRR, first three words",
         "search_mrr_typo": "Search MRR, one typo",
@@ -83,9 +95,15 @@ class LanguageSearchBenchmark:
         ),
         "search_mrr": (
             "The application end to end: a query string in, ranked image ids out, "
-            "through whatever database the submission built. Weak here while the "
-            "two above are strong points at the plumbing -- the database, the id "
-            "mapping, or the query path -- not at the embeddings."
+            "through whatever database the submission built. This is the average "
+            "over four versions of every query (the caption unchanged, its "
+            "keywords only, its first three words, and one with a typo), so it "
+            "asks whether search holds up on what a person would actually type "
+            "rather than only on a caption handed back verbatim. The four are "
+            "listed separately further down, so a low score here can be traced "
+            "to the rewrite that caused it. Weak here while the two above are "
+            "strong points at the plumbing, meaning the database, the id "
+            "mapping, or the query path, rather than at the embeddings."
         ),
         "retrieval_recall_at_1": (
             "How often the caption's own image is the single top match. The "
@@ -107,8 +125,9 @@ class LanguageSearchBenchmark:
             "while the median says what a typical query does."
         ),
         "chance_mrr": (
-            "What ranking the images at random scores. The floor every number "
-            "above should be read against."
+            "What ranking the images at random scores. This is the floor for "
+            "retrieval MRR. Text MRR and search MRR each have their own floor, "
+            "listed separately, because they are not asking the same question."
         ),
         "text_chance": (
             "The floor for text MRR specifically, which is a different number "
@@ -116,19 +135,37 @@ class LanguageSearchBenchmark:
             "captions. The two differ by roughly four times on the hidden set, "
             "so reading text MRR against the image floor flatters it."
         ),
+        "search_chance": (
+            "The floor for search MRR. It sits below the retrieval floor "
+            "because search returns a fixed number of results and an image "
+            "past the end of that list scores nothing, while retrieval ranks "
+            "the whole pool. On the hidden set the search floor is about "
+            "0.0064 against the retrieval floor's 0.0102."
+        ),
+        "search_mrr_verbatim": (
+            "The queries exactly as the captions were written, with nothing "
+            "rewritten. This is the control the three rewrites below are "
+            "measured against, and it is the easiest of the four: the query "
+            "is a sentence written by someone looking at the image. A gap "
+            "between this and search MRR is the cost of the rewrites."
+        ),
         "search_mrr_keywords": (
-            "The same queries with the stopwords removed, which is what "
-            "someone actually types into a search box. IDF weighting is what "
+            "The same queries with the stopwords removed, which is closer to "
+            "what someone types into a search box. IDF weighting is what "
             "should make those words nearly free, so this number sitting well "
-            "below the plain search MRR points at the weighting rather than "
-            "at the embedding. Measured on the reference it comes out "
-            "slightly higher, because those words were adding noise."
+            "below the unchanged captions points at the weighting rather than "
+            "at the embedding. Which way it moves is not fixed: on the "
+            "reference it came out 6 percent above the unchanged captions on "
+            "the hidden set and 7 percent below on the practice set, so treat "
+            "a move of that size as normal and a large drop as a finding."
         ),
         "search_mrr_truncated": (
-            "Only the first three content words of each query. Tests whether "
-            "the score falls off gradually as signal is removed or drops off "
-            "a cliff. Expected to be the weakest rung; a short query genuinely "
-            "carries less information."
+            "Only the first three content words of each query. This says "
+            "whether the score falls off gradually as signal is removed or "
+            "drops off a cliff. Expected to be the weakest of the four, and "
+            "it is on the reference; a three-word query genuinely carries "
+            "less information, so some of this gap is the task and not the "
+            "submission."
         ),
         "search_mrr_typo": (
             "One mistyped character per query, on the longest content word. "
