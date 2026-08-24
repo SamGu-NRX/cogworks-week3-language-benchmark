@@ -123,3 +123,26 @@ def test_the_gap_between_rungs_is_the_signature(scored):
 
     gap = scored["search_mrr_verbatim"] - scored["search_mrr_keywords"]
     assert gap > 0.8
+
+
+def test_the_curve_is_published_so_the_shape_can_be_seen(scored):
+    """The four rung scores were computed, published as four separate
+    metrics, and drawn as four rows of a table, so the shape between them
+    reached nobody. The shape is the part worth seeing: a memorizer's curve
+    falls off a cliff after the first rung and an honest submission's steps
+    down gently, because the course predicts IDF weighting makes dropping
+    stopwords nearly free."""
+
+    from language_search_benchmark import perturb
+    from language_search_benchmark.plugins import LanguageSearchBenchmark
+
+    benchmark = LanguageSearchBenchmark()
+    curve = benchmark._rung_curve(scored)
+
+    assert [point["rung"] for point in curve] == list(perturb.RUNGS)
+    assert [point["rung_index"] for point in curve] == list(range(len(perturb.RUNGS)))
+    # Every point carries its name, because the x values are an ordering and
+    # 0 through 3 say nothing to a reader or to a screen reader.
+    assert all(isinstance(point["rung"], str) for point in curve)
+    # The cliff this submission produces.
+    assert curve[0]["mrr"] - curve[1]["mrr"] > 0.8

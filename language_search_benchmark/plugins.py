@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 
-from . import __version__
+from . import __version__, perturb
 from .contracts import Resources
 from .datasets import (
     SEARCH_K,
@@ -176,7 +176,17 @@ class LanguageSearchBenchmark:
         ),
     }
 
+    #: How the run page draws the rung curve. The x axis is the rung's
+    #: position in `perturb.RUNGS`, which runs from the caption unchanged to
+    #: the furthest rewrite, so it is an ordering rather than a quantity; the
+    #: per-point label carries the name the reader needs.
+    sweep_axis_label = "how far the query is from the caption"
+    sweep_x_key = "rung_index"
+    sweep_y_key = "mrr"
+    sweep_label_key = "rung"
+
     def __init__(self) -> None:
+        self.last_sweep: List[Dict[str, Any]] = []
         self.last_diagnostics: List[str] = []
 
     def load_cases(self, tier: str, cache_root: Optional[Path] = None) -> Sequence[Any]:
@@ -207,7 +217,40 @@ class LanguageSearchBenchmark:
             for mapping in output.get("mappings", []):
                 diagnostics.append("adapter: {}".format(mapping))
         self.last_diagnostics = diagnostics[:32]
+        self.last_sweep = self._rung_curve(metrics)
         return metrics
+
+    @staticmethod
+    def _rung_curve(metrics: Dict[str, float]) -> List[Dict[str, Any]]:
+        """The four rungs as a curve, from the literal query to the furthest.
+
+        These four numbers were already computed and already published as
+        separate metrics, so the run page showed them as four rows of a table
+        and the shape between them reached nobody. The shape is the part worth
+        seeing. A submission that matched text rather than meaning scores near
+        the top on the verbatim rung and near the floor one rung later, which
+        is a cliff; a submission that learned an embedding space steps down
+        gently, because the course predicts IDF weighting makes dropping
+        stopwords nearly free.
+
+        Measured, on the test tier: a lookup table built from the annotations
+        file the submission is handed scores 0.9520 verbatim and 0.0279 on
+        keywords. The reference submission scores 0.6337 and 0.5580. Same
+        table, unmistakably different curve.
+
+        Drawn for every run rather than only when the drop is large. A rule
+        that fires on a threshold is a judgment about which submissions
+        deserve scrutiny, and this platform does not make those. The curve is
+        the reading; what it means is the reader's.
+        """
+
+        points: List[Dict[str, Any]] = []
+        for index, rung in enumerate(perturb.RUNGS):
+            value = metrics.get("search_mrr_{}".format(rung))
+            if value is None:
+                continue
+            points.append({"rung_index": index, "mrr": float(value), "rung": rung})
+        return points
 
     def cache_status(self, tier: str, cache_root: Optional[Path] = None) -> CacheStatus:
         return tier_status(tier)
