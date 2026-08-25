@@ -207,6 +207,52 @@ class LanguageSearchBenchmark:
         ),
     }
 
+    #: What kind of number each one is. The run page reads these and never
+    #: reads a metric name, so a benchmark that grows a floor or an unscored
+    #: probe gets the right rendering without the page learning about it.
+    #:
+    #: Three kinds are not the score. A floor is a property of the data, and
+    #: drawing "higher is better" on one tells a student to raise a number
+    #: they do not control. A reported metric is run deliberately and left
+    #: out of the score, which a reader has no way to guess. A diagnostic
+    #: describes one component in more detail than the component's own
+    #: number does.
+    metric_roles = {
+        "overall": "scored",
+        "text_mrr": "scored",
+        "retrieval_mrr": "scored",
+        "search_mrr": "scored",
+        "text_chance": "floor",
+        "chance_mrr": "floor",
+        "search_chance": "floor",
+        "retrieval_mrr_verbatim": "reported",
+        "search_mrr_verbatim": "reported",
+        # Plotted rather than tabled. These three are the rung curve, and the
+        # curve prints each value beside its point, so a row per rung was the
+        # same number twice. "plotted" tells the page they are accounted for
+        # elsewhere; a page that does not draw the curve still has them in
+        # the payload.
+        "search_mrr_keywords": "plotted",
+        "search_mrr_truncated": "plotted",
+        "search_mrr_typo": "plotted",
+        "retrieval_recall_at_1": "diagnostic",
+        "retrieval_recall_at_5": "diagnostic",
+        "retrieval_recall_at_10": "diagnostic",
+        "retrieval_median_rank": "diagnostic",
+    }
+
+    #: Which metric each floor or reported number belongs beside. A floor is
+    #: the scale its metric sits on, so it reads inline rather than as its
+    #: own row; a reported probe means nothing alone and everything next to
+    #: the scored number it shadows.
+    metric_relations = {
+        "text_chance": "text_mrr",
+        "chance_mrr": "retrieval_mrr",
+        "search_chance": "search_mrr",
+        "retrieval_mrr_verbatim": "retrieval_mrr",
+        "search_mrr_verbatim": "search_mrr",
+    }
+
     #: Every key `score()` can return, for the shared explainability test in
     #: python/cogbench/tests. That test compared `metric_labels` against
     #: `metric_help` and so could not see a metric missing from both, which

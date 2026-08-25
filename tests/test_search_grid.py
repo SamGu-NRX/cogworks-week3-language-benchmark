@@ -315,3 +315,43 @@ class TestEveryNumberReachesThePageExplained:
         benchmark = LanguageSearchBenchmark()
         for key in ("search_mrr_verbatim", "retrieval_mrr_verbatim"):
             assert "not scored" in benchmark.metric_labels[key]
+
+    def test_every_metric_declares_what_kind_of_number_it_is(self, universe, cases):
+        """The run page reads `metric_roles` and never a metric's name.
+
+        A metric with no role renders as a scored row with an arrow saying
+        which direction is better, which is right for a score and wrong for
+        the other three kinds this benchmark publishes.
+        """
+
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        benchmark = LanguageSearchBenchmark()
+        returned = set(benchmark.score(outputs, cases))
+
+        assert sorted(returned - set(benchmark.metric_roles)) == []
+        assert sorted(set(benchmark.metric_roles) - returned) == []
+
+    def test_a_floor_and_a_probe_name_what_they_belong_beside(self):
+        """A floor is the scale of one metric and a probe shadows one score.
+        Neither means anything alone, so both must name their partner or the
+        page has nowhere to put them."""
+
+        benchmark = LanguageSearchBenchmark()
+        for key, role in benchmark.metric_roles.items():
+            if role in ("floor", "reported"):
+                assert key in benchmark.metric_relations, key
+                # And the thing it points at has to be a real metric.
+                assert benchmark.metric_relations[key] in benchmark.metric_roles
+
+    def test_nothing_is_both_plotted_and_tabled(self, universe, cases):
+        """A rung is read off the curve, where its exact value is printed
+        beside its point. A row for it would be the same number twice."""
+
+        benchmark = LanguageSearchBenchmark()
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        benchmark.score(outputs, cases)
+        plotted = {k for k, role in benchmark.metric_roles.items() if role == "plotted"}
+        on_the_curve = {point["rung"] for point in benchmark.last_sweep}
+        # Every plotted metric is one of the rungs the curve draws.
+        for key in plotted:
+            assert key.replace("search_mrr_", "") in on_the_curve, key
