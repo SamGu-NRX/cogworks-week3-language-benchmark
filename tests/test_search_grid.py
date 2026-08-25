@@ -271,3 +271,47 @@ def test_scoring_a_text_only_case_list_still_works():
     )
     assert metrics["search_mrr"] == 0.0
     assert metrics["search_chance"] == 0.0
+
+
+class TestEveryNumberReachesThePageExplained:
+    """A metric the scorer returns and the plugin never declares.
+
+    `metric_labels` and `metric_help` are what the run page reads. The runner
+    falls back to `key.replace("_", " ").title()` for anything unlabeled, so a
+    metric added to the scorer alone arrives as "Retrieval Mrr Verbatim" with
+    no explanation next to it.
+
+    That happened: `retrieval_mrr_verbatim` was added in retrieval-v4 and no
+    test noticed, because the shared explainability suite compares labels
+    against help and a metric in neither is invisible to it. This closes that
+    from the benchmark's own side, where the real scorer can be run.
+    """
+
+    def test_the_declared_keys_are_exactly_what_scoring_returns(self, universe, cases):
+        """Both directions. A missing key is a number with no explanation; a
+        stale one reads as current and describes something nobody sees."""
+
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        benchmark = LanguageSearchBenchmark()
+        returned = set(benchmark.score(outputs, cases))
+        declared = set(benchmark.sample_metric_keys)
+
+        assert sorted(returned - declared) == [], "scored but never declared"
+        assert sorted(declared - returned) == [], "declared but never scored"
+
+    def test_every_returned_metric_has_a_label_and_an_explanation(self, universe, cases):
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        benchmark = LanguageSearchBenchmark()
+        returned = set(benchmark.score(outputs, cases))
+
+        assert sorted(returned - set(benchmark.metric_labels)) == []
+        assert sorted(returned - set(benchmark.metric_help)) == []
+
+    def test_the_unscored_probes_say_so_in_their_label(self, universe, cases):
+        """A student reading a table of sixteen numbers has no way to tell
+        which three feed the score. These two do not, and the reason they
+        exist is that they are the ones a lookup can answer."""
+
+        benchmark = LanguageSearchBenchmark()
+        for key in ("search_mrr_verbatim", "retrieval_mrr_verbatim"):
+            assert "not scored" in benchmark.metric_labels[key]

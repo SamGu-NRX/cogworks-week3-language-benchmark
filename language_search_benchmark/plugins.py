@@ -76,7 +76,8 @@ class LanguageSearchBenchmark:
         "chance_mrr": "Chance MRR",
         "text_chance": "Text chance MRR",
         "search_chance": "Search chance MRR",
-        "search_mrr_verbatim": "Search MRR, caption unchanged",
+        "search_mrr_verbatim": "Search MRR, caption unchanged (not scored)",
+        "retrieval_mrr_verbatim": "Retrieval MRR, caption unchanged (not scored)",
         "search_mrr_keywords": "Search MRR, keywords only",
         "search_mrr_truncated": "Search MRR, first three words",
         "search_mrr_typo": "Search MRR, one typo",
@@ -163,11 +164,21 @@ class LanguageSearchBenchmark:
             "0.0064 against the retrieval floor's 0.0102."
         ),
         "search_mrr_verbatim": (
-            "The queries exactly as the captions were written, with nothing "
-            "rewritten. This is the control the three rewrites below are "
-            "measured against, and it is the easiest of the four: the query "
-            "is a sentence written by someone looking at the image. A gap "
-            "between this and search MRR is the cost of the rewrites."
+            "The queries exactly as the captions were written. Reported and "
+            "not scored, because those captions are in the file your code is "
+            "handed: a submission that looked the query up in that file "
+            "instead of embedding it would answer every one of them. Read it "
+            "next to the scored search number. Close together means your "
+            "embedding is doing the work. Far apart, with this one high, "
+            "means the query text is being matched rather than its meaning."
+        ),
+        "retrieval_mrr_verbatim": (
+            "The same reading for retrieval: the captions unchanged, "
+            "reported and not scored, for the same reason. This is the one "
+            "that mattered most. A submission with no embedding at all "
+            "scored a perfect 1.0000 here while scoring at the floor on "
+            "every rewritten query, because it was reading the answer out of "
+            "the captions file rather than working it out."
         ),
         "search_mrr_keywords": (
             "The same queries with the stopwords removed, which is closer to "
@@ -195,6 +206,36 @@ class LanguageSearchBenchmark:
             "error rather than a low score means it raised."
         ),
     }
+
+    #: Every key `score()` can return, for the shared explainability test in
+    #: python/cogbench/tests. That test compared `metric_labels` against
+    #: `metric_help` and so could not see a metric missing from both, which
+    #: is how `retrieval_mrr_verbatim` reached a run page as the machine-made
+    #: title "Retrieval Mrr Verbatim" with no explanation.
+    #:
+    #: Written out rather than derived by scoring something, because the test
+    #: has no course artifacts and building a fixture there would test the
+    #: fixture. The cost is that this list is maintained by hand; the tests in
+    #: tests/test_search_grid.py compare it against a real scoring run in both
+    #: directions, so it cannot rot quietly.
+    sample_metric_keys = (
+        "overall",
+        "text_mrr",
+        "text_chance",
+        "retrieval_mrr",
+        "retrieval_mrr_verbatim",
+        "retrieval_recall_at_1",
+        "retrieval_recall_at_5",
+        "retrieval_recall_at_10",
+        "retrieval_median_rank",
+        "chance_mrr",
+        "search_mrr",
+        "search_chance",
+        "search_mrr_verbatim",
+        "search_mrr_keywords",
+        "search_mrr_truncated",
+        "search_mrr_typo",
+    )
 
     #: How the run page draws the rung curve. The x axis is the rung's
     #: position in `perturb.RUNGS`, which runs from the caption unchanged to
