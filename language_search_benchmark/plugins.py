@@ -41,7 +41,27 @@ class LanguageSearchBenchmark:
     #: measures whether search survives the queries a person types. `overall`
     #: moves as a result. This is not backward compatible, and the version is
     #: what keeps a v2 run from being read as if it reported the same thing.
-    scorer_version = "retrieval-v3"
+    #: retrieval-v4: the verbatim probes left the scored aggregates.
+    #:
+    #: Their queries are captions read straight out of the annotations file
+    #: the submission is handed, so a dictionary built from that file answers
+    #: them. Measured against the real scorer on the test tier, a submission
+    #: with no embedding at all scored 1.0000 on `retrieval_mrr` and 0.4822
+    #: overall, against a reference at 0.6925. Stripping gold from the
+    #: payload does not close it and it was already stripped: the sandbox
+    #: recomputes the gold row from things the contract requires.
+    #:
+    #: `retrieval_mrr` and `search_mrr` now average the three rewritten
+    #: rungs. The verbatim probes still run and are published as
+    #: `retrieval_mrr_verbatim` and `search_mrr_verbatim`, because the gap
+    #: between them and the scored number is the clearest reading here.
+    #:
+    #: Measured cost to an honest submission: overall 0.6925 to 0.6594 on the
+    #: test tier, 0.4241 to 0.4097 on evaluation. Cost to the memorizer:
+    #: 0.4822 to 0.0811. The instrument separates them 2.7 times better.
+    #:
+    #: See docs/decisions/week3-verbatim-probes.md.
+    scorer_version = "retrieval-v4"
     primary_metric = "overall"
 
     metric_labels = {

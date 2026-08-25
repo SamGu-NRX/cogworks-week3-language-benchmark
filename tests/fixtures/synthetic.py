@@ -256,3 +256,107 @@ def perfect_factory_for(universe: Universe):
         return PerfectAdapter(universe)
 
     return factory
+
+
+class PureMemorizerAdapter:
+    """A submission that embeds nothing and answers from the file it is given.
+
+    ``MemorizedCaptionAdapter`` above memorizes the search path and keeps
+    real embeddings, so it isolates one failure. This one is the harder
+    case and the reason `docs/decisions/week3-verbatim-probes.md` exists: it
+    has no embedding at all, and it exploits every component it can reach
+    using only the caption-to-image relationship that the annotations file
+    hands over.
+
+    On the real artifact that relationship is 400,172 pairs. Every scored
+    verbatim query is a caption of its gold image, so a dictionary answers
+    it: measured against the real scorer, this submission scored 1.0000 on
+    `retrieval_mrr` and 0.4822 overall while the reference scored 0.6925.
+
+    It is kept, and asserted at floor, because a change to how probes are
+    built could reopen that door and nothing else would notice. Assert per
+    component against that component's own floor, never against one global
+    chance number: the components have different denominators, and comparing
+    `text_mrr` against `chance_mrr` reports a submission sitting exactly on
+    its floor as 3.4 times chance.
+    """
+
+    def __init__(self, universe: "Universe") -> None:
+        self._universe = universe
+        self._db_ids: List[int] = []
+        self._known: dict = {}
+        self._position: dict = {}
+        #: Row order of the shared descriptor matrix, learned from the search
+        #: case's pool ids the first time they are seen.
+        self._pool_order: dict = {}
+
+    def _learn(self) -> None:
+        """The dictionary the annotations file yields, built once."""
+
+        if self._known:
+            return
+        position = {image_id: index for index, image_id in enumerate(self._universe.image_ids)}
+        self._known = {
+            caption: image_id
+            for image_id, index in position.items()
+            for caption in self._universe.captions_of[index]
+        }
+
+    def embed_text(self, captions: Sequence[str]) -> np.ndarray:
+        # One-hot on the image the caption belongs to, which is not an
+        # embedding of anything: it is the lookup wearing a matrix.
+        #
+        # The position comes from the pool the search case names, NOT from
+        # `prepare_database`. Two facts make that reachable, and both are
+        # things the assignment requires. The driver embeds the retrieval
+        # queries before it ever calls prepare, so an adapter that waited for
+        # prepare would score zero here. And `RetrievalCase` carries no image
+        # ids of its own: it shares one descriptor matrix with the search
+        # case, so the search case's `image_ids` IS the retrieval row order.
+        #
+        # That is how the real exploit reached 1.0000 on this component
+        # against the real artifacts, using only what the sandbox receives.
+        self._learn()
+        order = self._pool_order or {
+            image_id: index for index, image_id in enumerate(self._universe.image_ids)
+        }
+        width = max(len(order), 1)
+        matrix = np.zeros((len(captions), width))
+        for row, caption in enumerate(captions):
+            hit = self._known.get(caption)
+            if hit is not None and hit in order:
+                matrix[row, order[hit]] = 1.0
+        return matrix
+
+    def embed_images(self, descriptors: np.ndarray) -> np.ndarray:
+        # Identity, so the cosine between a query's one-hot and an image row
+        # is one exactly when the lookup named that image. Recording the pool
+        # here is what makes the retrieval exploit reachable: `embed_images`
+        # is handed the descriptor matrix, and the universe's descriptor for
+        # an image identifies which row that image occupies. The submission
+        # never needs to be told the pool order; it can recover it.
+        self._learn()
+        if not self._pool_order:
+            lookup = {
+                self._universe.descriptors[index].tobytes(): image_id
+                for index, image_id in enumerate(self._universe.image_ids)
+            }
+            self._pool_order = {
+                lookup[descriptors[row].tobytes()]: row
+                for row in range(descriptors.shape[0])
+                if descriptors[row].tobytes() in lookup
+            }
+        return np.eye(descriptors.shape[0])
+
+    def prepare_database(self, image_ids: Sequence[int], descriptors: np.ndarray) -> None:
+        self._learn()
+        self._db_ids = list(image_ids)
+        self._position = {image_id: index for index, image_id in enumerate(image_ids)}
+        self._pool_order = dict(self._position)
+
+    def search(self, query: str, k: int) -> List[int]:
+        self._learn()
+        hit = self._known.get(query)
+        if hit is None or hit not in self._position:
+            return self._db_ids[:k]
+        return ([hit] + [i for i in self._db_ids if i != hit])[:k]

@@ -254,10 +254,15 @@ def component_scores(
     # become the typo rung.
     by_kind: Dict[str, Tuple] = {}
     rung_cases: List[Tuple] = []
+    retrieval_rungs: List[Tuple] = []
     for case, output in zip(cases, outputs):
         kind = getattr(case, "kind", "?")
-        if kind == "search" and getattr(case, "rung", "verbatim") != "verbatim":
+        rung = getattr(case, "rung", "verbatim")
+        if kind == "search" and rung != "verbatim":
             rung_cases.append((case, output))
+            continue
+        if kind == "retrieval" and rung != "verbatim":
+            retrieval_rungs.append((case, output))
             continue
         by_kind[kind] = (case, output)
 
@@ -318,6 +323,47 @@ def component_scores(
                 "retrieval component scored 0: {}".format(output.get("error", "no output"))
             )
 
+    # The verbatim retrieval score, computed above, is now REPORTED and not
+    # SCORED. Its queries are captions read straight out of the annotations
+    # file the submission is handed, so a dictionary built from that file
+    # answers them: a submission that embedded nothing scored 1.0000 on this
+    # component. See docs/decisions/week3-verbatim-probes.md.
+    #
+    # It is still run, because it is the clearest measurement here. An honest
+    # submission scores about the same verbatim as rewritten; a memorizer
+    # scores 1.00 next to 0.03. That gap is the reading.
+    retrieval_verbatim = retrieval["mrr"]
+    retrieval_rung_scores: Dict[str, float] = {"verbatim": retrieval_verbatim}
+    for case, output in retrieval_rungs:
+        rung = getattr(case, "rung", "verbatim")
+        if case.gold_rows is None:
+            raise ValueError("Retrieval case has no gold rows; scoring requires the controller copy.")
+        if not output.get("ok"):
+            diagnostics.append(
+                "the {} retrieval rung scored 0: {}".format(
+                    rung, output.get("error", "no output")
+                )
+            )
+            retrieval_rung_scores[rung] = 0.0
+            continue
+        order = rank_matrix(
+            np.asarray(output["text"], dtype=np.float64)
+            @ np.asarray(output["images"], dtype=np.float64).T,
+            case.tie_break_seed,
+        )
+        retrieval_rung_scores[rung] = mrr(ranks_of_gold(order, case.gold_rows))
+
+    rewritten = [
+        retrieval_rung_scores[rung]
+        for rung in perturb.RUNGS
+        if rung != "verbatim" and rung in retrieval_rung_scores
+    ]
+    if rewritten:
+        # The scored number. Equal weight across the three, because a
+        # weighting would be a claim about how much each rewrite matters and
+        # there is no measurement supporting one.
+        retrieval["mrr"] = float(sum(rewritten) / len(rewritten))
+
     # Every rung, scored the same way, verbatim included. `search_mrr` is the
     # mean across all four.
     #
@@ -343,13 +389,19 @@ def component_scores(
     # Equal weight, not a weighting that favors verbatim. A weighting would be
     # a claim about how much each rewrite matters, and we have no measurement
     # supporting any particular set of weights.
-    scored_rungs: List[Tuple] = []
+    # The verbatim search rung is run and reported, not scored, for the same
+    # reason its retrieval twin is: its queries are captions read out of the
+    # annotations file the submission is handed. Leaving it in the average
+    # let a submission that embedded nothing carry a quarter of this
+    # component, measured at 0.9520 on that rung against 0.0279 on the next.
+    # See docs/decisions/week3-verbatim-probes.md.
+    scored_rungs: List[Tuple] = list(rung_cases)
+    verbatim_search: List[Tuple] = []
     if "search" in by_kind:
-        scored_rungs.append(by_kind["search"])
-    scored_rungs.extend(rung_cases)
+        verbatim_search.append(by_kind["search"])
 
     rung_scores: Dict[str, float] = {}
-    for case, output in scored_rungs:
+    for case, output in scored_rungs + verbatim_search:
         rung = getattr(case, "rung", "verbatim")
         if case.gold_image_ids is None:
             raise ValueError("Search case has no gold ids; scoring requires the controller copy.")
@@ -393,9 +445,14 @@ def component_scores(
                     sorted(expected), sorted(present)
                 )
             )
+        rewritten_rungs = [
+            rung_scores[rung]
+            for rung in perturb.RUNGS
+            if rung != "verbatim" and rung in rung_scores
+        ]
         search_score = float(
-            sum(rung_scores[rung] for rung in perturb.RUNGS) / len(perturb.RUNGS)
-        )
+            sum(rewritten_rungs) / len(rewritten_rungs)
+        ) if rewritten_rungs else 0.0
         # The pool is one shared object across the grid, so any rung gives the
         # same size; max() is here so a hand-built case list with a ragged
         # pool reports the more conservative (lower) floor rather than one
@@ -433,6 +490,8 @@ def component_scores(
     }
     for rung, value in sorted(rung_scores.items()):
         metrics["search_mrr_{}".format(rung)] = value
+    for rung, value in sorted(retrieval_rung_scores.items()):
+        metrics["retrieval_mrr_{}".format(rung)] = value
 
     # What the rewrites revealed, in one sentence, only when they revealed
     # something. A submission that holds across every rung gets no note.

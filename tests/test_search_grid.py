@@ -87,17 +87,31 @@ class TestTheTwoMetricsAreSeparate:
         assert metrics["search_mrr_verbatim"] == pytest.approx(1.0)
         assert metrics["retrieval_mrr"] - metrics["search_mrr"] > SEPARATION_FLOOR
 
-    def test_search_mrr_is_the_mean_of_the_four_rungs(self, universe, cases):
+    def test_search_mrr_is_the_mean_of_the_rewritten_rungs(self, universe, cases):
         """Stated as arithmetic so a change to the weighting has to be
         deliberate. Equal weight is not a claim that the rewrites matter
         equally; it is the absence of a claim, since no measurement supports
-        any other set of weights."""
+        any other set of weights.
+
+        The verbatim rung is excluded, and that is the whole point of
+        retrieval-v4. Its queries are captions read straight out of the
+        annotations file the submission is handed, so a dictionary built from
+        that file answers them: this adapter is that dictionary, and it scores
+        near the top verbatim and near the floor everywhere else. Averaging
+        the verbatim rung in gave it a quarter of the component for free."""
 
         outputs = run_cases(lambda resources: MemorizedCaptionAdapter(universe), None, cases)
         metrics, _ = _score(outputs, cases)
-        rungs = [metrics["search_mrr_{}".format(rung)] for rung in perturb.RUNGS]
-        assert len(rungs) == 4
-        assert metrics["search_mrr"] == pytest.approx(sum(rungs) / 4.0)
+        rewritten = [
+            metrics["search_mrr_{}".format(rung)]
+            for rung in perturb.RUNGS
+            if rung != "verbatim"
+        ]
+        assert len(rewritten) == 3
+        assert metrics["search_mrr"] == pytest.approx(sum(rewritten) / 3.0)
+        # Reported, so the memorization signature stays readable.
+        assert "search_mrr_verbatim" in metrics
+        assert metrics["search_mrr_verbatim"] > metrics["search_mrr"]
 
     def test_a_submission_that_survives_the_rewrites_keeps_its_score(self, universe, cases):
         """The separation must come from the submission, not from the metric.
@@ -185,7 +199,10 @@ class TestAnIncompleteGridRefuses:
                 broken.append(output)
         metrics, diagnostics = component_scores(broken, cases, SEARCH_K)
         assert metrics["search_mrr_typo"] == 0.0
-        assert metrics["search_mrr"] == pytest.approx(0.75)
+        # One of the three scored rungs, not one of four: the verbatim rung
+        # is reported and not scored since retrieval-v4, because its queries
+        # are captions read out of the file the submission is handed.
+        assert metrics["search_mrr"] == pytest.approx(2.0 / 3.0)
         assert any("typo query rung scored 0" in note for note in diagnostics)
 
 

@@ -138,6 +138,11 @@ class RetrievalCase:
     descriptors: np.ndarray
     gold_rows: Optional[List[int]]
     tie_break_seed: int
+    #: Which query rewrite this case carries, matching SearchCase. "verbatim"
+    #: is the caption exactly as it appears in the annotations file the
+    #: submission is handed, which is why it is reported and not scored; see
+    #: docs/decisions/week3-verbatim-probes.md.
+    rung: str = "verbatim"
 
 
 @dataclass
@@ -537,6 +542,27 @@ def materialize_cases(
             k=SEARCH_K,
             tie_break_seed=seed,
         ),
+    ] + [
+        # Retrieval under the same rewrites as search, and for the same
+        # reason. The verbatim queries above are captions read straight out
+        # of the annotations file the submission is handed, so a dictionary
+        # built from that file answers them: measured at 1.0000 on this
+        # component. The rewritten queries are not strings in that file.
+        # Only these are scored; see docs/decisions/week3-verbatim-probes.md.
+        #
+        # Same pool, same gold, same descriptors object as the verbatim case.
+        # Only the query strings differ, so a difference in score is the
+        # submission's response to the rewrite and nothing else.
+        RetrievalCase(
+            kind="retrieval",
+            queries=perturb.rewrite_all(queries, rung),
+            descriptors=matrix,
+            gold_rows=gold_rows,
+            tie_break_seed=seed,
+            rung=rung,
+        )
+        for rung in perturb.RUNGS
+        if rung != "verbatim"
     ] + [
         # One case per rewrite. The pool, the gold, and the descriptors are
         # the same objects; only the query strings change, so any difference
