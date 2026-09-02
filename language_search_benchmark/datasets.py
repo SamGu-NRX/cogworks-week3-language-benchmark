@@ -151,10 +151,11 @@ class SearchCase:
 
     ``rung`` names the rewrite applied to the queries. ``"verbatim"`` is the
     caption unchanged; the others rewrite it the way a person would type it.
-    Since scorer version retrieval-v3 every rung is scored and ``search_mrr``
-    is their mean, so the search component measures whether end-to-end search
-    survives the queries a user writes rather than only whether it reproduces
-    a caption it was handed. Each rung is still reported on its own as
+    Since scorer version retrieval-v4 the three rewritten rungs are scored and
+    ``search_mrr`` is their mean; ``verbatim`` is reported and not scored, so
+    the search component measures whether end-to-end search survives the
+    queries a user writes rather than whether it reproduces a caption it was
+    handed. Each rung is still reported on its own as
     ``search_mrr_<rung>``; see ``perturb.py`` for what each one predicts.
     """
 

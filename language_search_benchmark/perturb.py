@@ -12,11 +12,13 @@ for. And an unseen word contributes a zero vector rather than raising, which
 is only observable if some query contains one.
 
 So the four rungs are not arbitrary noise. Each one is a prediction the course
-material makes, turned into a measurement. Since scorer version retrieval-v3
-all four are scored, and their mean is ``search_mrr``. That is deliberate: a
-rung is only allowed into the score because the course predicts what a correct
-submission does with it, which makes each one a fair thing to ask for rather
-than a trick.
+material makes, turned into a measurement. Since scorer version retrieval-v4
+the three rewritten rungs are scored and their mean is ``search_mrr``, while
+``verbatim`` is run and reported but left out of both scored aggregates: its
+queries are captions read out of the file the submission is handed, so a
+submission that embedded nothing still scored a perfect 1.0000 on it. A rung
+is only allowed into the score because the course predicts what a correct
+submission does with it and because answering it requires the work.
 
 ``verbatim``
     The caption unchanged. The control, and the existing behavior.
