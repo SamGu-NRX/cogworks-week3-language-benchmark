@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Tuple, Any, Dict, List, Optional, Sequence
 
 from . import __version__, perturb
 from .contracts import Resources
@@ -318,14 +318,124 @@ class LanguageSearchBenchmark:
                 print("showcase skipped: {}".format(str(error).splitlines()[0][:160]))
         return outputs
 
+    #: The primary metric for THIS run. `primary_metric` is a class
+    #: attribute the runners read; a run whose image side was never
+    #: measured has no `overall`, and its primary is `text_mrr`. Set by
+    #: `score`, read by the runners through the instance.
+    primary_metric_for_run: Optional[str] = None
+
     def score(self, outputs: Sequence[Dict[str, Any]], cases: Sequence[Any]) -> Dict[str, float]:
         metrics, diagnostics = component_scores(outputs, cases, SEARCH_K)
         for output in outputs:
             for mapping in output.get("mappings", []):
                 diagnostics.append("adapter: {}".format(mapping))
+        # A submission with no image side (discovery found text but no
+        # trained weights) has retrieval and search cases that never ran.
+        # The driver scores those as zero with a diagnostic, and an overall
+        # averaged over them is a number nobody measured. So the three
+        # image-side scores and the overall are withheld, their floors are
+        # kept, the primary becomes text_mrr, and a diagnostic that names
+        # their own save path leads (docs/design/discovery-v2-brief.md,
+        # "Absent weights", decided 2026-09-02).
+        withheld = self._withheld(outputs, cases)
+        if withheld is not None:
+            note, prefixes, primary = withheld
+            for key in list(metrics):
+                if key == "overall" or any(
+                    key == prefix or key.startswith(prefix + "_") for prefix in prefixes
+                ):
+                    metrics.pop(key, None)
+            diagnostics.insert(0, note)
+            self.primary_metric_for_run = primary
+        else:
+            self.primary_metric_for_run = None
         self.last_diagnostics = diagnostics[:32]
         self.last_sweep = self._rung_curve(metrics)
         return metrics
+
+    def _withheld(
+        self, outputs: Sequence[Dict[str, Any]], cases: Sequence[Any]
+    ) -> Optional[Tuple[str, Tuple[str, ...], str]]:
+        """Which numbers this run may not report, and what leads instead.
+
+        Returns ``(diagnostic, metric prefixes to drop, primary metric)`` or
+        None when every surface was bound. The image side missing withholds
+        retrieval, search, and the overall (the decided policy); the search
+        side missing with the image side bound withholds search and the
+        overall and leads with retrieval. Read off the binding's own record
+        of what did not bind, with the driver outputs as a second witness:
+        Bagel's first end-to-end run scored search 0.0 into an overall of
+        0.4183 with its prepare step bound to the wrong argument order,
+        which is a number nobody measured.
+        """
+
+        note = self._unmeasured_image_side(outputs, cases)
+        if note is not None:
+            # The median rank comes from the same retrieval cases that never
+            # ran; an independent review found it published at 100.0.
+            return (
+                note,
+                ("retrieval_mrr", "retrieval_recall_at", "retrieval_median_rank", "search_mrr"),
+                "text_mrr",
+            )
+        absent = getattr(self, "_discovery_missing", {}) or {}
+        gone = [name for name in ("prepare", "search") if name in absent]
+        if not gone:
+            return None
+        for case, output in zip(cases, outputs):
+            if getattr(case, "kind", None) == "search" and output.get("ok"):
+                return None
+        return (
+            "overall withheld: no function in this repository answered a query "
+            "with image ids, so the search side is not measured; caption and "
+            "retrieval scores are. The search found {}: {}".format(
+                gone[0], absent[gone[0]]
+            ),
+            ("search_mrr",),
+            "retrieval_mrr",
+        )
+
+    def _unmeasured_image_side(
+        self, outputs: Sequence[Dict[str, Any]], cases: Sequence[Any]
+    ) -> Optional[str]:
+        """The diagnostic to lead with when the image side was never bound."""
+
+        from .discovered import NotBound
+
+        image_kinds = {"retrieval", "search"}
+        absent = getattr(self, "_discovery_missing", {}) or {}
+        for case, output in zip(cases, outputs):
+            if getattr(case, "kind", None) not in image_kinds:
+                continue
+            if output.get("ok"):
+                return None
+            # The binding is the record of what was not bound; the error
+            # string is only a second witness. A search case can fail in a
+            # prepare step that did bind, with an error that carries no
+            # mark, and reading the strings alone then averaged a zero into
+            # an overall for a repository whose image side was never built.
+            if "image" not in absent and NotBound.MARK not in str(output.get("error", "")):
+                return None
+        note = getattr(self, "_weights_note", None)
+        if note:
+            return note
+        root = getattr(self, "_discovery_root", None)
+        if root is None:
+            return "overall withheld: the image side has no trained weights to measure."
+        extras = getattr(self, "_discovery_extras", {}) or {}
+        absent = getattr(self, "_discovery_missing", {}) or {}
+        if "W" in extras and "image" in absent:
+            # The weights were found and read; their image step is what did
+            # not bind. Saying "no trained weights" here would send the team
+            # to commit a file that is already committed.
+            return (
+                "overall withheld: your trained weights were read from {}, but no "
+                "function in this repository turned descriptors into vectors with "
+                "them: {}".format(extras.get("weights_path", "the repository"), absent["image"])
+            )
+        from .roles import weights_diagnostic
+
+        return weights_diagnostic(Path(root))
 
     @staticmethod
     def _rung_curve(metrics: Dict[str, float]) -> List[Dict[str, Any]]:
@@ -358,6 +468,160 @@ class LanguageSearchBenchmark:
                 continue
             points.append({"rung_index": index, "mrr": float(value), "rung": rung})
         return points
+
+    def discovery(self) -> Any:
+        """What to look for in a repository that never packaged itself.
+
+        None of the four 2026 Week 3 repositories registered an entry point,
+        so asking for one asks for a step no team took. Instead the benchmark
+        says what its task is, in four surfaces the driver calls, and
+        `cogbench.resolve` searches their repository against that by running
+        their functions. Built lazily: it loads the public test tier and the
+        three course artifacts, and importing a plugin should not.
+
+        Every resource a stage may take is in `extras`; every course file a
+        repository might open at a path this machine does not have is in
+        `resource_files`, mapped by basename to the benchmark's copy.
+        """
+
+        from cogbench.discovery_spec import DiscoverySpec
+
+        from .roles import search_role
+
+        resources = build_resources(download=False, build_kv=True)
+        cases = self.load_cases("test")
+        text = next(case for case in cases if case.kind == "text")
+        retrieval = next(case for case in cases if case.kind == "retrieval")
+        search = next(case for case in cases if case.kind == "search")
+        corpus = [row["caption"] for row in resources.load_captions()["annotations"]]
+        extras: Dict[str, Any] = {
+            "glove": resources.load_glove(),
+            "corpus": corpus,
+            "descriptors_dict": resources.load_descriptors(),
+        }
+        self._discovery_cases = cases
+        self._discovery_extras = extras
+        files = {
+            "captions_train2014.json": resources.captions_path,
+            "resnet18_features.pkl": resources.descriptors_path,
+            "glove.6B.200d.txt.w2v": resources.glove_path,
+        }
+        if resources.glove_kv_path is not None:
+            files["glove.6B.200d.kv"] = resources.glove_kv_path
+        role = search_role(
+            text.captions,
+            corpus,
+            retrieval.descriptors,
+            search.image_ids,
+            search.queries[0],
+            search.k,
+        )
+        return DiscoverySpec(
+            chain_role=role,
+            fixture=(list(text.captions),),
+            accepts=self._accepts,
+            arrangements=None,
+            hints=("week3", "week 3", "language", "search", "capstone"),
+            extras=extras,
+            resource_files=files,
+            prepare=self._weights_of,
+            expects="every case the bound surfaces cover running, with finite caption embeddings",
+        )
+
+    def _weights_of(self, root: Path, modules: Sequence[Any] = ()) -> Dict[str, Any]:
+        """The trained projection this repository committed, for the pool.
+
+        Read once the root is known, which is after `discovery()` and before
+        the search. `W` is the (512, D) matrix their image step takes as an
+        argument or their database class takes in its constructor;
+        `weights_model` is one of their own model objects loaded from the
+        same file (`roles.loaded_model`), for a team whose encoder is an
+        object rather than a matrix (Bagel). Absent weights leave both out,
+        the image branch does not bind, and `score` withholds the overall.
+
+        Several weight files with no load call to decide between them are
+        the same outcome with a different sentence: the image side is not
+        measured, and the run says which files competed. Refusing the whole
+        repository instead would throw away a text side that works over a
+        question about the image side, which is the opposite of the decided
+        policy (docs/design/discovery-v2-brief.md, "Absent weights").
+        """
+
+        from .roles import AmbiguousWeights, loaded_model, weights_in
+
+        self._discovery_root = Path(root)
+        self._weights_note = None
+        # One plugin serves one search, but a process that resolves several
+        # repositories in turn (the corpus tool, a test) would otherwise
+        # carry the previous repository's matrix into this one's pool.
+        for name in ("W", "weights_model", "weights_cited", "weights_path"):
+            self._discovery_extras.pop(name, None)
+        try:
+            found = weights_in(Path(root))
+        except AmbiguousWeights as error:
+            self._weights_note = (
+                "overall withheld: several files in this repository load as a "
+                "(512, D) projection and no load call in your code says which one "
+                "to score: {}. Load one of them by name in the script you run, or "
+                "remove the others, and run again.".format(
+                    ", ".join(
+                        sorted(p.relative_to(root).as_posix() for p in error.candidates)
+                    )
+                )
+            )
+            return {}
+        if found is None:
+            return {}
+        supplied: Dict[str, Any] = {"W": found.matrix}
+        model = loaded_model(modules, found.path)
+        if model is not None:
+            supplied["weights_model"] = model[1]
+            self._discovery_extras["weights_model_label"] = model[0]
+        self._discovery_extras.update(supplied)
+        self._discovery_extras["weights_cited"] = found.cited
+        self._discovery_extras["weights_path"] = found.path.relative_to(root).as_posix()
+        return supplied
+
+    def _accepts(self, chains: Any, *_: Any):
+        """The week's acceptance test, closed over the discovery fixture."""
+
+        from .roles import accepts
+
+        # Showcase prints during every driver run; discovery runs the driver
+        # many times and none of those is a run a person is watching. Set
+        # for the length of this call and put back, because a local process
+        # that ran discovery and then the real benchmark lost its showcase
+        # for good when this was a `setdefault` at spec-build time.
+        previous = os.environ.get(SHOWCASE_ENV)
+        os.environ[SHOWCASE_ENV] = "0"
+        try:
+            return accepts(chains, self._discovery_cases, self._discovery_extras)
+        finally:
+            if previous is None:
+                os.environ.pop(SHOWCASE_ENV, None)
+            else:
+                os.environ[SHOWCASE_ENV] = previous
+
+    def submission_from_discovery(self, submission: Any) -> Any:
+        """Turn a resolved repository into the object ``run`` expects.
+
+        The weights the image branch bound with, if any, travel on the
+        submission's extras as `W`; the adapter carries them so a scored run
+        projects with the same matrix the search proved.
+        """
+
+        from .discovered import build
+
+        found = getattr(submission, "discovery", None)
+        root = getattr(getattr(found, "root", None), "path", None)
+        if root is not None:
+            self._discovery_root = Path(root)
+        missing = getattr(submission, "missing", None) or {}
+        self._discovery_missing = {
+            name: str(getattr(refusal, "detail", refusal))[:200]
+            for name, refusal in dict(missing).items()
+        }
+        return build(submission, getattr(self, "_discovery_extras", {}))
 
     def cache_status(self, tier: str, cache_root: Optional[Path] = None) -> CacheStatus:
         return tier_status(tier)
