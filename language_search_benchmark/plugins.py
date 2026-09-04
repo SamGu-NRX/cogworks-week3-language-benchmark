@@ -23,6 +23,16 @@ from .metrics import component_scores
 SHOWCASE_ENV = "COGWORKS_SHOWCASE"
 
 
+def _sentences(note: str) -> List[str]:
+    """Split a diagnostic at sentence ends, keeping abbreviations like `e.g.`
+    and dotted paths whole: a boundary is a period followed by a space and a
+    capital letter or a backtick."""
+
+    import re
+
+    return [part for part in re.split(r"(?<=\.) (?=[A-Z`])", note) if part]
+
+
 class LanguageSearchBenchmark:
     """Load, execute, and score the three retrieval components."""
 
@@ -345,7 +355,11 @@ class LanguageSearchBenchmark:
                     key == prefix or key.startswith(prefix + "_") for prefix in prefixes
                 ):
                     metrics.pop(key, None)
-            diagnostics.insert(0, note)
+            # One sentence per diagnostic. The run page shows the first entry
+            # as the headline and the rest as notes, and the wire caps each
+            # entry at 240 characters; the whole note is 320 to 366, so as one
+            # entry it was cut mid-word on exactly the run whose note matters.
+            diagnostics[0:0] = _sentences(note)
             self.primary_metric_for_run = primary
         else:
             self.primary_metric_for_run = None
@@ -498,6 +512,11 @@ class LanguageSearchBenchmark:
             "glove": resources.load_glove(),
             "corpus": corpus,
             "descriptors_dict": resources.load_descriptors(),
+            # Some teams put the course loader and caption vectorizer in two
+            # constructors. The paths are benchmark inputs, and the fit stages
+            # still run both constructors from the repository before scoring.
+            "coco_json_path": resources.captions_path,
+            "resnet_features_path": resources.descriptors_path,
         }
         self._discovery_cases = cases
         self._discovery_extras = extras
@@ -572,7 +591,10 @@ class LanguageSearchBenchmark:
             return {}
         if found is None:
             return {}
-        supplied: Dict[str, Any] = {"W": found.matrix}
+        supplied: Dict[str, Any] = {
+            "W": found.matrix,
+            "weights_used": [found.path.relative_to(root).as_posix()],
+        }
         model = loaded_model(modules, found.path)
         if model is not None:
             supplied["weights_model"] = model[1]

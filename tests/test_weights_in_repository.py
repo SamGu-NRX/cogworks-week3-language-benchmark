@@ -276,3 +276,107 @@ class TestThePrepareStepIsHandedTheFormItBoundWith:
 
         assert seen["rows"].shape == (2, 8)
         assert seen["ids"] == [5, 6]
+
+
+class TestMissingWeightsGuidance:
+    def test_it_keeps_weights_out_of_git_and_names_the_local_sync_flow(self, repository):
+        _write(
+            repository,
+            "training.py",
+            "def train(model):\n    model.save('results/modelweights.pkl')\n",
+        )
+        _write(repository, ".gitignore", "*.pkl\n")
+
+        assert roles.weights_diagnostic(repository) == (
+            "overall withheld: the image side has no trained weights to measure. "
+            "Your training.py saves to results/modelweights.pkl (training.py:2), and it "
+            "matches .gitignore line 1. Keep that weights file out of git. Then run "
+            "`cogworks run` locally and `cogworks sync`; the hosted run will fetch the "
+            "weights the local run used."
+        )
+
+
+class TestPathBackedTextSetup:
+    def test_two_repository_constructors_may_build_an_internal_idf_embedder(self):
+        from cogbench.pipeline import Candidate, _fits_of
+
+        captions = ["red kite", "blue boat"]
+
+        class CourseData:
+            def __init__(self, captions_path, descriptors_path):
+                self.paths = (captions_path, descriptors_path)
+
+            def get_all_captions(self):
+                return captions
+
+        class CaptionEmbedder:
+            def __init__(self, course_data):
+                self.course_data = course_data
+
+            def __call__(self, caption):
+                row = np.zeros(8, dtype=np.float32)
+                row[0] = 1.0 if caption.startswith("red") else -1.0
+                return row
+
+        role = roles.search_role(
+            captions,
+            captions,
+            np.zeros((2, 512), dtype=np.float32),
+            [1, 2],
+            captions[0],
+            1,
+        )
+        pool = {
+            "coco_json_path": Path("captions.json"),
+            "resnet_features_path": Path("descriptors.pkl"),
+        }
+        candidates = [
+            Candidate("theirs.CourseData", CourseData, "theirs"),
+            Candidate("theirs.CaptionEmbedder", CaptionEmbedder, "theirs"),
+        ]
+
+        fits, failed = _fits_of(role, candidates, pool, [])
+
+        assert failed is None
+        assert [name for name, _ in fits] == ["course_data", "text_embedder"]
+        assert isinstance(pool["text_embedder"], CaptionEmbedder)
+        assert "idfs" not in pool
+
+
+class TestWeightsUsedRecord:
+    def test_the_record_names_the_one_weights_file_the_run_loaded(self, repository):
+        from cogbench.resolve import from_spec
+        from language_search_benchmark.plugins import LanguageSearchBenchmark
+
+        path = repository / "trained.npy"
+        np.save(path, np.zeros((512, 8), dtype=np.float32))
+        _write(
+            repository,
+            "submission.py",
+            "import numpy as np\n"
+            "def embed_caption(caption):\n"
+            "    row = np.zeros(8, dtype=float)\n"
+            "    row[0] = 1.0 if caption.startswith('red') else -1.0\n"
+            "    return row\n",
+        )
+
+        class Spec:
+            def __init__(self):
+                self.chain_role = roles.text_branch(["red kite", "blue boat"])
+                self.fixture = (["red kite", "blue boat"],)
+                self.accepts = lambda steps, *_: (True, "ok")
+                self.arrangements = None
+                self.hints = ()
+                self.extras = {}
+                self.identities = ()
+                self.resource_files = {}
+                self.factories = None
+                self.readers = 0
+                self.expects = "ok"
+                plugin = LanguageSearchBenchmark()
+                plugin._discovery_extras = {}
+                self.prepare = plugin._weights_of
+
+        submission = from_spec(repository, Spec())
+
+        assert submission.to_dict()["weightsUsed"] == ["trained.npy"]

@@ -168,3 +168,36 @@ def test_score_requires_gold(universe, cases):
     stripped[0].group_rows = None
     with pytest.raises(ValueError):
         component_scores(outputs, stripped, SEARCH_K)
+
+
+def test_course_artifact_git_lfs_pointer_redirects_to_benchmark_copy(tmp_path):
+    from cogbench.discover import _Redirects
+
+    pointer = tmp_path / "student" / "glove.6B.200d.txt.w2v"
+    pointer.parent.mkdir()
+    pointer.write_text(
+        "version https://git-lfs.github.com/spec/v1\n"
+        "oid sha256:0000000000000000000000000000000000000000000000000000000000000000\n"
+        "size 123\n"
+    )
+    benchmark_copy = tmp_path / "benchmark" / pointer.name
+    benchmark_copy.parent.mkdir()
+    benchmark_copy.write_text("1 1\nword 0.5\n")
+    redirects = _Redirects({pointer.name: benchmark_copy})
+
+    def parse_pointer():
+        path = pointer
+        raise ValueError("invalid literal in course data")
+
+    try:
+        parse_pointer()
+    except ValueError as error:
+        assert redirects.wanted(error) == pointer.name
+
+    redirects.enter()
+    try:
+        redirects.install(pointer.name)
+        with open(pointer, "r", encoding="utf-8") as stream:
+            assert stream.read() == benchmark_copy.read_text()
+    finally:
+        redirects.leave()

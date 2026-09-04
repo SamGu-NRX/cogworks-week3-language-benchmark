@@ -14,7 +14,8 @@ evaluation payload well under the hosted 8 MiB cap.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Sequence
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 
@@ -24,9 +25,27 @@ from .contracts import AdapterContractError
 
 ROUND_DECIMALS = 5
 
+#: This package's own directory; their code begins at the first frame below it.
+_OURS = Path(__file__).resolve().parent
+
+
+def _compiler_line(error: BaseException) -> Optional[str]:
+    """`Type: message at file:line`, when the raise came out of their own code.
+
+    Deferred import for the reason `plugins.discovery` defers its own: this
+    package is published without cogbench among its dependencies.
+    """
+
+    try:
+        from cogbench.raised import their_line
+    except ImportError:
+        return None
+    return their_line(error, _OURS)
+
 
 def _error_output(kind: str, error: BaseException, extra: Sequence[str] = ()) -> Dict[str, Any]:
-    lines = [str(error).splitlines()[0][:200] if str(error) else type(error).__name__]
+    first = _compiler_line(error)
+    lines = [first or (str(error).splitlines()[0][:200] if str(error) else type(error).__name__)]
     lines.extend(str(item)[:200] for item in extra)
     return {"ok": False, "kind": kind, "error": " | ".join(lines)}
 

@@ -12,8 +12,10 @@ Three things here are not stage shapes and are worth reading first.
 ``compute_idfs`` and its cousins take the whole caption corpus and return a
 table their embedder then needs on every call. That is a side input, not a
 link in the chain, which is what ``Stage.fit`` is for: it runs once against
-the benchmark's corpus and joins the extras pool. The corpus is ours to hand
-over; the formula is theirs.
+the benchmark's corpus and joins the extras pool. Some embedders keep that
+weighting inside an object instead, so the fit is optional and the text stage
+must prove it can run without the table. The corpus is ours to hand over; the
+formula is theirs.
 
 The trained ``W_embed`` lives in the repository as a file, and finding it is
 neither a stage nor a resource the benchmark owns. ``weights_in`` does that
@@ -33,7 +35,6 @@ be scored badly by the benchmark, not refused by discovery.
 from __future__ import annotations
 
 import ast
-import inspect
 import fnmatch
 import os
 import subprocess
@@ -238,6 +239,12 @@ def looks_like_token_lists(value: Any) -> bool:
     return True
 
 
+def looks_like_course_data(value: Any) -> bool:
+    """An object that exposes the caption corpus loaded from course files."""
+
+    return callable(getattr(value, "get_all_captions", None))
+
+
 def looks_like_W(value: Any) -> bool:
     """A 512-to-D projection, however it was saved.
 
@@ -253,7 +260,7 @@ def looks_like_W(value: Any) -> bool:
 
     if isinstance(value, type):
         loader = getattr(value, "load", None)
-        return callable(loader) and callable(getattr(value, "__call__", None))
+        return callable(loader) and callable(value)
     if isinstance(value, (list, tuple)):
         return bool(value) and looks_like_W(value[0])
     if isinstance(value, dict):
@@ -845,31 +852,34 @@ def gitignore_line(root: Path, target: str) -> Optional[int]:
 
 
 def weights_diagnostic(root: Path) -> str:
-    """One sentence naming, in their words, what the image side is missing.
+    """Say why the image score is withheld and how local weights reach a hosted run.
 
-    Read from their own save call and their own `.gitignore`, because "no
-    trained weights were found" is true and useless, while "your training.py
-    writes results/modelweights.pkl and *.pkl is ignored" is one commit away
-    from being fixed.
+    The save target and ignore line come from the repository. The weights stay
+    out of git because `cogworks sync` transfers the file used by the preceding
+    local `cogworks run` to the hosted run.
     """
 
-    lead = (
-        "overall withheld: the image side has no trained weights to measure."
-    )
+    lead = "overall withheld: the image side has no trained weights to measure."
     where = save_call(root)
     if where is None:
         return (
             lead
             + " Nothing under this repository loads as a (512, D) projection and no"
             " source file saves one, so there is no image embedding to score."
-            " Commit the weights your training run produces and try again."
+            " Keep the weights your training run produces out of git. Then run"
+            " `cogworks run` locally and `cogworks sync`; the hosted run will fetch"
+            " the weights the local run used."
         )
     source, line, target = where
     sentence = "{} Your {} saves to {} ({}:{})".format(lead, source, target, source, line)
     number = gitignore_line(root, target)
     if number is not None:
         sentence += ", and it matches .gitignore line {}".format(number)
-    return sentence + ". Commit that file and run again."
+    return (
+        sentence
+        + ". Keep that weights file out of git. Then run `cogworks run` locally"
+        " and `cogworks sync`; the hosted run will fetch the weights the local run used."
+    )
 
 
 # --------------------------------------------------------------------------
@@ -917,7 +927,7 @@ def text_branch(captions: Sequence[str]) -> Role:
                 accepts=lambda value: isinstance(value, (list, tuple)) and bool(value),
                 produces=looks_like_matrix_for(len(captions)),
                 per_item=True,
-                extras=("glove", "idfs"),
+                extras=("text_embedder", "glove", "idfs"),
             ),
         ),
         fixture=(list(captions),),
@@ -1059,15 +1069,19 @@ def search_role(
     query: str,
     k: int,
 ) -> Role:
-    """The week's task: an IDF table computed once, then four surfaces.
+    """The week's task: optional text setup, then four scored surfaces.
 
-    The IDF stage is `fit`: nothing downstream takes its value as input and
-    everything downstream takes it alongside one, so it runs once against the
-    caption corpus the benchmark owns and joins the extras pool under `idfs`.
-    That name is load-bearing for one repository: CogFinder's
-    `embed_caption(caption, idfs)` cannot take the table positionally next to
-    GloVe, and the only shape that binds it is the keyword one, which matches
-    on the parameter's own name.
+    The setup stages are `fit`: nothing downstream takes their values as its
+    main input, so each runs once and joins the extras pool. The IDF table is
+    optional because an embedder may compute those weights inside its own
+    object. When a repository does return a table, the `idfs` name remains
+    load-bearing for CogFinder's `embed_caption(caption, idfs)`, whose only
+    binding passes the table by the parameter's own name.
+
+    The two constructor fits cover the course's other ordinary division of
+    work. One object loads the caption JSON and descriptor pickle paths; a
+    second object builds an embedder from that loaded data. Both are optional,
+    so repositories with plain embedding functions keep their previous path.
 
     Text is required. Image, prepare, and search are optional, which is the
     decided policy for a repository with no trained weights (see
@@ -1083,9 +1097,31 @@ def search_role(
         "search",
         (
             Stage(
+                "course_data",
+                prefers=("coco", "course_data", "dataset", "data"),
+                fit=True,
+                optional=True,
+                fixture=(),
+                produces=looks_like_course_data,
+                extras=("coco_json_path", "resnet_features_path"),
+            ),
+            Stage(
+                "text_embedder",
+                prefers=("vectorizer", "embedder", "caption", "text"),
+                fit=True,
+                optional=True,
+                fixture=(),
+                # The text branch runs this callable on the fixture and
+                # checks its matrix and constant-vector refusal. Calling it
+                # here would duplicate that proof outside the search clock.
+                produces=callable,
+                extras=("course_data",),
+            ),
+            Stage(
                 "idfs",
                 prefers=("idf", "inverse_document", "document_frequency"),
                 fit=True,
+                optional=True,
                 fixture=(list(corpus),),
                 produces=looks_like_idf_table,
             ),
