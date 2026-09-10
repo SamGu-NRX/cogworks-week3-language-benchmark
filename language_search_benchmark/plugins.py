@@ -91,6 +91,9 @@ class LanguageSearchBenchmark:
         "search_mrr_keywords": "Search MRR, keywords only",
         "search_mrr_truncated": "Search MRR, first three words",
         "search_mrr_typo": "Search MRR, one typo",
+        "retrieval_mrr_keywords": "Retrieval MRR, keywords only",
+        "retrieval_mrr_truncated": "Retrieval MRR, first three words",
+        "retrieval_mrr_typo": "Retrieval MRR, one typo",
     }
     lower_is_better = {"retrieval_median_rank"}
 
@@ -215,6 +218,24 @@ class LanguageSearchBenchmark:
             "A large drop here means an unseen word is dominating the sum; an "
             "error rather than a low score means it raised."
         ),
+        "retrieval_mrr_keywords": (
+            "The same rewrite as the search rung above, ranked here from your "
+            "embeddings rather than through your own search path. Reading the "
+            "two together separates the embedding from the code around it: "
+            "close together means your search is carrying the embedding "
+            "faithfully, and a retrieval number well above its search twin "
+            "means the ranking is losing what the embedding found."
+        ),
+        "retrieval_mrr_truncated": (
+            "First three content words, ranked from your embeddings. Expected "
+            "to be the weakest rewrite, because a three-word query carries "
+            "less information; some of that gap is the task."
+        ),
+        "retrieval_mrr_typo": (
+            "One mistyped character, ranked from your embeddings. The scored "
+            "retrieval number is the mean of these three rewrites, so this is "
+            "one of the three it is made of, not an extra reading."
+        ),
     }
 
     #: What kind of number each one is. The run page reads these and never
@@ -245,6 +266,16 @@ class LanguageSearchBenchmark:
         "search_mrr_keywords": "plotted",
         "search_mrr_truncated": "plotted",
         "search_mrr_typo": "plotted",
+        # The retrieval rewrites are the three numbers `retrieval_mrr` is the
+        # mean of. They are diagnostic rather than plotted because `sweep()`
+        # draws the search rungs only: a metric marked plotted is dropped from
+        # the rows on the assumption its value is printed beside a point, so
+        # marking these plotted would take them off the page entirely. They are
+        # not "reported" either, which means run deliberately and left out of
+        # the score; these are in it.
+        "retrieval_mrr_keywords": "diagnostic",
+        "retrieval_mrr_truncated": "diagnostic",
+        "retrieval_mrr_typo": "diagnostic",
         "retrieval_recall_at_1": "diagnostic",
         "retrieval_recall_at_5": "diagnostic",
         "retrieval_recall_at_10": "diagnostic",
@@ -280,6 +311,9 @@ class LanguageSearchBenchmark:
         "text_chance",
         "retrieval_mrr",
         "retrieval_mrr_verbatim",
+        "retrieval_mrr_keywords",
+        "retrieval_mrr_truncated",
+        "retrieval_mrr_typo",
         "retrieval_recall_at_1",
         "retrieval_recall_at_5",
         "retrieval_recall_at_10",

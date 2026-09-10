@@ -186,6 +186,27 @@ class TestAnIncompleteGridRefuses:
         with pytest.raises(ValueError, match="grid is incomplete"):
             component_scores(short_outputs, short_cases, SEARCH_K)
 
+    def test_a_retrieval_grid_missing_its_rewrites_refuses_too(self, universe, cases):
+        """The half of this that was missing, and what it cost.
+
+        `retrieval_mrr` is the mean of the three rewrites. With none of them
+        present the mean was simply not taken and the verbatim score stayed,
+        which is the memorization probe: a submission that embedded nothing
+        scored 1.0000 there. The hosted sandbox rebuilt only the search
+        rewrites for exactly this reason, so an official run would have
+        published the probe under a scorer version claiming a three-rewrite
+        average. Nothing raised.
+        """
+
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        keep = [
+            (output, case)
+            for output, case in zip(outputs, cases)
+            if not (case.kind == "retrieval" and getattr(case, "rung", "verbatim") != "verbatim")
+        ]
+        with pytest.raises(ValueError, match="retrieval grid is incomplete"):
+            component_scores([o for o, _ in keep], [c for _, c in keep], SEARCH_K)
+
     def test_a_rung_that_ran_and_failed_is_not_a_missing_rung(self, universe, cases):
         """It scores 0 and drags the mean down, which is the honest reading:
         the submission was asked and could not answer."""

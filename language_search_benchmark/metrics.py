@@ -353,6 +353,30 @@ def component_scores(
         )
         retrieval_rung_scores[rung] = mrr(ranks_of_gold(order, case.gold_rows))
 
+    # The same refusal the search grid makes twenty lines down, and for the
+    # same reason. Without it, a retrieval component that ran with no rewrites
+    # falls through to the line below with `rewritten` empty and keeps
+    # `retrieval["mrr"]` at the verbatim score, which is the memorization probe
+    # this component exists to keep out of the number. That is not theoretical:
+    # the sandbox rebuilt only the search rewrites, and an official run would
+    # have published the probe as `retrieval_mrr` under a scorer version that
+    # says three rewrites are averaged.
+    #
+    # Keyed on the component having run, not on `retrieval_rung_scores` being
+    # non-empty: that dict is seeded with the verbatim score, and a repository
+    # with no image side has no retrieval component at all, which is a partial
+    # result rather than a broken grid.
+    if "retrieval" in by_kind:
+        present = set(retrieval_rung_scores)
+        expected = set(perturb.RUNGS)
+        if present != expected:
+            raise ValueError(
+                "The retrieval grid is incomplete: expected the rungs {} but "
+                "the cases carry {}. Scoring an incomplete grid would report a "
+                "retrieval MRR that is not the average it claims to be.".format(
+                    sorted(expected), sorted(present)
+                )
+            )
     rewritten = [
         retrieval_rung_scores[rung]
         for rung in perturb.RUNGS

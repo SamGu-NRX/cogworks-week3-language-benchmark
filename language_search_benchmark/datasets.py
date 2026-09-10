@@ -29,7 +29,7 @@ import shutil
 import tempfile
 import urllib.request
 import zipfile
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
 
@@ -513,75 +513,141 @@ def materialize_cases(
             )
         )
 
-    # One id list and one descriptor copy shared by every search case (the
-    # copy keeps a mutating submission away from the retrieval case's matrix).
-    # Sharing the objects is what lets the driver see, by identity, that the
-    # rung cases use the verbatim pool and skip rebuilding the database.
-    search_image_ids = list(pool_image_ids)
-    search_descriptors = matrix.copy()
+    return attach_gold(
+        build_cases(
+            text_captions=text_captions,
+            queries=queries,
+            pool_image_ids=pool_image_ids,
+            pool_descriptors=matrix,
+            tie_break_seed=seed,
+            search_k=SEARCH_K,
+        ),
+        text_group_rows=group_rows,
+        retrieval_gold_rows=gold_rows,
+        search_gold_image_ids=gold_image_ids,
+    )
 
-    return [
-        TextCase(
-            kind="text",
-            captions=text_captions,
-            group_rows=group_rows,
-            tie_break_seed=seed,
-        ),
-        RetrievalCase(
-            kind="retrieval",
-            queries=queries,
-            descriptors=matrix,
-            gold_rows=gold_rows,
-            tie_break_seed=seed,
-        ),
-        SearchCase(
-            kind="search",
-            queries=queries,
-            image_ids=search_image_ids,
-            descriptors=search_descriptors,
-            gold_image_ids=gold_image_ids,
-            k=SEARCH_K,
-            tie_break_seed=seed,
-        ),
-    ] + [
-        # Retrieval under the same rewrites as search, and for the same
-        # reason. The verbatim queries above are captions read straight out
-        # of the annotations file the submission is handed, so a dictionary
-        # built from that file answers them: measured at 1.0000 on this
-        # component. The rewritten queries are not strings in that file.
-        # Only these are scored; see docs/decisions/week3-verbatim-probes.md.
-        #
-        # Same pool, same gold, same descriptors object as the verbatim case.
-        # Only the query strings differ, so a difference in score is the
-        # submission's response to the rewrite and nothing else.
-        RetrievalCase(
+
+def build_cases(
+    *,
+    text_captions: Sequence[str],
+    queries: Sequence[str],
+    pool_image_ids: Sequence[int],
+    pool_descriptors: np.ndarray,
+    tie_break_seed: int,
+    search_k: int,
+) -> List[Any]:
+    """The week's case grid, gold-free, from values already resolved.
+
+    One place builds this list. The controller reaches it through
+    `materialize_cases`, which resolves a manifest first; the evaluation
+    sandbox reaches it from the payload zip, which cannot carry a manifest
+    because gold is `caption_image[caption_id]` and the captions file is baked
+    into the image. Both used to assemble the grid themselves and drifted: the
+    sandbox rebuilt the search rewrites and not the retrieval ones, so it ran
+    six cases against a nine-case tier. Scoring pairs outputs to cases by
+    position, so that is not a recoverable difference.
+
+    Keyword-only on purpose. The three sequence arguments are the same type,
+    and every failure this function exists to prevent is a positional one.
+
+    Two sharing rules, both measured rather than assumed:
+
+    * Every search case holds the same `image_ids` list and the same
+      descriptor array, because `drivers.run_with_adapter` decides whether to
+      rebuild a submission's index by comparing those objects by identity. A
+      fresh list per rung made the sandbox build the index four times where
+      the local run built it once, and on an append-style prepare that moved
+      the score (search_mrr_truncated 0.406667 local against 0.250000 hosted).
+    * Search works on a copy, so it does not share an array with retrieval.
+      Nothing in the contract asks a submission's `prepare_database` to leave
+      the pool alone, and the retrieval rewrites are ranked after it runs;
+      sharing one array let an in-place prepare move all three of them.
+    """
+
+    seed = int(tie_break_seed)
+    queries = list(queries)
+    rewrites = [rung for rung in perturb.RUNGS if rung != "verbatim"]
+    search_image_ids = [int(value) for value in pool_image_ids]
+    search_descriptors = np.asarray(pool_descriptors, dtype=np.float32).copy()
+
+    def retrieval(rung: str) -> Any:
+        return RetrievalCase(
             kind="retrieval",
             queries=perturb.rewrite_all(queries, rung),
-            descriptors=matrix,
-            gold_rows=gold_rows,
+            descriptors=pool_descriptors,
+            gold_rows=None,
             tie_break_seed=seed,
             rung=rung,
         )
-        for rung in perturb.RUNGS
-        if rung != "verbatim"
-    ] + [
-        # One case per rewrite. The pool, the gold, and the descriptors are
-        # the same objects; only the query strings change, so any difference
-        # in score is the submission's response to the rewrite and nothing
-        # else.
-        SearchCase(
+
+    def search(rung: str) -> Any:
+        return SearchCase(
             kind="search",
             queries=perturb.rewrite_all(queries, rung),
             image_ids=search_image_ids,
             descriptors=search_descriptors,
-            gold_image_ids=gold_image_ids,
-            k=SEARCH_K,
+            gold_image_ids=None,
+            k=int(search_k),
             tie_break_seed=seed,
             rung=rung,
         )
-        for rung in perturb.RUNGS
-        if rung != "verbatim"
-    ]
+
+    return (
+        [
+            TextCase(
+                kind="text",
+                captions=list(text_captions),
+                group_rows=None,
+                tie_break_seed=seed,
+            ),
+            retrieval("verbatim"),
+            search("verbatim"),
+        ]
+        + [retrieval(rung) for rung in rewrites]
+        + [search(rung) for rung in rewrites]
+    )
+
+
+def attach_gold(
+    cases: Sequence[Any],
+    *,
+    text_group_rows: Sequence[int],
+    retrieval_gold_rows: Sequence[int],
+    search_gold_image_ids: Sequence[int],
+) -> List[Any]:
+    """The same cases with the answers on, for the controller that scores them.
+
+    Separate from `build_cases` so the sandbox path cannot produce gold: it
+    calls the constructor and never this. Every rewrite shares the verbatim
+    case's answers, because a rewrite changes the query text and not which
+    image is correct.
+
+    Maps over the input in order rather than rebuilding the list, so the order
+    is stated once, in `build_cases`.
+    """
+
+    group_rows = [int(value) for value in text_group_rows]
+    gold_rows = [int(value) for value in retrieval_gold_rows]
+    gold_image_ids = [int(value) for value in search_gold_image_ids]
+    restored: List[Any] = []
+    for case in cases:
+        kind = getattr(case, "kind", "?")
+        if kind == "text":
+            if len(group_rows) != len(case.captions):
+                raise ValueError("Gold text groups do not match the caption count.")
+            restored.append(replace(case, group_rows=group_rows))
+        elif kind == "retrieval":
+            if len(gold_rows) != len(case.queries):
+                raise ValueError("Gold rows do not match the query count.")
+            restored.append(replace(case, gold_rows=gold_rows))
+        elif kind == "search":
+            if len(gold_image_ids) != len(case.queries):
+                raise ValueError("Gold rows do not match the query count.")
+            restored.append(replace(case, gold_image_ids=gold_image_ids))
+        else:
+            raise ValueError("Unknown case kind {!r}.".format(kind))
+    return restored
 
 
 def tier_status(tier: str) -> CacheStatus:
