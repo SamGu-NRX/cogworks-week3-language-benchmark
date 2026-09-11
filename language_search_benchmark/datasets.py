@@ -643,7 +643,7 @@ def attach_gold(
             restored.append(replace(case, gold_rows=gold_rows))
         elif kind == "search":
             if len(gold_image_ids) != len(case.queries):
-                raise ValueError("Gold rows do not match the query count.")
+                raise ValueError("Gold image ids do not match the query count.")
             restored.append(replace(case, gold_image_ids=gold_image_ids))
         else:
             raise ValueError("Unknown case kind {!r}.".format(kind))

@@ -25,7 +25,6 @@ from typing import List, Sequence
 
 import numpy as np
 
-from language_search_benchmark import perturb
 from language_search_benchmark.datasets import attach_gold, build_cases
 
 LATENT = 8

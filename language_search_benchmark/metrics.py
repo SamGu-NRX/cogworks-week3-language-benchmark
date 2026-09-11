@@ -353,14 +353,15 @@ def component_scores(
         )
         retrieval_rung_scores[rung] = mrr(ranks_of_gold(order, case.gold_rows))
 
-    # The same refusal the search grid makes twenty lines down, and for the
-    # same reason. Without it, a retrieval component that ran with no rewrites
+    # The same refusal the search grid makes further down, and for the same
+    # reason. Without it, a retrieval component that ran with no rewrites
     # falls through to the line below with `rewritten` empty and keeps
     # `retrieval["mrr"]` at the verbatim score, which is the memorization probe
-    # this component exists to keep out of the number. That is not theoretical:
-    # the sandbox rebuilt only the search rewrites, and an official run would
-    # have published the probe as `retrieval_mrr` under a scorer version that
-    # says three rewrites are averaged.
+    # this component exists to keep out of the number. The drift was real: the
+    # sandbox rebuilt only the search rewrites. What stopped it becoming a
+    # published number was the runner's count check, which refused the
+    # six-case result. Nothing in here would have noticed, which is the
+    # argument for the refusal.
     #
     # Keyed on the component having run, not on `retrieval_rung_scores` being
     # non-empty: that dict is seeded with the verbatim score, and a repository
@@ -450,9 +451,10 @@ def component_scores(
     # dividing by however many showed up would make `search_mrr` mean a
     # different thing per run with nothing on the page to say so. Both are
     # plausible wrong numbers, and this is a construction error rather than
-    # anything a submission can cause: `materialize_cases` and the sandbox's
-    # `decode_payload` both build the grid from this same `RUNGS` tuple, so
-    # they can only disagree with it if one side was edited alone.
+    # anything a submission can cause. Both sides now build the grid through
+    # `build_cases`, so they no longer state the rung set separately; this
+    # stays because a refusal is what makes that a loud failure rather than a
+    # quiet average over whatever arrived.
     #
     # A rung that ran and failed is not missing. It is in `rung_scores` at
     # 0.0 with a diagnostic, and it pulls the mean down as it should.

@@ -99,9 +99,12 @@ class TheSharingPolicyIsPartOfTheGrid(unittest.TestCase):
         search.descriptors += 100.0  # what an in-place prepare_database does
         np.testing.assert_array_equal(retrieval.descriptors, before)
 
-    def test_a_submission_prepares_its_index_once(self):
-        """The identity rules above exist for this, so drive it rather than
-        assert the objects and hope."""
+    def test_the_pool_objects_change_exactly_once_across_the_search_rungs(self):
+        """The same identity the driver compares, walked in case order.
+
+        This reproduces the driver's check rather than calling it, so it pins
+        the property the driver reads and not the driver's use of it.
+        """
 
         seen = []
         previous = {}
@@ -149,8 +152,13 @@ class GoldIsAttachedSeparately(unittest.TestCase):
             )
 
 
-class MaterializeCasesIsTheConstructorPlusGold(unittest.TestCase):
-    """The proof that moving the grid into `build_cases` moved no number."""
+class MaterializeCasesResolvesAManifestAndNothingElse(unittest.TestCase):
+    """What is left of `materialize_cases` once the grid moved out.
+
+    It does not prove no number moved: both sides of the comparison go through
+    `build_cases`, because that is what `materialize_cases` now is. It proves
+    the manifest resolution, which is the half that stayed.
+    """
 
     def test_a_manifest_resolves_to_the_constructor_output_field_for_field(self):
         with TemporaryDirectory() as folder:
