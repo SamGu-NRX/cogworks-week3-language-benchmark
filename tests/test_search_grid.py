@@ -239,6 +239,27 @@ class TestAnIncompleteGridRefuses:
         with pytest.raises(ValueError, match="retrieval grid is incomplete"):
             component_scores([o for o, _ in keep], [c for _, c in keep], SEARCH_K)
 
+    def test_a_repeated_retrieval_rung_refuses(self, universe, cases):
+        """Scores are collected into a dict keyed by rung.
+
+        Two cases carrying the same rung leave one score and no trace of the
+        other, and the set of keys still looks complete. Counting the cases is
+        what sees it.
+        """
+
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        paired = list(zip(outputs, cases))
+        extra = next(
+            (o, c) for o, c in paired
+            if c.kind == "retrieval" and getattr(c, "rung", "verbatim") == "keywords"
+        )
+        with pytest.raises(ValueError, match="retrieval grid is incomplete"):
+            component_scores(
+                [o for o, _ in paired] + [extra[0]],
+                [c for _, c in paired] + [extra[1]],
+                SEARCH_K,
+            )
+
     def test_a_rung_that_ran_and_failed_is_not_a_missing_rung(self, universe, cases):
         """It scores 0 and drags the mean down, which is the honest reading:
         the submission was asked and could not answer."""

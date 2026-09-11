@@ -381,15 +381,16 @@ def component_scores(
     # with no image side has no retrieval component at all, which is a partial
     # result rather than a broken grid.
     if "retrieval" in by_kind or retrieval_rungs:
-        # Built from the cases rather than from `retrieval_rung_scores`, which
-        # is seeded with a "verbatim" entry whether or not a verbatim case
-        # arrived. Reading the seed let a grid of rewrites with no verbatim
-        # case satisfy the check and then report `retrieval_mrr_verbatim` as
-        # the seeded 0.0, which is a number no component produced.
-        present = {rung for rung in retrieval_rung_scores if rung != "verbatim"}
+        # Read off the cases, not off `retrieval_rung_scores`. That dict is
+        # seeded with a "verbatim" entry whether or not a verbatim case
+        # arrived, and it is keyed by rung, so it also hides a repeat: two
+        # cases carrying the same rung leave one score and no trace of the
+        # other. Counting the cases catches a missing rung and a repeated one
+        # with the same comparison.
+        present = sorted(getattr(case, "rung", "verbatim") for case, _ in retrieval_rungs)
         if "retrieval" in by_kind:
-            present.add("verbatim")
-        expected = set(perturb.RUNGS)
+            present = sorted(present + ["verbatim"])
+        expected = sorted(perturb.RUNGS)
         if present != expected:
             raise ValueError(
                 "The retrieval grid is incomplete: expected the rungs {} but "
