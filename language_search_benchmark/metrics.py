@@ -381,15 +381,12 @@ def component_scores(
     # with no image side has no retrieval component at all, which is a partial
     # result rather than a broken grid.
     if "retrieval" in by_kind or retrieval_rungs:
-        # Read off the cases, not off `retrieval_rung_scores`. That dict is
-        # seeded with a "verbatim" entry whether or not a verbatim case
-        # arrived, and it is keyed by rung, so it also hides a repeat: two
-        # cases carrying the same rung leave one score and no trace of the
-        # other. Counting the cases catches a missing rung and a repeated one
-        # with the same comparison.
-        present = sorted(getattr(case, "rung", "verbatim") for case, _ in retrieval_rungs)
-        if "retrieval" in by_kind:
-            present = sorted(present + ["verbatim"])
+        # Count original cases: both score dictionaries and by_kind discard
+        # duplicates, including repeated verbatim cases.
+        present = sorted(
+            getattr(case, "rung", "verbatim")
+            for case in cases if case.kind == "retrieval"
+        )
         expected = sorted(perturb.RUNGS)
         if present != expected:
             raise ValueError(
@@ -482,8 +479,11 @@ def component_scores(
     search_score = 0.0
     search_chance = 0.0
     if rung_scores:
-        present = set(rung_scores)
-        expected = set(perturb.RUNGS)
+        present = sorted(
+            getattr(case, "rung", "verbatim")
+            for case in cases if case.kind == "search"
+        )
+        expected = sorted(perturb.RUNGS)
         if present != expected:
             raise ValueError(
                 "The search grid is incomplete: expected the rungs {} but the "

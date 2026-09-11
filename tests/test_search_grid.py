@@ -207,19 +207,14 @@ class TestAnIncompleteGridRefuses:
         with pytest.raises(ValueError, match="retrieval grid is incomplete"):
             component_scores([o for o, _ in keep], [c for _, c in keep], SEARCH_K)
 
-    def test_fewer_outputs_than_cases_refuses_instead_of_scoring_the_overlap(
-        self, universe, cases
-    ):
-        """`zip` pairs by position and stops at the shorter side.
-
-        A short `outputs` dropped the cases at the end of the grid, which is
-        where the rewritten rungs live, and scored whatever was left. Nothing
-        said so: the components that survived produced ordinary numbers.
-        """
-
-        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+    @pytest.mark.parametrize("extra_output", [False, True])
+    def test_output_count_mismatch_refuses(self, universe, cases, extra_output):
+        # A text-only case has no rung guard to mask zip's silent truncation.
+        text_cases = [case for case in cases if case.kind == "text"]
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, text_cases)
+        mismatched = outputs + outputs if extra_output else []
         with pytest.raises(ValueError, match="outputs for"):
-            component_scores(outputs[:2], cases, SEARCH_K)
+            component_scores(mismatched, text_cases, SEARCH_K)
 
     def test_a_retrieval_grid_with_no_verbatim_case_refuses(self, universe, cases):
         """The guard used to read a dict seeded with a verbatim entry.
@@ -239,21 +234,17 @@ class TestAnIncompleteGridRefuses:
         with pytest.raises(ValueError, match="retrieval grid is incomplete"):
             component_scores([o for o, _ in keep], [c for _, c in keep], SEARCH_K)
 
-    def test_a_repeated_retrieval_rung_refuses(self, universe, cases):
-        """Scores are collected into a dict keyed by rung.
-
-        Two cases carrying the same rung leave one score and no trace of the
-        other, and the set of keys still looks complete. Counting the cases is
-        what sees it.
-        """
-
+    @pytest.mark.parametrize("kind", ["retrieval", "search"])
+    @pytest.mark.parametrize("rung", perturb.RUNGS)
+    def test_a_repeated_rung_refuses(self, universe, cases, kind, rung):
+        """Neither the score dict nor the by-kind dict preserves duplicates."""
         outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
         paired = list(zip(outputs, cases))
         extra = next(
             (o, c) for o, c in paired
-            if c.kind == "retrieval" and getattr(c, "rung", "verbatim") == "keywords"
+            if c.kind == kind and getattr(c, "rung", "verbatim") == rung
         )
-        with pytest.raises(ValueError, match="retrieval grid is incomplete"):
+        with pytest.raises(ValueError, match=kind + " grid is incomplete"):
             component_scores(
                 [o for o, _ in paired] + [extra[0]],
                 [c for _, c in paired] + [extra[1]],
