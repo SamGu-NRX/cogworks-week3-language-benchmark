@@ -247,6 +247,19 @@ def component_scores(
     component was asked for, and gold below it counts as a miss.
     """
 
+    # `zip` below pairs by position and stops at the shorter side, so a short
+    # `outputs` would drop trailing cases and score whatever remained. The
+    # truncation is silent and the components it removes are the ones at the
+    # end of the grid, which is where the rewritten rungs live. A genuine
+    # partial result is a shorter CASE list with one output each, not a case
+    # list with outputs missing, so this refuses rather than filling anything
+    # in.
+    if len(outputs) != len(cases):
+        raise ValueError(
+            "Scoring pairs outputs to cases by position and was given {} "
+            "outputs for {} cases.".format(len(outputs), len(cases))
+        )
+
     diagnostics: List[str] = []
     # Keyed by kind, and for search by kind AND rung. Several search cases
     # share one kind, one per query rewrite, and a plain by-kind dict would
@@ -353,6 +366,36 @@ def component_scores(
         )
         retrieval_rung_scores[rung] = mrr(ranks_of_gold(order, case.gold_rows))
 
+    # The same refusal the search grid makes further down, and for the same
+    # reason. Without it, a retrieval component that ran with no rewrites
+    # falls through to the line below with `rewritten` empty and keeps
+    # `retrieval["mrr"]` at the verbatim score, which is the memorization probe
+    # this component exists to keep out of the number. The drift was real: the
+    # sandbox rebuilt only the search rewrites. What stopped it becoming a
+    # published number was the runner's count check, which refused the
+    # six-case result. Nothing in here would have noticed, which is the
+    # argument for the refusal.
+    #
+    # Keyed on the component having run, not on `retrieval_rung_scores` being
+    # non-empty: that dict is seeded with the verbatim score, and a repository
+    # with no image side has no retrieval component at all, which is a partial
+    # result rather than a broken grid.
+    if "retrieval" in by_kind or retrieval_rungs:
+        # Count original cases: both score dictionaries and by_kind discard
+        # duplicates, including repeated verbatim cases.
+        present = sorted(
+            getattr(case, "rung", "verbatim")
+            for case in cases if case.kind == "retrieval"
+        )
+        expected = sorted(perturb.RUNGS)
+        if present != expected:
+            raise ValueError(
+                "The retrieval grid is incomplete: expected the rungs {} but "
+                "the cases carry {}. Scoring an incomplete grid would report a "
+                "retrieval MRR that is not the average it claims to be.".format(
+                    sorted(expected), sorted(present)
+                )
+            )
     rewritten = [
         retrieval_rung_scores[rung]
         for rung in perturb.RUNGS
@@ -426,17 +469,21 @@ def component_scores(
     # dividing by however many showed up would make `search_mrr` mean a
     # different thing per run with nothing on the page to say so. Both are
     # plausible wrong numbers, and this is a construction error rather than
-    # anything a submission can cause: `materialize_cases` and the sandbox's
-    # `decode_payload` both build the grid from this same `RUNGS` tuple, so
-    # they can only disagree with it if one side was edited alone.
+    # anything a submission can cause. Both sides now build the grid through
+    # `build_cases`, so they no longer state the rung set separately; this
+    # stays because a refusal is what makes that a loud failure rather than a
+    # quiet average over whatever arrived.
     #
     # A rung that ran and failed is not missing. It is in `rung_scores` at
     # 0.0 with a diagnostic, and it pulls the mean down as it should.
     search_score = 0.0
     search_chance = 0.0
     if rung_scores:
-        present = set(rung_scores)
-        expected = set(perturb.RUNGS)
+        present = sorted(
+            getattr(case, "rung", "verbatim")
+            for case in cases if case.kind == "search"
+        )
+        expected = sorted(perturb.RUNGS)
         if present != expected:
             raise ValueError(
                 "The search grid is incomplete: expected the rungs {} but the "

@@ -186,6 +186,71 @@ class TestAnIncompleteGridRefuses:
         with pytest.raises(ValueError, match="grid is incomplete"):
             component_scores(short_outputs, short_cases, SEARCH_K)
 
+    def test_a_retrieval_grid_missing_its_rewrites_refuses_too(self, universe, cases):
+        """The half of this that was missing, and what it cost.
+
+        `retrieval_mrr` is the mean of the three rewrites. With none of them
+        present the mean was simply not taken and the verbatim score stayed,
+        which is the memorization probe: a submission that embedded nothing
+        scored 1.0000 there. The hosted sandbox rebuilt only the search
+        rewrites for exactly this reason, so an official run would have
+        published the probe under a scorer version claiming a three-rewrite
+        average. Nothing raised.
+        """
+
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        keep = [
+            (output, case)
+            for output, case in zip(outputs, cases)
+            if not (case.kind == "retrieval" and getattr(case, "rung", "verbatim") != "verbatim")
+        ]
+        with pytest.raises(ValueError, match="retrieval grid is incomplete"):
+            component_scores([o for o, _ in keep], [c for _, c in keep], SEARCH_K)
+
+    @pytest.mark.parametrize("extra_output", [False, True])
+    def test_output_count_mismatch_refuses(self, universe, cases, extra_output):
+        # A text-only case has no rung guard to mask zip's silent truncation.
+        text_cases = [case for case in cases if case.kind == "text"]
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, text_cases)
+        mismatched = outputs + outputs if extra_output else []
+        with pytest.raises(ValueError, match="outputs for"):
+            component_scores(mismatched, text_cases, SEARCH_K)
+
+    def test_a_retrieval_grid_with_no_verbatim_case_refuses(self, universe, cases):
+        """The guard used to read a dict seeded with a verbatim entry.
+
+        With the verbatim case absent but its rewrites present, the seed made
+        the grid look complete, `retrieval_mrr` averaged the rewrites, and
+        `retrieval_mrr_verbatim` was published as the seeded 0.0, a number no
+        component produced.
+        """
+
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        keep = [
+            (output, case)
+            for output, case in zip(outputs, cases)
+            if not (case.kind == "retrieval" and getattr(case, "rung", "verbatim") == "verbatim")
+        ]
+        with pytest.raises(ValueError, match="retrieval grid is incomplete"):
+            component_scores([o for o, _ in keep], [c for _, c in keep], SEARCH_K)
+
+    @pytest.mark.parametrize("kind", ["retrieval", "search"])
+    @pytest.mark.parametrize("rung", perturb.RUNGS)
+    def test_a_repeated_rung_refuses(self, universe, cases, kind, rung):
+        """Neither the score dict nor the by-kind dict preserves duplicates."""
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        paired = list(zip(outputs, cases))
+        extra = next(
+            (o, c) for o, c in paired
+            if c.kind == kind and getattr(c, "rung", "verbatim") == rung
+        )
+        with pytest.raises(ValueError, match=kind + " grid is incomplete"):
+            component_scores(
+                [o for o, _ in paired] + [extra[0]],
+                [c for _, c in paired] + [extra[1]],
+                SEARCH_K,
+            )
+
     def test_a_rung_that_ran_and_failed_is_not_a_missing_rung(self, universe, cases):
         """It scores 0 and drags the mean down, which is the honest reading:
         the submission was asked and could not answer."""

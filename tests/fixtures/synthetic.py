@@ -25,8 +25,7 @@ from typing import List, Sequence
 
 import numpy as np
 
-from language_search_benchmark import perturb
-from language_search_benchmark.datasets import RetrievalCase, SearchCase, TextCase
+from language_search_benchmark.datasets import attach_gold, build_cases
 
 LATENT = 8
 DESC = 512
@@ -88,35 +87,23 @@ class Universe:
         queries = [self.captions_of[index][0] for index in query_indices]
         gold_rows = [pool_indices.index(index) for index in query_indices]
         gold_image_ids = [self.image_ids[index] for index in query_indices]
-        # The whole rewrite grid, built the way `materialize_cases` builds it:
-        # one shared id list and one shared descriptor copy across every rung,
-        # since the driver uses object identity to decide whether the pool
-        # changed. Scoring refuses an incomplete grid, so a fixture that
-        # shipped only the verbatim case could not be scored at all.
-        search_ids = list(pool_image_ids)
-        search_descriptors = descriptors.copy()
-        return [
-            TextCase(kind="text", captions=text_captions, group_rows=group_rows, tie_break_seed=seed),
-            RetrievalCase(
-                kind="retrieval",
+        # The grid comes from the benchmark's own constructor, so this fixture
+        # cannot drift from what a real run builds. It used to hand-build the
+        # list and shipped only the search rewrites, which is why the tests
+        # here agreed with a sandbox that rebuilt only the search rewrites.
+        return attach_gold(
+            build_cases(
+                text_captions=text_captions,
                 queries=queries,
-                descriptors=descriptors,
-                gold_rows=gold_rows,
+                pool_image_ids=pool_image_ids,
+                pool_descriptors=descriptors,
                 tie_break_seed=seed,
+                search_k=10,
             ),
-        ] + [
-            SearchCase(
-                kind="search",
-                queries=perturb.rewrite_all(queries, rung),
-                image_ids=search_ids,
-                descriptors=search_descriptors,
-                gold_image_ids=gold_image_ids,
-                k=10,
-                tie_break_seed=seed,
-                rung=rung,
-            )
-            for rung in perturb.RUNGS
-        ]
+            text_group_rows=group_rows,
+            retrieval_gold_rows=gold_rows,
+            search_gold_image_ids=gold_image_ids,
+        )
 
 
 class PerfectAdapter:

@@ -150,6 +150,12 @@ class TestTheirModelObjectIsLoadedFromTheFile:
         return module
 
     def test_a_zero_argument_class_with_a_load_is_built_around_the_file(self, repository):
+
+        # Reaches the SDK, which is not a declared dependency of this package
+        # and which CI installs without. Named rather than failed for; a skip
+        # here is not a pass, it is a missing install.
+        pytest.importorskip("cogbench")
+
         path = repository / "w.pkl"
         W = np.arange(512 * 8, dtype=np.float32).reshape(512, 8)
         with open(path, "wb") as stream:
@@ -163,6 +169,12 @@ class TestTheirModelObjectIsLoadedFromTheFile:
         assert np.array_equal(instance(np.eye(512, dtype=np.float32)[:2]), W[:2])
 
     def test_a_class_that_cannot_encode_after_loading_is_not_the_model(self, repository):
+
+        # Reaches the SDK, which is not a declared dependency of this package
+        # and which CI installs without. Named rather than failed for; a skip
+        # here is not a pass, it is a missing install.
+        pytest.importorskip("cogbench")
+
         path = repository / "w.pkl"
         with open(path, "wb") as stream:
             pickle.dump("not a list", stream)
@@ -258,6 +270,12 @@ class TestThePrepareStepIsHandedTheFormItBoundWith:
         assert with_projection[3][1] == ids
 
     def test_the_scored_run_uses_the_bound_form(self):
+
+        # Reaches the SDK, which is not a declared dependency of this package
+        # and which CI installs without. Named rather than failed for; a skip
+        # here is not a pass, it is a missing install.
+        pytest.importorskip("cogbench")
+
         from cogbench.pipeline import Candidate
         from language_search_benchmark.discovered import DiscoveredSearch
 
@@ -298,6 +316,12 @@ class TestMissingWeightsGuidance:
 
 class TestPathBackedTextSetup:
     def test_two_repository_constructors_may_build_an_internal_idf_embedder(self):
+
+        # Reaches the SDK, which is not a declared dependency of this package
+        # and which CI installs without. Named rather than failed for; a skip
+        # here is not a pass, it is a missing install.
+        pytest.importorskip("cogbench")
+
         from cogbench.pipeline import Candidate, _fits_of
 
         captions = ["red kite", "blue boat"]
@@ -345,6 +369,12 @@ class TestPathBackedTextSetup:
 
 class TestWeightsUsedRecord:
     def test_the_record_names_the_one_weights_file_the_run_loaded(self, repository):
+
+        # Reaches the SDK, which is not a declared dependency of this package
+        # and which CI installs without. Named rather than failed for; a skip
+        # here is not a pass, it is a missing install.
+        pytest.importorskip("cogbench")
+
         from cogbench.resolve import from_spec
         from language_search_benchmark.plugins import LanguageSearchBenchmark
 

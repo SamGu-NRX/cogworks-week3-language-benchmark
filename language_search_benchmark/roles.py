@@ -41,11 +41,12 @@ import subprocess
 import sys
 from dataclasses import replace, dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from cogbench.pipeline import Role, Stage
+if TYPE_CHECKING:  # annotations only; the runtime imports are in the functions
+    from cogbench.pipeline import Role
 
 __all__ = [
     "AmbiguousWeights",
@@ -897,6 +898,13 @@ def text_branch(captions: Sequence[str]) -> Role:
     is `fusible`, which is what lets the second be probed against the
     benchmark's own captions for the teams who wrote one function.
     """
+    # Imported here rather than at module scope. This package declares no
+    # dependency on the SDK and CI installs it without one, so the
+    # module-level import made `import language_search_benchmark.roles`
+    # fail and took every test in this repository down with it.
+    # `plugins.py` already reaches `cogbench.discovery_spec` this way.
+    from cogbench.pipeline import Role, Stage
+
 
     return Role(
         "text",
@@ -941,6 +949,8 @@ def image_branch(descriptors: np.ndarray) -> Role:
     audited image encoder takes the projection as an argument or holds it on
     an object built with it.
     """
+    from cogbench.pipeline import Role, Stage
+
 
     return Role(
         "image",
@@ -993,6 +1003,8 @@ def prepare_branch(image_ids: Sequence[int], descriptors: np.ndarray) -> Role:
     that branch has bound, so this fixture is made when the branch resolves
     and offers the projected forms only when the pool holds them.
     """
+    from cogbench.pipeline import Role, Stage
+
 
     from cogbench.pipeline import Fixtures
 
@@ -1028,6 +1040,8 @@ def search_branch(query: str, k: int, pool: Sequence[int]) -> Role:
     after the other three branches had bound. So the fixture is made when
     the branch is resolved, from the text chain the search already found.
     """
+    from cogbench.pipeline import Role, Stage
+
 
     def _embedded_query(pool_values: Dict[str, Any], chains: Dict[str, Any]) -> Any:
         steps = chains["text"]
@@ -1092,6 +1106,8 @@ def search_role(
     method of the object PREPARE builds and Bagel's prepare takes IMAGE's
     output: no single declared order serves both.
     """
+    from cogbench.pipeline import Role, Stage
+
 
     return Role(
         "search",
