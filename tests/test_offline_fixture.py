@@ -171,6 +171,12 @@ def test_score_requires_gold(universe, cases):
 
 
 def test_course_artifact_git_lfs_pointer_redirects_to_benchmark_copy(tmp_path):
+
+    # Reaches the SDK, which is not a declared dependency of this package
+    # and which CI installs without. Named rather than failed for; a skip
+    # here is not a pass, it is a missing install.
+    pytest.importorskip("cogbench")
+
     from cogbench.discover import _Redirects
 
     pointer = tmp_path / "student" / "glove.6B.200d.txt.w2v"
