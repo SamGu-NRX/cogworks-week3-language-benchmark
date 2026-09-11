@@ -207,6 +207,38 @@ class TestAnIncompleteGridRefuses:
         with pytest.raises(ValueError, match="retrieval grid is incomplete"):
             component_scores([o for o, _ in keep], [c for _, c in keep], SEARCH_K)
 
+    def test_fewer_outputs_than_cases_refuses_instead_of_scoring_the_overlap(
+        self, universe, cases
+    ):
+        """`zip` pairs by position and stops at the shorter side.
+
+        A short `outputs` dropped the cases at the end of the grid, which is
+        where the rewritten rungs live, and scored whatever was left. Nothing
+        said so: the components that survived produced ordinary numbers.
+        """
+
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        with pytest.raises(ValueError, match="outputs for"):
+            component_scores(outputs[:2], cases, SEARCH_K)
+
+    def test_a_retrieval_grid_with_no_verbatim_case_refuses(self, universe, cases):
+        """The guard used to read a dict seeded with a verbatim entry.
+
+        With the verbatim case absent but its rewrites present, the seed made
+        the grid look complete, `retrieval_mrr` averaged the rewrites, and
+        `retrieval_mrr_verbatim` was published as the seeded 0.0, a number no
+        component produced.
+        """
+
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        keep = [
+            (output, case)
+            for output, case in zip(outputs, cases)
+            if not (case.kind == "retrieval" and getattr(case, "rung", "verbatim") == "verbatim")
+        ]
+        with pytest.raises(ValueError, match="retrieval grid is incomplete"):
+            component_scores([o for o, _ in keep], [c for _, c in keep], SEARCH_K)
+
     def test_a_rung_that_ran_and_failed_is_not_a_missing_rung(self, universe, cases):
         """It scores 0 and drags the mean down, which is the honest reading:
         the submission was asked and could not answer."""

@@ -221,10 +221,13 @@ class LanguageSearchBenchmark:
         "retrieval_mrr_keywords": (
             "The same rewrite as the search rung above, ranked here from your "
             "embeddings rather than through your own search path. Reading the "
-            "two together separates the embedding from the code around it: "
-            "close together means your search is carrying the embedding "
-            "faithfully, and a retrieval number well above its search twin "
-            "means the ranking is losing what the embedding found."
+            "two together separates the embedding from the code around it, "
+            "with one caveat: retrieval ranks the whole pool, while search "
+            "returns 50 results and anything past the last one counts as a "
+            "miss. So a retrieval number above its search twin means either "
+            "that your search dropped images your embedding ranked just "
+            "outside the cut, or that the ranking is losing what the "
+            "embedding found, and these two numbers alone do not say which."
         ),
         "retrieval_mrr_truncated": (
             "First three content words, ranked from your embeddings. Expected "

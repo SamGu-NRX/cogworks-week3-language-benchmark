@@ -247,6 +247,19 @@ def component_scores(
     component was asked for, and gold below it counts as a miss.
     """
 
+    # `zip` below pairs by position and stops at the shorter side, so a short
+    # `outputs` would drop trailing cases and score whatever remained. The
+    # truncation is silent and the components it removes are the ones at the
+    # end of the grid, which is where the rewritten rungs live. A genuine
+    # partial result is a shorter CASE list with one output each, not a case
+    # list with outputs missing, so this refuses rather than filling anything
+    # in.
+    if len(outputs) != len(cases):
+        raise ValueError(
+            "Scoring pairs outputs to cases by position and was given {} "
+            "outputs for {} cases.".format(len(outputs), len(cases))
+        )
+
     diagnostics: List[str] = []
     # Keyed by kind, and for search by kind AND rung. Several search cases
     # share one kind, one per query rewrite, and a plain by-kind dict would
@@ -367,8 +380,15 @@ def component_scores(
     # non-empty: that dict is seeded with the verbatim score, and a repository
     # with no image side has no retrieval component at all, which is a partial
     # result rather than a broken grid.
-    if "retrieval" in by_kind:
-        present = set(retrieval_rung_scores)
+    if "retrieval" in by_kind or retrieval_rungs:
+        # Built from the cases rather than from `retrieval_rung_scores`, which
+        # is seeded with a "verbatim" entry whether or not a verbatim case
+        # arrived. Reading the seed let a grid of rewrites with no verbatim
+        # case satisfy the check and then report `retrieval_mrr_verbatim` as
+        # the seeded 0.0, which is a number no component produced.
+        present = {rung for rung in retrieval_rung_scores if rung != "verbatim"}
+        if "retrieval" in by_kind:
+            present.add("verbatim")
         expected = set(perturb.RUNGS)
         if present != expected:
             raise ValueError(
