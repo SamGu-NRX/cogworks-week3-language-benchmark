@@ -626,21 +626,28 @@ class LanguageSearchBenchmark:
 
         branches = getattr(submission, "branches", {}) or {}
         image = branches.get("image")
-        if not image:
+        # One step, so the projection this step was handed is what produced
+        # the output. A longer chain hands its result on to code we did not
+        # inspect, and ownership of the projection is no longer established.
+        if not image or len(image) != 1:
             return False
         took = next((n for n in self._WEIGHT_INPUTS if self._took(image[0], n)), None)
         if took is None:
             return False
 
         prepare = branches.get("prepare")
+        if prepare is not None and len(prepare) != 1:
+            return False
         if not prepare:
             # No database in this binding, so there is no second consumer to
             # agree with. The search branch is what needs one.
             return not branches.get("search")
         form = getattr(prepare[0], "form", None) or 0
-        if form >= 2:
-            # Built from the image branch's projection, so the same encoder by
-            # construction.
+        if form in (2, 3):
+            # `roles.prepare_forms` 2 and 3 are the projected pair, built from
+            # the image branch's own output, so the same encoder by
+            # construction. Named exactly: a later index is a form this does
+            # not know, and unknown is the safe answer.
             return True
         # A raw form has to have been handed the same input, by the same name:
         # an image built from the retained model and a database that projected
