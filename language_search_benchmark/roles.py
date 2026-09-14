@@ -766,8 +766,9 @@ def _read(path: Path, cited: str, capture: Optional[Callable[[Path], Path]] = No
     """The projection and its bias, in this process, once one file has won.
 
     When the SDK offers ``capture``, the winner is copied before this reads
-    it and every load goes to the copy. The team's own file stays writable;
-    what was scored no longer depends on it staying unchanged.
+    it and both loads here go to the copy. The team's own file stays
+    writable, and what this returns no longer depends on it staying
+    unchanged. Code of theirs that opens the path itself is unaffected.
     """
 
     source = capture(path) if capture is not None else path
