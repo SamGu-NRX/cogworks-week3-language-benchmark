@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Tuple, Any, Dict, List, Optional, Sequence
+from typing import Tuple, Any, Callable, Dict, List, Optional, Sequence
 
 from . import __version__, perturb
 from .contracts import Resources
@@ -584,7 +584,12 @@ class LanguageSearchBenchmark:
             expects="every case the bound surfaces cover running, with finite caption embeddings",
         )
 
-    def _weights_of(self, root: Path, modules: Sequence[Any] = ()) -> Dict[str, Any]:
+    def _weights_of(
+        self,
+        root: Path,
+        modules: Sequence[Any] = (),
+        capture: Optional[Callable[[Path], Path]] = None,
+    ) -> Dict[str, Any]:
         """The trained projection this repository committed, for the pool.
 
         Read once the root is known, which is after `discovery()` and before
@@ -613,7 +618,11 @@ class LanguageSearchBenchmark:
         for name in ("W", "weights_model", "weights_cited", "weights_path"):
             self._discovery_extras.pop(name, None)
         try:
-            found = weights_in(Path(root))
+            # `capture` is the SDK's; when it offers one, the winning file is
+            # retained before anything loads it and both loaders below read
+            # the retained copy, so a later rewrite or delete cannot change
+            # what was scored.
+            found = weights_in(Path(root), capture=capture)
         except AmbiguousWeights as error:
             self._weights_note = (
                 "overall withheld: several files in this repository load as a "
@@ -628,11 +637,14 @@ class LanguageSearchBenchmark:
             return {}
         if found is None:
             return {}
-        supplied: Dict[str, Any] = {
-            "W": found.matrix,
-            "weights_used": [found.path.relative_to(root).as_posix()],
-        }
-        model = loaded_model(modules, found.path)
+        # No `weights_used` here: what `capture` retained is what the run
+        # scored, and the SDK reports that. Naming the file again would be a
+        # second answer that could disagree with the first.
+        supplied: Dict[str, Any] = {"W": found.matrix}
+        # Their own `load` reads this path, so it gets the retained copy too.
+        # The matrix and the model must come from one set of bytes or the
+        # report would describe only half of what scored.
+        model = loaded_model(modules, found.source)
         if model is not None:
             supplied["weights_model"] = model[1]
             self._discovery_extras["weights_model_label"] = model[0]
