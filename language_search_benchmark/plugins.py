@@ -581,8 +581,71 @@ class LanguageSearchBenchmark:
             extras=extras,
             resource_files=files,
             prepare=self._weights_of,
+            weights_consumed=self._weights_consumed,
             expects="every case the bound surfaces cover running, with finite caption embeddings",
         )
+
+
+    #: The pooled names this week's weight can arrive under. `W` is the
+    #: projection itself; `weights_model` is the team's own encoder object,
+    #: built by their `load` on the retained file.
+    _WEIGHT_INPUTS = ("W", "weights_model")
+
+    @staticmethod
+    def _took(step: Any, name: str) -> bool:
+        """Whether this call was handed ``name`` from the pool.
+
+        Read off the bound plan, which is the argument list itself. A pooled
+        candidate is the step rather than an argument to it, so it carries no
+        slot and is recognised by its provenance instead.
+        """
+
+        if ("extra:" + name) in getattr(step, "plan", ()):
+            return True
+        if name in getattr(step, "keywords", ()):
+            return True
+        supplied = getattr(step, "supplied", {}) or {}
+        return supplied.get("pooled") == name
+
+    def _weights_consumed(self, submission: Any) -> bool:
+        """Whether the projection that scored is the one we retained.
+
+        Both halves or neither. An image encoder built from the retained file
+        proves nothing about a database that projected the descriptors itself,
+        and the run would then publish a receipt for bytes only half of it
+        read. The supported shapes are: the image step took the retained
+        model or the retained matrix, and the database either took that same
+        input by the same name or was built from the image branch's own
+        output (`roles.prepare_forms` 2 and 3, which exist only when that
+        branch ran).
+
+        Anything else is unknown. That is not a judgement about whether their
+        code is right; it is that this benchmark cannot say which bytes it
+        read, so it declines to say.
+        """
+
+        branches = getattr(submission, "branches", {}) or {}
+        image = branches.get("image")
+        if not image:
+            return False
+        took = next((n for n in self._WEIGHT_INPUTS if self._took(image[0], n)), None)
+        if took is None:
+            return False
+
+        prepare = branches.get("prepare")
+        if not prepare:
+            # No database in this binding, so there is no second consumer to
+            # agree with. The search branch is what needs one.
+            return not branches.get("search")
+        form = getattr(prepare[0], "form", None) or 0
+        if form >= 2:
+            # Built from the image branch's projection, so the same encoder by
+            # construction.
+            return True
+        # A raw form has to have been handed the same input, by the same name:
+        # an image built from the retained model and a database that projected
+        # with some other matrix are two encoders, not one.
+        return self._took(prepare[0], took)
 
     def _weights_of(
         self,
