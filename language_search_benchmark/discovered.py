@@ -39,15 +39,11 @@ class NotBound(CheckFailure):
     def absent(cls, surface: str) -> "NotBound":
         """A branch discovery never bound, named so the scorer can see it.
 
-        `surface` says which component's zero is not a zero. It is a field
-        rather than a marker in the message because the scorer used to
-        sniff one out of the error string and then restate a cause it had
-        no access to: scoring runs in the controller while the search runs
-        in a sandbox, so the instance that knew why the weights did not
-        decide an image step is not the instance that reports it. Which
-        surfaces are absent, and what to say about each, comes from
-        `DiscoveredSearch.absent_surfaces`, not from here -- an absence
-        that no case reached still has to be reported.
+        `surface` says which component's zero is not a zero. A field rather
+        than a marker in the message, which the scorer used to read out of
+        the error string. Which surfaces are absent, and what to say about
+        each, comes from `DiscoveredSearch.absent_surfaces`, not from here:
+        an absence that no case reached still has to be reported.
         """
 
         error = cls(_ABSENCE_ERRORS[surface])
@@ -143,13 +139,18 @@ class DiscoveredSearch:
     def absent_surfaces(self) -> Dict[str, str]:
         """The branches that did not bind, and what to say about each.
 
+        The one record of the search that reaches scoring. A hosted run
+        searches a repository in a sandbox process and scores it in the
+        controller with a second plugin object, so anything this instance
+        knows and does not hand to the driver is gone by the time a
+        diagnostic is written. Everything downstream reads this.
+
         A fact about the binding, so the driver reads it once rather than
-        collecting it from the surfaces the run happens to reach. It used
-        to be assembled from the refusals themselves, which meant an
-        earlier failure could hide a later absence: a repository with no
-        search branch whose bound prepare step raises never reaches
-        `search`, and the run then published a search score of zero for a
-        surface that was never there.
+        collecting it from the surfaces the run happens to reach. Assembled
+        from the refusals themselves, an earlier failure hid a later
+        absence: a repository with no search branch whose bound prepare
+        step raises never reaches `search`, and the run then published a
+        search score of zero for a surface that was never there.
         """
 
         notes = dict(_ABSENCE_REASONS)

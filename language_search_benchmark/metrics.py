@@ -323,6 +323,13 @@ def component_scores(
             "outputs for {} cases.".format(len(outputs), len(cases))
         )
 
+    # The three floors are published as `text_chance`, `chance_mrr` and
+    # `search_chance`, each typed as a floor and related to the metric it
+    # scales (`plugins.metric_roles`, `plugins.metric_relations`), so the
+    # page prints each one beside its own number. They were also written
+    # into a diagnostic, which put the same three values in front of the
+    # reader twice and, on a run with nothing else to say, made a list of
+    # floors the headline of a successful result (run 1772).
     diagnostics: List[str] = []
     absent = _absent_in(outputs)
     # Keyed by kind, and for search by kind AND rung. Several search cases
@@ -632,13 +639,4 @@ def component_scores(
                 "captions. An unseen word should contribute a zero vector rather "
                 "than dominating or raising.".format(1 - typo / verbatim)
             )
-    if text_chance or search_chance:
-        # Three floors, named separately. They are not interchangeable: on the
-        # evaluation tier text_chance is about 4x chance_mrr and search_chance
-        # is about 0.63x it, so a reader who picks the wrong one is off by
-        # more than the differences between submissions.
-        diagnostics.append(
-            "chance baselines: text_mrr {:.4f}, retrieval_mrr {:.4f}, "
-            "search_mrr {:.4f}.".format(text_chance, retrieval_chance, search_chance)
-        )
     return metrics, diagnostics

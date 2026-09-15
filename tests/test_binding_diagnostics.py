@@ -1,18 +1,15 @@
 """What a run tells a student about a surface the search never bound.
 
-The hosted evaluation searches a repository in a sandbox process and scores in
-the controller, so the object that bound the branches and the object that
-scores them are two different `LanguageSearchBenchmark` instances. Every test
-here scores with an instance that has never searched anything, which is the
-arrangement production actually runs.
+Every test here scores with a `LanguageSearchBenchmark` that has never
+searched anything, because that is the arrangement production runs: the
+search and the scoring happen in different processes with different plugin
+objects (`discovered.DiscoveredSearch.absent_surfaces`).
 
-Under that arrangement run 9762 told a student "the image side has no trained
-weights to measure." Their weights were committed and readable. The search had
-refused the image branch because two files in that repository load as a
-(512, D) projection and nothing in their code chose between them -- a reason
-the searching instance had already written down and the scoring instance could
-not see. It then repeated the same two warnings eight times, once per case
-that needed an absent surface.
+Under that arrangement run 9762 told a student "the image side has no
+trained weights to measure." Their weights were committed and readable, and
+the search had refused the image branch because two files in that repository
+load as a (512, D) projection with nothing in their code choosing between
+them. It then repeated the same two warnings eight times.
 """
 
 import shutil

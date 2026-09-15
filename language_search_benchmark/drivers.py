@@ -57,9 +57,8 @@ def _error_output(kind: str, error: BaseException, extra: Sequence[str] = ()) ->
     output: Dict[str, Any] = {"ok": False, "kind": kind, "error": " | ".join(lines)}
     # Which absent surface this particular failure is, so the scorer can
     # tell it from a function of theirs that ran and broke. Only a
-    # `NotBound` the search itself raised may say so: read as a plain
-    # attribute, any exception out of student code could carry a `surface`
-    # of its own and silence its own report.
+    # `NotBound` may say so: read as a plain attribute, an exception out of
+    # student code could carry a `surface` and silence its own report.
     if isinstance(error, NotBound) and getattr(error, "surface", None):
         output["not_bound"] = str(error.surface)
     return output
@@ -171,11 +170,9 @@ def run_with_adapter(adapter: Any, cases: Sequence[Any]) -> List[Dict[str, Any]]
     mappings = getattr(adapter, "mappings", [])
     if mappings and outputs:
         outputs[0].setdefault("mappings", list(mappings)[:8])
-    # What the search did not bind, read from the binding rather than
-    # collected from the failures, because an earlier failure can stop the
-    # run reaching a later absence: a repository with no search branch
-    # whose bound prepare step raises never calls `search`, and the scorer
-    # then had nothing telling it that search was never there.
+    # What the search did not bind, read from the binding itself
+    # (`discovered.DiscoveredSearch.absent_surfaces`). Collected from the
+    # failures instead, an earlier failure hid a later absence.
     absent = getattr(adapter, "absent_surfaces", None)
     if absent and outputs:
         outputs[0].setdefault("absent_surfaces", dict(absent))

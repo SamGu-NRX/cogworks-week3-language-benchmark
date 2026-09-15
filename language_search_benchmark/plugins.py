@@ -30,15 +30,9 @@ _SURFACES = ("text", "image", "prepare", "search")
 def _unbound_surfaces(outputs: Sequence[Dict[str, Any]]) -> Dict[str, str]:
     """The surfaces the search never bound, and what to say about each.
 
-    Read off `absent_surfaces`, which the driver takes from the binding
-    itself and puts on the run's first output. That record is the whole of
-    what reaches the scorer: the hosted evaluation searches a repository in
-    a sandbox process and scores it in the controller, so the instance that
-    knows why a branch did not bind is not the instance that reports it.
-
-    From the binding rather than from the failures, because an earlier
-    failure can stop the run reaching a later absence, and an absence
-    nothing reached is still an absence.
+    Read off `absent_surfaces`, which the driver puts on the run's first
+    output and which `discovered.DiscoveredSearch.absent_surfaces` explains.
+    Nothing else about the search reaches this far.
     """
 
     found: Dict[str, Any] = {}
@@ -457,6 +451,11 @@ class LanguageSearchBenchmark:
     sweep_x_key = "rung_index"
     sweep_y_key = "mrr"
     sweep_label_key = "rung"
+    #: Which metric the curve plots. `_rung_curve` reads
+    #: `search_mrr_{rung}`, and a runner with no way to ask fell back to
+    #: `primary_metric`, so run 1772 drew four search scores under the
+    #: label "overall".
+    sweep_metric = "search_mrr"
 
     def __init__(self) -> None:
         self.last_sweep: List[Dict[str, Any]] = []
@@ -587,11 +586,9 @@ class LanguageSearchBenchmark:
         measured.
 
         ``unbound`` is read off the driver's outputs rather than off this
-        object, which the search does not share with the scorer. This used
-        to fall back to a sentence about absent weights whenever it could
-        not find that state, and told a repository whose two committed
-        projections the search had refused to choose between that it had
-        no trained weights at all.
+        object. Falling back to this object's own state told a repository
+        whose two committed projections the search had refused to choose
+        between that it had no trained weights at all.
         """
 
         if "image" in unbound:
@@ -826,10 +823,9 @@ class LanguageSearchBenchmark:
         question about the image side, which is the opposite of the decided
         policy (docs/design/discovery-v2-brief.md, "Absent weights").
 
-        Both sentences are written here, where the repository is open, and
-        not at scoring: `weights_diagnostic` reads their save call and
-        their `.gitignore`, and scoring runs in a process that has neither
-        the repository nor this object.
+        Both sentences are written here, where the repository is open:
+        `weights_diagnostic` reads their save call and their `.gitignore`,
+        and scoring has neither.
         """
 
         from .roles import AmbiguousWeights, loaded_model, weights_diagnostic, weights_in
