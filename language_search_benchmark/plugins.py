@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Tuple, Any, Callable, Dict, List, Optional, Sequence
+from typing import Tuple, Any, Callable, Dict, List, Optional, Sequence, Set
 
 from . import __version__, perturb
 from .contracts import Resources
@@ -106,6 +106,23 @@ def _refusal_reason(refusal: Any) -> str:
 
     learned = " ".join(str(note) for note in getattr(refusal, "notes", ()) or ())
     return learned or str(getattr(refusal, "detail", refusal))
+
+
+def _still_measured(metrics: Dict[str, float]) -> str:
+    """The components this run did measure, named as a student reads them."""
+
+    names = [
+        label
+        for key, label in (
+            ("text_mrr", "caption"),
+            ("retrieval_mrr", "retrieval"),
+            ("search_mrr", "search"),
+        )
+        if key in metrics
+    ]
+    if len(names) == 1:
+        return "your {} score is".format(names[0])
+    return "your {} and {} scores are".format(", ".join(names[:-1]), names[-1])
 
 
 def _clipped(detail: str, limit: int = 180) -> str:
@@ -492,7 +509,12 @@ class LanguageSearchBenchmark:
         # their own save path leads (docs/design/discovery-v2-brief.md,
         # "Absent weights", decided 2026-09-02).
         unbound = _unbound_surfaces(outputs)
-        withheld = self._withheld(unbound)
+        scored = {
+            getattr(case, "kind", None)
+            for case, output in zip(cases, outputs)
+            if output.get("ok")
+        }
+        withheld = self._withheld(unbound, scored)
         leading = None
         if withheld is not None:
             leading, prefixes, primary = withheld
@@ -521,23 +543,29 @@ class LanguageSearchBenchmark:
         rest: List[str] = []
         for surface, reason in unbound.items():
             if surface != leading:
-                # A reader who has just been told what to do about the
-                # headline needs to know the next note is a different
-                # problem and not more of that one.
-                opener = "Separately, " if leading is not None else ""
+                # "Also", not "separately": the branches bind in this order
+                # and a later one can fail because an earlier one did. A
+                # student whose database constructor takes the projection
+                # they have two copies of has written both functions this
+                # would otherwise call missing.
+                opener = "Also, " if leading is not None else ""
                 rest.extend(_sentences(opener + reason))
                 continue
             # Which half is gone and which half still counts. A withheld
             # overall is not a zero, and nothing else on the page says so.
-            measured = (
-                "your caption score is"
-                if surface == "image"
-                else "your caption and retrieval scores are"
-            )
+            # Read off the metrics that survived rather than restated, so
+            # the sentence cannot disagree with the numbers beside it.
             lead = _sentences(
                 "overall withheld: {} The {} side is not measured; {}.".format(
-                    reason, "image" if surface == "image" else "search", measured
+                    reason,
+                    "image" if surface == "image" else "search",
+                    _still_measured(metrics),
                 )
+            )
+        if lead and rest:
+            rest.append(
+                "A surface here can fail to bind because an earlier one did, "
+                "so start with the first."
             )
         diagnostics[0:0] = lead + rest
         self.last_diagnostics = diagnostics[:32]
@@ -545,7 +573,7 @@ class LanguageSearchBenchmark:
         return metrics
 
     def _withheld(
-        self, unbound: Dict[str, str]
+        self, unbound: Dict[str, str], scored: Set[Any]
     ) -> Optional[Tuple[str, Tuple[str, ...], str]]:
         """Which numbers this run may not report, and which surface leads.
 
@@ -569,11 +597,17 @@ class LanguageSearchBenchmark:
         if "image" in unbound:
             # The median rank comes from the same retrieval cases that never
             # ran; an independent review found it published at 100.0.
-            return (
-                "image",
-                ("retrieval_mrr", "retrieval_recall_at", "retrieval_median_rank", "search_mrr"),
-                "text_mrr",
-            )
+            prefixes = ["retrieval_mrr", "retrieval_recall_at", "retrieval_median_rank"]
+            if "search" not in scored:
+                # A database that projects the descriptors itself binds on a
+                # raw argument form with no image branch beside it
+                # (`roles.prepare_forms` 0 and 1), and its search cases then
+                # run and answer. Dropping that number because the image
+                # branch is absent would withhold a score four cases
+                # produced, which is the opposite of the reason any of this
+                # is withheld.
+                prefixes.append("search_mrr")
+            return ("image", tuple(prefixes), "text_mrr")
         for surface in ("prepare", "search"):
             if surface in unbound:
                 return (surface, ("search_mrr",), "retrieval_mrr")
@@ -888,6 +922,16 @@ class LanguageSearchBenchmark:
 
         if "image" not in missing:
             return None
+        refusal = missing["image"]
+        if getattr(refusal, "ran_to_the_end", False):
+            # Their image step bound and ran; the search refused its answer.
+            # The weights scan has nothing to do with that, and leading with
+            # it sent a student to sync a file over a function that is
+            # already there and returning the wrong shape.
+            return (
+                "this run could not use what your image function returned. "
+                "Why: {}".format(_clipped(_refusal_reason(refusal)))
+            )
         if self._weights_note:
             return self._weights_note
         extras = getattr(self, "_discovery_extras", {}) or {}
@@ -903,7 +947,7 @@ class LanguageSearchBenchmark:
                 "function it could use to turn image descriptors into vectors. "
                 "Why: {}".format(
                     extras.get("weights_path", "the repository"),
-                    _clipped(_refusal_reason(missing["image"])),
+                    _clipped(_refusal_reason(refusal)),
                 )
             )
         return None

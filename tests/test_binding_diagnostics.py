@@ -85,15 +85,28 @@ class _Bound(DiscoveredSearch):
 
     def __init__(self, universe, image_note=None):
         super().__init__({name: () for name in self.branches}, {}, image_note)
-        self._universe = universe
+        self._working = PerfectAdapter(universe)
+
+    def __getattr__(self, name):
+        raise AttributeError(name)
 
     def embed_text(self, captions):
-        return PerfectAdapter(self._universe).embed_text(captions)
+        return self._working.embed_text(captions)
 
     def embed_images(self, descriptors):
         if "image" not in self.branches:
             return super().embed_images(descriptors)
-        return PerfectAdapter(self._universe).embed_images(descriptors)
+        return self._working.embed_images(descriptors)
+
+    def prepare_database(self, image_ids, descriptors):
+        if "prepare" not in self.branches:
+            return super().prepare_database(image_ids, descriptors)
+        self._working.prepare_database(image_ids, descriptors)
+
+    def search(self, query, k):
+        if "search" not in self.branches:
+            return super().search(query, k)
+        return self._working.search(query, k)
 
 
 def _score(universe, cases, adapter):
@@ -231,8 +244,10 @@ class TestEachAbsenceIsSaidOnce:
         for what in ("image descriptors into vectors", "searchable database", "query string"):
             assert sum(what in note for note in binding) == 1
         assert len(set(diagnostics)) == len(diagnostics)
-        # A later finding is a different problem, not more of the first.
-        assert sum(note.startswith("Separately, ") for note in diagnostics) == 2
+        # Added to the first finding, not called separate from it: a later
+        # branch can fail to bind because an earlier one did.
+        assert sum(note.startswith("Also, ") for note in diagnostics) == 2
+        assert any("start with the first" in note for note in diagnostics)
 
     def test_the_image_side_leads_and_its_numbers_are_withheld(self, universe, cases):
         metrics, _diagnostics = _scored(universe, cases)
@@ -268,6 +283,32 @@ class TestOnlyTheSearchSideIsAbsent:
         assert "overall" not in metrics
 
 
+class TestASurfaceThatIsAbsentButNotUnmeasured:
+    def test_a_database_that_projects_for_itself_keeps_its_search_score(
+        self, universe, cases
+    ):
+        """No standalone image step, and the search cases still answer.
+
+        `roles.prepare_forms` 0 and 1 hand a database the raw descriptors,
+        so a repository that projects inside its own database binds prepare
+        and search with no image branch beside them. Withholding the score
+        those cases produced would be the opposite of the reason anything
+        here is withheld.
+        """
+
+        class ProjectsForItself(_Bound):
+            branches = ("text", "prepare", "search")
+
+        metrics, diagnostics = _score(universe, cases, ProjectsForItself(universe))
+
+        assert metrics["search_mrr"] > 0.9
+        assert "retrieval_mrr" not in metrics
+        assert "overall" not in metrics
+        assert any(
+            "your caption and search scores are" in note for note in diagnostics
+        )
+
+
 class TestAComponentThatRanAndFailedIsStillItsOwnFinding:
     def test_their_own_error_is_reported_per_component(self, universe, cases):
         """A bound function that raises is not an absent surface.
@@ -289,6 +330,13 @@ class TestAComponentThatRanAndFailedIsStillItsOwnFinding:
             note.startswith("retrieval component scored 0") and "not (512, 200)" in note
             for note in diagnostics
         )
+        # The three rewritten rungs broke the same way, so they are one
+        # finding naming all three rather than three copies of it.
+        assert any(
+            note.startswith("the keywords, truncated and typo retrieval rungs scored 0")
+            for note in diagnostics
+        )
+        assert sum("not (512, 200)" in note for note in diagnostics) == 2
 
 
 class TestTheRecordTravelsOnTheOutput:
@@ -353,7 +401,84 @@ class TestTheRecordTravelsOnTheOutput:
         assert any("their index builder raised" in note for note in diagnostics)
 
 
+class TestOnlyABindingMaySayASurfaceIsAbsent:
+    def test_a_working_submission_carrying_the_attribute_is_ignored(
+        self, universe, cases
+    ):
+        """The record is read off the adapter, and the adapter wraps
+        whatever object the submission handed us. Forwarded from any object,
+        an unrelated attribute of this name would delete four measured
+        retrieval scores and report a surface that is plainly there."""
+
+        class Claims:
+            absent_surfaces = {"image": "internal cache metadata"}
+
+            def __init__(self, working):
+                self._working = working
+
+            def embed_text(self, captions):
+                return self._working.embed_text(captions)
+
+            def embed_images(self, descriptors):
+                return self._working.embed_images(descriptors)
+
+            def prepare_database(self, image_ids, descriptors):
+                self._working.prepare_database(image_ids, descriptors)
+
+            def search(self, query, k):
+                return self._working.search(query, k)
+
+        metrics, diagnostics = _score(universe, cases, Claims(PerfectAdapter(universe)))
+
+        assert metrics["overall"] > 0.8
+        assert metrics["retrieval_mrr"] > 0.9
+        assert not any("not measured" in note for note in diagnostics)
+
+
 class TestWhichAnswerDiscoveryGives:
+    def test_an_image_step_that_ran_is_not_a_weights_problem(self, repository):
+        """Their function is there and the search refused its answer.
+
+        The weight scan finds nothing whenever the projection lives inside
+        their own code, and leading with its advice sent a student to sync a
+        file over a function that is already written.
+        """
+
+        class Refusal:
+            stage = "image"
+            detail = "the chain ran but did not return the right answer"
+            notes = ()
+            ran_to_the_end = True
+
+        plugin = LanguageSearchBenchmark()
+        plugin._discovery_extras = {}
+        plugin._weights_of(repository)
+
+        note = plugin._image_note({"image": Refusal()})
+
+        assert note.startswith("this run could not use what your image function returned")
+        assert "the chain ran but did not return the right answer" in note
+        assert "cogworks sync" not in note
+
+    def test_the_reason_the_search_learned_beats_the_hand_off_it_named(self):
+        """`Refusal.detail` names the hand-off that failed and is sometimes
+        not the reason; the SDK puts the reason in `notes` when it found
+        one."""
+
+        class Refusal:
+            detail = "nothing accepted the input the benchmark passes"
+            notes = ("their package puts its modules in a folder of its own",)
+            ran_to_the_end = False
+
+        plugin = LanguageSearchBenchmark()
+        plugin._discovery_extras = {"W": object(), "weights_path": "data/W_embed.npy"}
+
+        note = plugin._image_note({"image": Refusal()})
+
+        assert "folder of its own" in note
+        assert "nothing accepted the input" not in note
+
+
     def test_weights_that_loaded_but_bound_nothing_name_their_file(self):
         plugin = LanguageSearchBenchmark()
         plugin._discovery_extras = {"W": object(), "weights_path": "data/W_embed.npy"}
@@ -378,11 +503,21 @@ class TestWhichAnswerDiscoveryGives:
         assert not tail[:-3].endswith("overlon")
         assert max(len(sentence) for sentence in _sentences(note)) <= 240
 
-    def test_a_bound_image_branch_has_nothing_to_explain(self):
+    def test_an_image_branch_that_bound_has_nothing_to_explain(self):
+        """Only the search side is absent here, so there is no image note."""
+
         plugin = LanguageSearchBenchmark()
         plugin._discovery_extras = {}
 
-        assert plugin._image_note({"search": "no function answered a query"}) is None
+        assert plugin._image_note({"search": object()}) is None
+
+    def test_each_component_error_ends_in_one_sentence(self):
+        from language_search_benchmark.discovered import NotBound
+
+        for surface in ("text", "image", "prepare", "search"):
+            message = str(NotBound.absent(surface))
+            assert message.endswith(".") and not message.endswith("..")
+            assert len(message) <= 200
 
 
 class TestASearchThatReallyRefusedTwoCandidates:

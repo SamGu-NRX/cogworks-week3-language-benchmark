@@ -60,15 +60,13 @@ class NotBound(CheckFailure):
 #: what the repository holds: the search is a search, and a sentence about
 #: the repository is a claim it cannot make.
 #:
-#: The image sentence carries the contract too, because after the old
-#: sentence's claim about trained weights came out there is otherwise
-#: nothing here to act on.
-_ABSENCE_REASONS = {
+#: This is also the component's own error, which the driver truncates at
+#: 200 characters, so each one is a single sentence.
+_ABSENCE_ERRORS = {
     "text": "this run found no function it could use to turn captions into vectors.",
     "image": (
         "this run found no function it could use to turn image descriptors into "
-        "vectors. It looks for one that takes the descriptor array and returns one "
-        "row per image, in the same space as your caption vectors."
+        "vectors."
     ),
     "prepare": (
         "this run found no function it could use to build a searchable database "
@@ -80,9 +78,15 @@ _ABSENCE_REASONS = {
     ),
 }
 
-#: The first sentence of each, which is the component's own error. Separate
-#: because the driver truncates that error at 200 characters for display.
-_ABSENCE_ERRORS = {name: reason.split(". ")[0] + "." for name, reason in _ABSENCE_REASONS.items()}
+#: What the run says about each, which is the same sentence plus the
+#: contract for the image side: after the old sentence's claim about
+#: trained weights came out there was otherwise nothing there to act on.
+_ABSENCE_REASONS = dict(
+    _ABSENCE_ERRORS,
+    image=_ABSENCE_ERRORS["image"]
+    + " It looks for one that takes the descriptor array and returns one row per"
+    + " image, in the same space as your caption vectors.",
+)
 
 
 class DiscoveredSearch:

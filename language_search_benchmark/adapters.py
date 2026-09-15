@@ -67,15 +67,20 @@ class AdaptedSearchAdapter:
 
     @property
     def absent_surfaces(self) -> Optional[Dict[str, str]]:
-        """What the wrapped object says the search never bound.
+        """What the search never bound, when the wrapped object is a binding.
 
-        Only a discovered binding knows this; a submission that declares
-        its own adapter has no such record and answers with nothing.
-        `drivers.run_with_adapter` reads it off the adapter, so it has to
-        survive the wrapping.
+        `drivers.run_with_adapter` reads this off the adapter, so it has to
+        survive the wrapping. Forwarded only from a `DiscoveredSearch`: read
+        off whatever object the submission handed us, a working adapter that
+        happens to carry an attribute of this name would delete its own
+        measured scores and tell the student a surface was never there.
         """
 
-        return getattr(self._target, "absent_surfaces", None)
+        from .discovered import DiscoveredSearch
+
+        if isinstance(self._target, DiscoveredSearch):
+            return self._target.absent_surfaces
+        return None
 
     @property
     def has_search(self) -> bool:
