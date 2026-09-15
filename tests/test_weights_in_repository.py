@@ -18,6 +18,7 @@ Three rules, each decided by one 2026 repository:
 
 from __future__ import annotations
 
+import hashlib
 import pickle
 import shutil
 import sys
@@ -410,3 +411,40 @@ class TestWeightsUsedRecord:
         submission = from_spec(repository, Spec())
 
         assert submission.to_dict()["weightsUsed"] == ["trained.npy"]
+
+
+class TestTheSdkWorkspaceIsNotACandidate:
+    """`.cogbench` holds SDK-retained inputs, not extra student models."""
+
+    def test_a_retained_copy_does_not_compete_with_its_own_source(self, repository):
+        source = repository / "data" / "W_embed.npy"
+        source.parent.mkdir(parents=True)
+        np.save(source, np.ones((512, 200), dtype=np.float32))
+        # Content-addressed the way the SDK writes it: the digest of these
+        # bytes, then the file's own repository-relative name below it.
+        digest = hashlib.sha256(source.read_bytes()).hexdigest()
+        retained = repository / ".cogbench" / "weights" / digest / "data"
+        retained.mkdir(parents=True)
+        shutil.copyfile(source, retained / "W_embed.npy")
+
+        assert [p.relative_to(repository).as_posix() for p in roles.weight_files(repository)] == [
+            "data/W_embed.npy"
+        ]
+        found = roles.weights_in(repository)
+        assert found is not None
+        assert found.path == source
+
+    def test_two_genuine_source_candidates_are_still_refused(self, repository):
+        """The skip is about one directory, not about identical bytes: two
+        files their own code does not choose between stay ambiguous."""
+
+        first = repository / "data" / "W_embed.npy"
+        first.parent.mkdir(parents=True)
+        np.save(first, np.ones((512, 200), dtype=np.float32))
+        second = repository / "models" / "W_other.npy"
+        second.parent.mkdir(parents=True)
+        shutil.copyfile(first, second)
+
+        assert len(roles.weight_files(repository)) == 2
+        with pytest.raises(roles.AmbiguousWeights):
+            roles.weights_in(repository)

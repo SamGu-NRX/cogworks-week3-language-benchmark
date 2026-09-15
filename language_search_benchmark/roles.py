@@ -102,7 +102,8 @@ MAX_WEIGHT_BYTES = 200 * 1024 * 1024
 LOAD_TIMEOUT_SECONDS = 20
 
 #: Directories never walked when looking for weights.
-_SKIP_DIRECTORIES = (".git", "__pycache__", ".venv", "venv", "node_modules")
+#: ``.cogbench`` contains SDK-retained inputs, not additional student models.
+_SKIP_DIRECTORIES = (".git", ".cogbench", "__pycache__", ".venv", "venv", "node_modules")
 
 
 class AmbiguousWeights(RuntimeError):
