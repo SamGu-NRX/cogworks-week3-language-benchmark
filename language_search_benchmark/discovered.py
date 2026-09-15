@@ -82,15 +82,72 @@ class DiscoveredSearch:
 
     # -- the protocol ------------------------------------------------------
 
-    def _through(self, name: str, arguments: Sequence[Any]) -> Any:
-        """Run one branch on this run's input, with this run's values live."""
+    def _through(
+        self, name: str, arguments: Sequence[Any], owner: Optional[Sequence[Any]] = None
+    ) -> Any:
+        """Run one branch on this run's input, with this run's values live.
+
+        ``owner`` is the argument form for the prepare branch's constructor,
+        run first and inside the same pool when this branch's steps are
+        methods of the object it builds. It stays inside the pool: the object
+        that answers queries is the one `prepare_database` builds.
+        """
 
         from cogbench.pipeline import runtime_pool
 
         with runtime_pool(self._live):
-            value = _run(self._branches[name], list(arguments))
+            if owner is None:
+                value = _run(self._branches[name], list(arguments))
+            else:
+                built = _call(self._branches["prepare"][0], list(owner))
+                with runtime_pool({"prepare": built}):
+                    value = _run(self._branches[name], list(arguments))
         self._live[name] = value
         return value
+
+    @property
+    def _image_is_a_method_of_the_store(self) -> bool:
+        """Whether the image branch reads the object the prepare branch builds.
+
+        Lashika's `ImageDatabase(image_ids, descriptors, W)` projects in its
+        constructor and exposes `descriptor_to_embedding`, so the image half
+        of the space is a method of the database rather than a function beside
+        it. `cogbench` records that as the step's originating branch.
+        """
+
+        first = (self._branches.get("image") or (None,))[0]
+        return (
+            getattr(first, "attribute", None) is not None
+            and getattr(first, "branch", None) == "prepare"
+            and bool(self._branches.get("prepare"))
+        )
+
+    def _owner_form(self, descriptors: Any) -> Optional[Sequence[Any]]:
+        """Constructor arguments that give the image steps an object, or None.
+
+        The driver runs the retrieval case before it ever calls
+        `prepare_database`, so a method of the database has nothing to be taken
+        off and `cogbench` refuses the call: the retrieval component scored
+        zero for a repository whose image half works.
+
+        The ids are row positions rather than the pool's. `RetrievalCase`
+        carries no image ids on purpose, because learning the pool row order
+        before prepare is the memorization exploit this benchmark measures
+        against (tests/test_memorizer_null.py). What is built here is dropped
+        once the projection is read; `prepare_database` builds the database
+        that answers queries, from the real ids.
+        """
+
+        from .roles import prepare_forms
+
+        if "prepare" in self._live or not self._image_is_a_method_of_the_store:
+            return None
+        matrix = np.asarray(descriptors)
+        which = getattr(self._branches["prepare"][0], "form", None) or 0
+        forms = prepare_forms(list(range(int(matrix.shape[0]))), matrix)
+        # Forms 2 and 3 are the projected pair, so a prepare bound on one took
+        # the image branch's own output and cannot be what it needs first.
+        return forms[which] if which < len(forms) else None
 
     def embed_text(self, captions: Sequence[str]) -> np.ndarray:
         if "text" not in self._branches:
@@ -106,7 +163,13 @@ class DiscoveredSearch:
                 NotBound.MARK + " " + "no trained image projection was found in this repository, so "
                 "the image half of the embedding space was never built."
             )
-        return _matrix(self._through("image", [np.asarray(descriptors)]), rows, "embed_images")
+        return _matrix(
+            self._through(
+                "image", [np.asarray(descriptors)], self._owner_form(descriptors)
+            ),
+            rows,
+            "embed_images",
+        )
 
     def prepare_database(self, image_ids: Sequence[int], descriptors: Any) -> None:
         if "prepare" not in self._branches:
@@ -119,10 +182,13 @@ class DiscoveredSearch:
         # or ids and the image branch's projected matrix either way round.
         # The scored run hands it the same form, made from this run's
         # values; the image branch runs first so the projected forms exist.
+        # Unless the image branch is a method of what this call builds, the
+        # other half of the fixpoint `roles.search_role` describes, where
+        # asking for the projection first is a cycle.
         from .roles import prepare_forms
 
         projected = None
-        if "image" in self._branches:
+        if "image" in self._branches and not self._image_is_a_method_of_the_store:
             projected = self._through("image", [np.asarray(descriptors)])
         forms = prepare_forms(list(image_ids), np.asarray(descriptors), projected)
         first = self._branches["prepare"][0]

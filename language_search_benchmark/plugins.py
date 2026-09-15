@@ -610,6 +610,27 @@ class LanguageSearchBenchmark:
         supplied = getattr(step, "supplied", {}) or {}
         return supplied.get("pooled") == name
 
+    def _built_with(self, step: Any, prepare: Any) -> Optional[str]:
+        """The retained input the constructor that produced this method took.
+
+        `cogbench` records a method's originating branch and its owner class,
+        so one prepare constructor of that class is the call the image step's
+        object came out of, and its plan is what that object was handed.
+        """
+
+        if getattr(step, "attribute", None) is None:
+            return None
+        if not prepare or getattr(step, "branch", None) != "prepare":
+            return None
+        constructor = prepare[0]
+        if not isinstance(getattr(constructor, "call", None), type):
+            return None
+        if getattr(step, "owner", None) is not constructor.call:
+            return None
+        return next(
+            (n for n in self._WEIGHT_INPUTS if self._took(constructor, n)), None
+        )
+
     def _weights_consumed(self, submission: Any) -> bool:
         """Whether the projection that scored is the one we retained.
 
@@ -620,7 +641,8 @@ class LanguageSearchBenchmark:
         model or the retained matrix, and the database either took that same
         input by the same name or was built from the image branch's own
         output (`roles.prepare_forms` 2 and 3, which exist only when that
-        branch ran).
+        branch ran), or the image step is a method of the object the database
+        branch built, which `_built_with` decides.
 
         Anything else is unknown. That is not a judgement about whether their
         code is right; it is that this benchmark cannot say which bytes it
@@ -634,13 +656,16 @@ class LanguageSearchBenchmark:
         # inspect, and ownership of the projection is no longer established.
         if not image or len(image) != 1:
             return False
-        took = next((n for n in self._WEIGHT_INPUTS if self._took(image[0], n)), None)
-        if took is None:
-            return False
-
         prepare = branches.get("prepare")
         if prepare is not None and len(prepare) != 1:
             return False
+
+        took = next((n for n in self._WEIGHT_INPUTS if self._took(image[0], n)), None)
+        if took is None:
+            took = self._built_with(image[0], prepare)
+        if took is None:
+            return False
+
         if not prepare:
             # No database in this binding, so there is no second consumer to
             # agree with. The search branch is what needs one.
