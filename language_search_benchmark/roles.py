@@ -41,7 +41,7 @@ import subprocess
 import sys
 from dataclasses import replace, dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -102,7 +102,8 @@ MAX_WEIGHT_BYTES = 200 * 1024 * 1024
 LOAD_TIMEOUT_SECONDS = 20
 
 #: Directories never walked when looking for weights.
-_SKIP_DIRECTORIES = (".git", "__pycache__", ".venv", "venv", "node_modules")
+#: ``.cogbench`` contains SDK-retained inputs, not additional student models.
+_SKIP_DIRECTORIES = (".git", ".cogbench", "__pycache__", ".venv", "venv", "node_modules")
 
 
 class AmbiguousWeights(RuntimeError):
@@ -138,6 +139,16 @@ class Weights:
     #: file, when one exists. Empty when there was only one candidate and
     #: nothing had to be disambiguated.
     cited: str = ""
+    #: Where the bytes were actually read from. The same file as ``path``
+    #: unless the SDK retained a copy first, in which case every load of this
+    #: projection reads the copy and ``path`` stays the name to report.
+    retained: Optional[Path] = None
+
+    @property
+    def source(self) -> Path:
+        """The file to load from: the retained copy when there is one."""
+
+        return self.retained or self.path
 
 
 # --------------------------------------------------------------------------
@@ -653,7 +664,11 @@ def _dead_when_loaded(tree: ast.Module) -> set:
 _UNKNOWN = object()
 
 
-def weights_in(root: Path, search_path: Sequence[str] = ()) -> Optional[Weights]:
+def weights_in(
+    root: Path,
+    search_path: Sequence[str] = (),
+    capture: Optional[Callable[[Path], Path]] = None,
+) -> Optional[Weights]:
     """The trained projection this repository committed, or None.
 
     Returns None when nothing under the root loads as one, which is the answer
@@ -676,7 +691,7 @@ def weights_in(root: Path, search_path: Sequence[str] = ()) -> Optional[Weights]
     if not holding:
         return None
     if len(holding) == 1:
-        return _read(holding[0], "")
+        return _read(holding[0], "", capture)
 
     # The file their code loads, and only that. When loads at module scope
     # exist, those decide: they are what runs when the script runs. Only when
@@ -695,7 +710,7 @@ def weights_in(root: Path, search_path: Sequence[str] = ()) -> Optional[Weights]
     if len(chosen) != 1:
         raise AmbiguousWeights(holding)
     path, citations = next(iter(chosen.items()))
-    return _read(path, citations[0])
+    return _read(path, citations[0], capture)
 
 
 def loaded_model(modules: Sequence[Any], path: Path) -> Optional[Tuple[str, Any]]:
@@ -748,12 +763,28 @@ def loaded_model(modules: Sequence[Any], path: Path) -> Optional[Tuple[str, Any]
     return None
 
 
-def _read(path: Path, cited: str) -> Weights:
-    """The projection and its bias, in this process, once one file has won."""
+def _read(path: Path, cited: str, capture: Optional[Callable[[Path], Path]] = None) -> Weights:
+    """The projection and its bias, in this process, once one file has won.
 
-    loaded = load_weight_file(str(path))
-    matrix, bias = _split(loaded)
-    return Weights(path=path, matrix=matrix, bias=bias, cited=cited)
+    When the SDK offers ``capture``, the winner is copied before this reads
+    it and both loads here go to the copy. The team's own file stays
+    writable, and what this returns no longer depends on it staying
+    unchanged. Code of theirs that opens the path itself is unaffected.
+    """
+
+    source = capture(path) if capture is not None else path
+    loaded = load_weight_file(str(source))
+    try:
+        matrix, bias = _split(loaded)
+    finally:
+        # `np.load` on a .npz hands back an NpzFile holding an open
+        # descriptor. `_split` has already read the arrays out of it by here,
+        # so closing frees the handle without touching their lifetime. A .npy
+        # or a pickle returns no archive and there is nothing to close.
+        close = getattr(loaded, "close", None)
+        if hasattr(loaded, "files") and callable(close):
+            close()
+    return Weights(path=path, matrix=matrix, bias=bias, cited=cited, retained=source)
 
 
 def _split(loaded: Any) -> Tuple[np.ndarray, Optional[np.ndarray]]:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Tuple, Any, Dict, List, Optional, Sequence
+from typing import Tuple, Any, Callable, Dict, List, Optional, Sequence
 
 from . import __version__, perturb
 from .contracts import Resources
@@ -581,10 +581,109 @@ class LanguageSearchBenchmark:
             extras=extras,
             resource_files=files,
             prepare=self._weights_of,
+            weights_consumed=self._weights_consumed,
             expects="every case the bound surfaces cover running, with finite caption embeddings",
         )
 
-    def _weights_of(self, root: Path, modules: Sequence[Any] = ()) -> Dict[str, Any]:
+
+    #: The pooled names this week's weight can arrive under. `W` is the
+    #: projection itself; `weights_model` is the team's own encoder object,
+    #: built by their `load` on the retained file.
+    _WEIGHT_INPUTS = ("W", "weights_model")
+
+    @staticmethod
+    def _took(step: Any, name: str) -> bool:
+        """Whether this call was handed ``name`` from the pool.
+
+        Read off the bound plan, which is the argument list itself. A pooled
+        candidate is the step rather than an argument to it, so it carries no
+        slot and is recognised by its provenance instead.
+        """
+
+        if ("extra:" + name) in getattr(step, "plan", ()):
+            return True
+        if name in getattr(step, "keywords", ()):
+            return True
+        supplied = getattr(step, "supplied", {}) or {}
+        return supplied.get("pooled") == name
+
+    def _built_with(self, step: Any, prepare: Any) -> Optional[str]:
+        """The retained input passed to the constructor that produced this
+        method. The SDK records its originating branch and owner class; a
+        single matching prepare constructor identifies the input plan used
+        for its instance and rebuild.
+        """
+
+        if getattr(step, "attribute", None) is None:
+            return None
+        if not prepare or getattr(step, "branch", None) != "prepare":
+            return None
+        constructor = prepare[0]
+        if not isinstance(getattr(constructor, "call", None), type):
+            return None
+        if getattr(step, "owner", None) is not constructor.call:
+            return None
+        return next(
+            (n for n in self._WEIGHT_INPUTS if self._took(constructor, n)), None
+        )
+
+    def _weights_consumed(self, submission: Any) -> bool:
+        """Whether the projection that scored is the one we retained.
+
+        Both halves or neither. An image encoder built from the retained file
+        proves nothing about a database that projected the descriptors itself,
+        and the run would then publish a receipt for bytes only half of it
+        read. The supported shapes are: the image step took the retained
+        model or the retained matrix, and the database either took that same
+        input by the same name or was built from the image branch's own
+        output (`roles.prepare_forms` 2 and 3, which exist only when that
+        branch ran), or the image step is a method of the object the database
+        branch built, which `_built_with` decides.
+
+        Anything else is unknown. That is not a judgement about whether their
+        code is right; it is that this benchmark cannot say which bytes it
+        read, so it declines to say.
+        """
+
+        branches = getattr(submission, "branches", {}) or {}
+        image = branches.get("image")
+        # One step, so the projection this step was handed is what produced
+        # the output. A longer chain hands its result on to code we did not
+        # inspect, and ownership of the projection is no longer established.
+        if not image or len(image) != 1:
+            return False
+        prepare = branches.get("prepare")
+        if prepare is not None and len(prepare) != 1:
+            return False
+
+        took = next((n for n in self._WEIGHT_INPUTS if self._took(image[0], n)), None)
+        if took is None:
+            took = self._built_with(image[0], prepare)
+        if took is None:
+            return False
+
+        if not prepare:
+            # No database in this binding, so there is no second consumer to
+            # agree with. The search branch is what needs one.
+            return not branches.get("search")
+        form = getattr(prepare[0], "form", None) or 0
+        if form in (2, 3):
+            # `roles.prepare_forms` 2 and 3 are the projected pair, built from
+            # the image branch's own output, so the same encoder by
+            # construction. Named exactly: a later index is a form this does
+            # not know, and unknown is the safe answer.
+            return True
+        # A raw form has to have been handed the same input, by the same name:
+        # an image built from the retained model and a database that projected
+        # with some other matrix are two encoders, not one.
+        return self._took(prepare[0], took)
+
+    def _weights_of(
+        self,
+        root: Path,
+        modules: Sequence[Any] = (),
+        capture: Optional[Callable[[Path], Path]] = None,
+    ) -> Dict[str, Any]:
         """The trained projection this repository committed, for the pool.
 
         Read once the root is known, which is after `discovery()` and before
@@ -613,7 +712,11 @@ class LanguageSearchBenchmark:
         for name in ("W", "weights_model", "weights_cited", "weights_path"):
             self._discovery_extras.pop(name, None)
         try:
-            found = weights_in(Path(root))
+            # `capture` is the SDK's; when it offers one, the winning file is
+            # retained before anything loads it and both loaders below read
+            # the retained copy, so a later rewrite or delete cannot change
+            # what was scored.
+            found = weights_in(Path(root), capture=capture)
         except AmbiguousWeights as error:
             self._weights_note = (
                 "overall withheld: several files in this repository load as a "
@@ -628,11 +731,14 @@ class LanguageSearchBenchmark:
             return {}
         if found is None:
             return {}
-        supplied: Dict[str, Any] = {
-            "W": found.matrix,
-            "weights_used": [found.path.relative_to(root).as_posix()],
-        }
-        model = loaded_model(modules, found.path)
+        # No `weights_used` here: what `capture` retained is what the run
+        # scored, and the SDK reports that. Naming the file again would be a
+        # second answer that could disagree with the first.
+        supplied: Dict[str, Any] = {"W": found.matrix}
+        # Their own `load` reads this path, so it gets the retained copy too.
+        # The matrix and the model must come from one set of bytes or the
+        # report would describe only half of what scored.
+        model = loaded_model(modules, found.source)
         if model is not None:
             supplied["weights_model"] = model[1]
             self._discovery_extras["weights_model_label"] = model[0]
