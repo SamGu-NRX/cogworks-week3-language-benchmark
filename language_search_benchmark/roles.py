@@ -101,8 +101,9 @@ MAX_WEIGHT_BYTES = 200 * 1024 * 1024
 #: else.
 LOAD_TIMEOUT_SECONDS = 20
 
-#: Directories never walked when looking for weights.
-#: ``.cogbench`` contains SDK-retained inputs, not additional student models.
+#: Directories never walked when looking for weights. `.cogbench` holds the
+#: copies the SDK retained, under the original names, so a repository that
+#: resolved once read as two candidates on the second run.
 _SKIP_DIRECTORIES = (".git", ".cogbench", "__pycache__", ".venv", "venv", "node_modules")
 
 

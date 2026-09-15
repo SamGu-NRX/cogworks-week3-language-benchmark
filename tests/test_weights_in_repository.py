@@ -413,8 +413,507 @@ class TestWeightsUsedRecord:
         assert submission.to_dict()["weightsUsed"] == ["trained.npy"]
 
 
+#: A team whose image side is an object rather than a matrix: a class that
+#: builds for free, fills itself from their own pickle, and encodes
+#: afterwards. Bagel's shape, at the size a unit test wants.
+AN_ENCODER_OF_THEIR_OWN = '''
+import pickle
+
+
+class ImageToCaption:
+    def __init__(self):
+        self.W = None
+
+    def load(self, path):
+        with open(path, "rb") as stream:
+            self.W = pickle.load(stream)[0]
+
+    def __call__(self, descriptors):
+        return descriptors @ self.W
+
+
+def to_captions(descriptors, weights_model):
+    return weights_model(descriptors)
+'''
+
+
+def _weights_file(root: Path, name: str, fill: float) -> np.ndarray:
+    """One saved projection, filled so the file it came from can be read off."""
+
+    W = np.full((512, roles.MIN_WIDTH), fill, dtype=np.float32)
+    path = root / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "wb") as stream:
+        pickle.dump([W, np.zeros((1, roles.MIN_WIDTH), dtype=np.float32)], stream)
+    return W
+
+
+def _image_spec(plugin):
+    """The two hooks under test, wired the way `plugins.discovery` wires them."""
+
+    from cogbench.pipeline import Role, Stage
+
+    rows = np.eye(512, dtype=np.float32)[:2]
+
+    class Spec:
+        chain_role = Role(
+            "search",
+            (
+                Stage(
+                    "image",
+                    produces=lambda v: (
+                        isinstance(v, np.ndarray) and v.shape == (2, roles.MIN_WIDTH)
+                    ),
+                    extras=("W", "weights_model"),
+                ),
+            ),
+        )
+        fixture = (rows,)
+        accepts = staticmethod(lambda steps, *_: (True, "ok"))
+        arrangements = None
+        hints = ()
+        extras: dict = {}
+        identities = ()
+        resource_files: dict = {}
+        factories = None
+        readers = 0
+        expects = "ok"
+        prepare = plugin._weights_of
+        construct = plugin._weights_model_for
+
+    return Spec(), rows
+
+
+class TestOnePluginReadingTwoRepositories:
+    """Which repository's weights a reading loads, when one plugin read both.
+
+    The corpus tool resolves several repositories in turn with one plugin, and
+    a submission stays usable afterwards: `Submission.fresh` reads the
+    repository again for every scored run. So the question is not which
+    weights the plugin last saw, it is which weights this submission was
+    resolved against. The answer has to live with the submission, which is why
+    `prepare` hands the file back as data and `construct` reads it out of the
+    pool its own reading was given.
+    """
+
+    def _resolved(self, plugin, root):
+        from cogbench.resolve import from_spec
+
+        spec, rows = _image_spec(plugin)
+        return from_spec(root, spec), rows
+
+    def test_a_later_repository_does_not_change_what_an_earlier_one_loads(self, repository):
+        pytest.importorskip("cogbench")
+
+        from language_search_benchmark.plugins import LanguageSearchBenchmark
+
+        first, second = repository / "first", repository / "second"
+        theirs = _weights_file(first, "trained.pkl", 1.0)
+        _write(first, "submission.py", AN_ENCODER_OF_THEIR_OWN)
+        _weights_file(second, "trained.pkl", 7.0)
+        _write(second, "submission.py", AN_ENCODER_OF_THEIR_OWN)
+
+        plugin = LanguageSearchBenchmark()
+        plugin._discovery_extras = {}
+        one, rows = self._resolved(plugin, first)
+        assert one.ready, one.verdict.headline
+        two, _ = self._resolved(plugin, second)
+        assert two.ready, two.verdict.headline
+
+        again = one.fresh()
+        try:
+            answer = again.chain[0].bound(rows)
+        finally:
+            again.close()
+
+        assert np.array_equal(answer, rows @ theirs)
+
+    def test_a_repository_with_no_weights_does_not_empty_an_earlier_one(self, repository):
+        pytest.importorskip("cogbench")
+
+        from language_search_benchmark.plugins import LanguageSearchBenchmark
+
+        first, second = repository / "first", repository / "second"
+        theirs = _weights_file(first, "trained.pkl", 1.0)
+        _write(first, "submission.py", AN_ENCODER_OF_THEIR_OWN)
+        # Committed nothing. Two of the four audited 2026 repositories are
+        # this, so it is the ordinary neighbour of a repository that did.
+        _write(second, "submission.py", AN_ENCODER_OF_THEIR_OWN)
+
+        plugin = LanguageSearchBenchmark()
+        plugin._discovery_extras = {}
+        one, rows = self._resolved(plugin, first)
+        assert one.ready, one.verdict.headline
+        two, _ = self._resolved(plugin, second)
+        assert not two.ready
+
+        again = one.fresh()
+        try:
+            answer = again.chain[0].bound(rows)
+        finally:
+            again.close()
+
+        assert np.array_equal(answer, rows @ theirs)
+
+    def test_the_matrix_the_pool_carries_is_the_one_the_model_was_filled_from(
+        self, repository
+    ):
+        pytest.importorskip("cogbench")
+
+        from language_search_benchmark.plugins import LanguageSearchBenchmark
+
+        theirs = _weights_file(repository, "trained.pkl", 3.0)
+        _write(repository, "submission.py", AN_ENCODER_OF_THEIR_OWN)
+
+        plugin = LanguageSearchBenchmark()
+        plugin._discovery_extras = {}
+        data = plugin._weights_of(repository)
+
+        assert np.array_equal(data["W"], theirs)
+        with plugin._weights_model_for(repository, _modules_of(repository), data) as built:
+            assert np.array_equal(built["weights_model"].W, data["W"])
+
+    def test_the_plugin_keeps_nothing_about_the_repository_it_just_read(self, repository):
+        # Anything kept here is a second answer to "which projection scored",
+        # and the next repository read overwrites it while the first submission
+        # is still being scored. The matrix, the file it came from and the
+        # sentence the run leads with all go back as data instead.
+        from language_search_benchmark.plugins import LanguageSearchBenchmark
+
+        _weights_file(repository, "trained.pkl", 3.0)
+        _write(repository, "submission.py", AN_ENCODER_OF_THEIR_OWN)
+
+        plugin = LanguageSearchBenchmark()
+        plugin._discovery_extras = {}
+        data = plugin._weights_of(repository)
+
+        assert "W" not in plugin._discovery_extras
+        assert "weights_path" not in plugin._discovery_extras
+        assert data["weights_report"] == {"path": "trained.pkl", "cited": ""}
+
+
+#: A team with a caption side and nothing that touches the projection, so the
+#: image branch is the one that does not bind. That is the repository whose run
+#: page has to say why the image side is unmeasured.
+A_CAPTION_SIDE_ONLY = '''
+def embed_captions(captions):
+    return [[float(len(c))] for c in captions]
+'''
+
+#: The same team with an image side and a database, both through their own
+#: encoder. `_weights_consumed` publishes a receipt only when both halves read
+#: the file the run retained.
+AN_IMAGE_SIDE_AND_A_DATABASE = AN_ENCODER_OF_THEIR_OWN + '''
+
+def build_store(descriptors, weights_model):
+    return {"vectors": weights_model(descriptors), "ids": [0, 1]}
+'''
+
+#: And the same team whose database projected with something of its own, which
+#: is the case the receipt is withheld for.
+AN_IMAGE_SIDE_AND_A_DATABASE_OF_ITS_OWN = AN_ENCODER_OF_THEIR_OWN + '''
+
+def build_store(descriptors):
+    return {"vectors": descriptors, "ids": [0, 1]}
+'''
+
+
+def _branched_spec(plugin, branches, weights_consumed=None):
+    """A role of several surfaces, wired through the plugin's own two hooks.
+
+    The shape week 3 actually resolves: one optional image branch beside
+    another surface, over one shared pool. The stages and the repositories are
+    miniature; the hooks, the search and the receipt decision are the real
+    ones.
+    """
+
+    from cogbench.discovery_spec import DiscoverySpec
+    from cogbench.pipeline import Role, Stage
+
+    rows = np.eye(512, dtype=np.float32)[:2]
+    image = Role(
+        "image",
+        (
+            Stage(
+                "image",
+                produces=lambda v: (
+                    isinstance(v, np.ndarray) and v.shape == (2, roles.MIN_WIDTH)
+                ),
+                extras=("W", "weights_model"),
+            ),
+        ),
+        fixture=(rows,),
+        optional=True,
+    )
+    text = Role(
+        "text",
+        (Stage("text", produces=lambda v: isinstance(v, list) and bool(v)),),
+        fixture=(["a caption"],),
+    )
+    prepare = Role(
+        "prepare",
+        (
+            Stage(
+                "prepare",
+                produces=lambda v: isinstance(v, dict) and "ids" in v,
+                extras=("W", "weights_model"),
+            ),
+        ),
+        fixture=(rows,),
+        optional=True,
+    )
+    by_name = {"image": image, "text": text, "prepare": prepare}
+    return DiscoverySpec(
+        chain_role=Role("search", (), branches=tuple(by_name[n] for n in branches)),
+        fixture=(rows,),
+        accepts=lambda chains, *_: (True, "ok"),
+        arrangements=None,
+        prepare=plugin._weights_of,
+        construct=plugin._weights_model_for,
+        weights_consumed=weights_consumed,
+    ), rows
+
+
+def _plugin():
+    from language_search_benchmark.plugins import LanguageSearchBenchmark
+
+    plugin = LanguageSearchBenchmark()
+    plugin._discovery_extras = {}
+    return plugin
+
+
+def _unmeasured(plugin):
+    """What `score` would lead with, off the submission last handed over."""
+
+    case = types.SimpleNamespace(kind="retrieval")
+    return plugin._unmeasured_image_side([{"ok": False, "error": ""}], [case])
+
+
+class TestTheWeightReportBelongsToTheSubmissionItWasReadFor:
+    """Which repository the sentence about the image side is about.
+
+    One plugin resolves several repositories in turn, and a submission is
+    scored after the next one has been read: `run` calls
+    `submission_from_discovery` and then `score`. So the file named, and the
+    ambiguity reported, have to come off the submission being scored rather
+    than off whichever repository the plugin read last.
+    """
+
+    def test_a_later_ambiguous_repository_does_not_describe_an_earlier_one(
+        self, repository
+    ):
+        pytest.importorskip("cogbench")
+
+        from cogbench.resolve import from_spec
+
+        first, second = repository / "first", repository / "second"
+        _weights_file(first, "trained.pkl", 1.0)
+        _write(first, "submission.py", A_CAPTION_SIDE_ONLY)
+        _weights_file(second, "model_tests/testd_50.pkl", 1.0)
+        _weights_file(second, "model_tests/test1.pkl", 2.0)
+        _write(
+            second,
+            "get_model_embeddings.py",
+            "def main(model):\n"
+            "    model.load('model_tests/testd_50.pkl')\n"
+            "    model.load('model_tests/test1.pkl')\n",
+        )
+        _write(second, "submission.py", A_CAPTION_SIDE_ONLY)
+
+        plugin = _plugin()
+        spec, _rows = _branched_spec(plugin, ("text", "image"))
+        one = from_spec(first, spec)
+        two = from_spec(second, spec)
+        assert "image" in one.missing and "image" in two.missing
+
+        plugin.submission_from_discovery(one)
+        about_the_first = _unmeasured(plugin)
+        plugin.submission_from_discovery(two)
+        about_the_second = _unmeasured(plugin)
+
+        assert "trained.pkl" in about_the_first
+        assert "several files" not in about_the_first
+        assert "several files" in about_the_second
+        assert "trained.pkl" not in about_the_second
+
+    def test_scoring_the_first_one_last_still_names_its_own_file(self, repository):
+        """The same pair, scored in the other order.
+
+        A plugin field would be right in whichever order ends on its own
+        repository, so the order that ends on the other one is the test.
+        """
+
+        pytest.importorskip("cogbench")
+
+        from cogbench.resolve import from_spec
+
+        first, second = repository / "first", repository / "second"
+        _weights_file(first, "trained.pkl", 1.0)
+        _write(first, "submission.py", A_CAPTION_SIDE_ONLY)
+        _write(second, "submission.py", A_CAPTION_SIDE_ONLY)
+
+        plugin = _plugin()
+        spec, _rows = _branched_spec(plugin, ("text", "image"))
+        one = from_spec(first, spec)
+        # A neighbour that committed nothing, read in between.
+        from_spec(second, spec)
+
+        plugin.submission_from_discovery(one)
+        note = _unmeasured(plugin)
+
+        assert "trained.pkl" in note
+        assert "no trained weights" not in note
+
+    def test_a_repository_with_no_weights_says_so_after_one_that_had_them(
+        self, repository
+    ):
+        pytest.importorskip("cogbench")
+
+        from cogbench.resolve import from_spec
+
+        first, second = repository / "first", repository / "second"
+        _weights_file(first, "trained.pkl", 1.0)
+        _write(first, "submission.py", A_CAPTION_SIDE_ONLY)
+        _write(second, "submission.py", A_CAPTION_SIDE_ONLY)
+
+        plugin = _plugin()
+        spec, _rows = _branched_spec(plugin, ("text", "image"))
+        from_spec(first, spec)
+        two = from_spec(second, spec)
+
+        plugin.submission_from_discovery(two)
+        note = _unmeasured(plugin)
+
+        assert "no trained weights" in note
+        assert "trained.pkl" not in note
+
+
+class TestAReceiptNeedsBothHalvesToHaveReadTheFile:
+    """`weights_consumed` through the hooks, on a repository with a database.
+
+    The image branch alone cannot answer it: a run whose database projected
+    with something else read bytes this benchmark did not retain, and a receipt
+    for those bytes would be a claim about a file only half the run used.
+    """
+
+    def test_an_image_side_and_a_database_on_one_encoder_publish_receipts(
+        self, repository
+    ):
+        pytest.importorskip("cogbench")
+
+        from cogbench.resolve import from_spec
+
+        _weights_file(repository, "trained.pkl", 1.0)
+        _write(repository, "submission.py", AN_IMAGE_SIDE_AND_A_DATABASE)
+
+        plugin = _plugin()
+        spec, _rows = _branched_spec(
+            plugin, ("image", "prepare"), weights_consumed=plugin._weights_consumed
+        )
+        submission = from_spec(repository, spec)
+
+        assert submission.ready, submission.verdict.headline
+        assert submission.weights_used == ("trained.pkl",)
+        assert submission.weights_captured
+        assert submission.weights_captured[0]["path"] == "trained.pkl"
+
+    def test_a_database_that_projected_with_its_own_thing_publishes_none(
+        self, repository
+    ):
+        pytest.importorskip("cogbench")
+
+        from cogbench.resolve import from_spec
+
+        _weights_file(repository, "trained.pkl", 1.0)
+        _write(repository, "submission.py", AN_IMAGE_SIDE_AND_A_DATABASE_OF_ITS_OWN)
+
+        plugin = _plugin()
+        spec, _rows = _branched_spec(
+            plugin, ("image", "prepare"), weights_consumed=plugin._weights_consumed
+        )
+        submission = from_spec(repository, spec)
+
+        assert submission.ready, submission.verdict.headline
+        assert submission.weights_used == ("trained.pkl",)
+        assert submission.weights_captured is None
+
+
+def _modules_of(root: Path):
+    """Their modules, for a hook that is being called without a reading."""
+
+    import importlib.util
+
+    loaded = []
+    for path in sorted(Path(root).glob("*.py")):
+        spec = importlib.util.spec_from_file_location(path.stem, path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        loaded.append(module)
+    return loaded
+
+
+class TestRetentionDoesNotMakeASecondReadingAmbiguous:
+    """The platform's own copy is not one of their weight files.
+
+    `capture` retains the winner under `<root>/.cogbench/weights/...` with its
+    original basename. Enumerating that copy gives it the same citation their
+    own source gives the original, so no file wins and a repository that was
+    unambiguous the first time is reported as ambiguous the second. Bagel is
+    the repository this happened to, and its `model_tests/testd_50.pkl` is
+    named at `get_model_embeddings.py:13`.
+    """
+
+    def _captured(self, root):
+        from cogbench import storage
+
+        def capture(original: Path) -> Path:
+            return storage.retain_input(root, original).retained
+
+        return capture
+
+    def test_two_readings_of_one_checkout_choose_the_same_file(self, repository):
+        pytest.importorskip("cogbench")
+
+        _weights_file(repository, "model_tests/testd_50.pkl", 1.0)
+        _weights_file(repository, "model_tests/test1.pkl", 2.0)
+        _write(
+            repository,
+            "get_model_embeddings.py",
+            "def main(model):\n    model.load('model_tests/testd_50.pkl')\n",
+        )
+        capture = self._captured(repository)
+
+        first = roles.weights_in(repository, capture=capture)
+        second = roles.weights_in(repository, capture=capture)
+
+        assert first is not None and second is not None
+        assert first.path == second.path == repository / "model_tests/testd_50.pkl"
+        assert np.array_equal(first.matrix, second.matrix)
+        assert (repository / ".cogbench").is_dir()
+
+    def test_a_repository_that_really_is_ambiguous_still_says_so(self, repository):
+        pytest.importorskip("cogbench")
+
+        _weights_file(repository, "model_tests/testd_50.pkl", 1.0)
+        _weights_file(repository, "model_tests/test1.pkl", 2.0)
+        _write(
+            repository,
+            "get_model_embeddings.py",
+            "def main(model):\n"
+            "    model.load('model_tests/testd_50.pkl')\n"
+            "    model.load('model_tests/test1.pkl')\n",
+        )
+
+        with pytest.raises(roles.AmbiguousWeights):
+            roles.weights_in(repository)
+
+
 class TestTheSdkWorkspaceIsNotACandidate:
-    """`.cogbench` holds SDK-retained inputs, not extra student models."""
+    """The same skip, checked against a hand-written `.cogbench` layout.
+
+    The class above retains through the real `capture`; this one writes the
+    copy itself, so the rule is covered where cogbench is not installed.
+    """
 
     def test_a_retained_copy_does_not_compete_with_its_own_source(self, repository):
         source = repository / "data" / "W_embed.npy"
@@ -435,8 +934,8 @@ class TestTheSdkWorkspaceIsNotACandidate:
         assert found.path == source
 
     def test_two_genuine_source_candidates_are_still_refused(self, repository):
-        """The skip is about one directory, not about identical bytes: two
-        files their own code does not choose between stay ambiguous."""
+        """The skip is one directory, not a rule about identical bytes: two
+        copies outside `.cogbench` that their code never names stay ambiguous."""
 
         first = repository / "data" / "W_embed.npy"
         first.parent.mkdir(parents=True)
