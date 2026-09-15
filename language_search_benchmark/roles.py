@@ -102,9 +102,8 @@ MAX_WEIGHT_BYTES = 200 * 1024 * 1024
 LOAD_TIMEOUT_SECONDS = 20
 
 #: Directories never walked when looking for weights. `.cogbench` holds the
-#: copies `capture` retained, under the same names as the originals, so a
-#: repository that resolved once read as having two candidate files the
-#: second time.
+#: copies the SDK retained, under the original names, so a repository that
+#: resolved once read as two candidates on the second run.
 _SKIP_DIRECTORIES = (".git", ".cogbench", "__pycache__", ".venv", "venv", "node_modules")
 
 
