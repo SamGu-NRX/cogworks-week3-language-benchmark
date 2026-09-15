@@ -6,6 +6,12 @@ while the other components still run. Only a submission whose factory cannot
 produce any usable adapter fails everything (and even then the run itself
 completes, carrying the mapping report to the student).
 
+A failed component carries the error it failed with. When the failure is a
+surface discovery never bound, it also carries `not_bound`, and the run's
+first output carries `absent_surfaces`: the scorer reports those once
+rather than per case, so a never-bound surface has no per-component
+diagnostic here.
+
 Outputs are JSON-serializable by construction: embeddings are unit-
 normalized (a submission's own normalization convention therefore cannot
 skew cosine scores) and rounded to five decimals, which keeps the largest
@@ -22,6 +28,7 @@ import numpy as np
 from .adapters import adapt_search
 from .checks import CheckFailure, l2_normalize_rows, validate_rankings
 from .contracts import AdapterContractError
+from .discovered import NotBound
 
 ROUND_DECIMALS = 5
 
@@ -47,7 +54,14 @@ def _error_output(kind: str, error: BaseException, extra: Sequence[str] = ()) ->
     first = _compiler_line(error)
     lines = [first or (str(error).splitlines()[0][:200] if str(error) else type(error).__name__)]
     lines.extend(str(item)[:200] for item in extra)
-    return {"ok": False, "kind": kind, "error": " | ".join(lines)}
+    output: Dict[str, Any] = {"ok": False, "kind": kind, "error": " | ".join(lines)}
+    # Which absent surface this particular failure is, so the scorer can
+    # tell it from a function of theirs that ran and broke. Only a
+    # `NotBound` may say so: read as a plain attribute, an exception out of
+    # student code could carry a `surface` and silence its own report.
+    if isinstance(error, NotBound) and getattr(error, "surface", None):
+        output["not_bound"] = str(error.surface)
+    return output
 
 
 def _rounded(matrix: np.ndarray) -> List[List[float]]:
@@ -156,4 +170,10 @@ def run_with_adapter(adapter: Any, cases: Sequence[Any]) -> List[Dict[str, Any]]
     mappings = getattr(adapter, "mappings", [])
     if mappings and outputs:
         outputs[0].setdefault("mappings", list(mappings)[:8])
+    # What the search did not bind, read from the binding itself
+    # (`discovered.DiscoveredSearch.absent_surfaces`). Collected from the
+    # failures instead, an earlier failure hid a later absence.
+    absent = getattr(adapter, "absent_surfaces", None)
+    if absent and outputs:
+        outputs[0].setdefault("absent_surfaces", dict(absent))
     return outputs

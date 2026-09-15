@@ -23,7 +23,7 @@ lose the whole search component with nothing to read.
 from __future__ import annotations
 
 import difflib
-from typing import Any, Callable, List, Optional, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import numpy as np
 
@@ -64,6 +64,23 @@ class AdaptedSearchAdapter:
         self._search_fn = search_fn
         self._prepare_fn = prepare_fn
         self.mappings = mappings
+
+    @property
+    def absent_surfaces(self) -> Optional[Dict[str, str]]:
+        """What the search never bound, when the wrapped object is a binding.
+
+        `drivers.run_with_adapter` reads this off the adapter, so it has to
+        survive the wrapping. Forwarded only from a `DiscoveredSearch`: read
+        off whatever object the submission handed us, a working adapter that
+        happens to carry an attribute of this name would delete its own
+        measured scores and tell the student a surface was never there.
+        """
+
+        from .discovered import DiscoveredSearch
+
+        if isinstance(self._target, DiscoveredSearch):
+            return self._target.absent_surfaces
+        return None
 
     @property
     def has_search(self) -> bool:

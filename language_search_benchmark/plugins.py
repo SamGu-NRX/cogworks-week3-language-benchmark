@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Tuple, Any, Callable, Dict, List, Optional, Sequence
+from typing import Tuple, Any, Callable, Dict, List, Optional, Sequence, Set
 
 from . import __version__, perturb
 from .contracts import Resources
@@ -21,6 +21,119 @@ from .metrics import component_scores
 
 #: Set to "0" (the hosted evaluation does) to skip the showcase lines.
 SHOWCASE_ENV = "COGWORKS_SHOWCASE"
+
+
+#: The order the branches run in, which is the order their absences read in.
+_SURFACES = ("text", "image", "prepare", "search")
+
+
+def _unbound_surfaces(outputs: Sequence[Dict[str, Any]]) -> Dict[str, str]:
+    """The surfaces the search never bound, and what to say about each.
+
+    Read off `absent_surfaces`, which the driver puts on the run's first
+    output and which `discovered.DiscoveredSearch.absent_surfaces` explains.
+    Nothing else about the search reaches this far.
+    """
+
+    found: Dict[str, Any] = {}
+    for output in outputs:
+        record = output.get("absent_surfaces")
+        if isinstance(record, dict):
+            found.update(record)
+    return {
+        name: str(found[name]) for name in _SURFACES if name in found and found[name]
+    }
+
+
+def _ambiguous_note(root: Path, error: Any) -> str:
+    """What to say when more than one file could be the projection.
+
+    ``error`` is a `roles.AmbiguousWeights`, untyped here because this
+    module reaches `roles` through deferred imports.
+
+    Three sentences, because `score` splits a note into one diagnostic per
+    sentence and the run page leads with the first: what happened, the
+    evidence, what to do. The paths are in the second sentence rather than
+    the headline, which is set in serif and was already two lines without
+    them.
+
+    The two ways to reach this refusal need opposite instructions
+    (`roles.AmbiguousWeights`). Saying that nothing in their code loads one
+    of these files by name is plainly false to a student whose two training
+    scripts each load one, and the advice that follows it is work they have
+    already done.
+    """
+
+    files = sorted(path.relative_to(root).as_posix() for path in error.candidates)
+    cited = {
+        path.relative_to(root).as_posix(): where for path, where in error.cited.items()
+    }
+    if not cited:
+        return (
+            "several files in this repository load as a (512, D) projection and "
+            "nothing in your code loads one of them by name, so this run could not "
+            "tell which one to score. The files are {}. Load one by name in the "
+            "script you run, or remove the others, and run again.".format(
+                ", ".join(files)
+            )
+        )
+    return (
+        "several files in this repository load as a (512, D) projection and your "
+        "code loads more than one of them, so this run could not tell which one "
+        "to score. Your code loads {}. Keep the load for the one you score, drop "
+        "the rest, and run again.".format(
+            ", ".join("{} at {}".format(name, cited[name]) for name in sorted(cited))
+        )
+    )
+
+
+def _refusal_reason(refusal: Any) -> str:
+    """Discovery's reason for a branch, in its own words.
+
+    `detail` names the hand-off that failed, which is the right headline
+    and is sometimes not the reason; the SDK puts the reason underneath in
+    `notes` when the search learned one (`cogbench.pipeline.Refusal`). A
+    repository refused three stages away from anything `detail` names is
+    the case that field exists for, and this diagnostic is the wrong place
+    to repeat the mistake of reporting only the headline.
+    """
+
+    learned = " ".join(str(note) for note in getattr(refusal, "notes", ()) or ())
+    return learned or str(getattr(refusal, "detail", refusal))
+
+
+def _still_measured(metrics: Dict[str, float]) -> str:
+    """The components this run did measure, named as a student reads them."""
+
+    names = [
+        label
+        for key, label in (
+            ("text_mrr", "caption"),
+            ("retrieval_mrr", "retrieval"),
+            ("search_mrr", "search"),
+        )
+        if key in metrics
+    ]
+    if len(names) == 1:
+        return "your {} score is".format(names[0])
+    return "your {} and {} scores are".format(", ".join(names[:-1]), names[-1])
+
+
+def _clipped(detail: str, limit: int = 180) -> str:
+    """Discovery's own words, short enough to finish the sentence they end.
+
+    Their length is not ours to control and a saved local report caps a
+    diagnostic at 240 characters, so this cuts first and leaves room for
+    the few words this benchmark puts in front of them. At a word, because
+    a sentence that stops mid-word reads as a fault in the report rather
+    than a limit. The hosted wire allows 600 and wraps rather than cutting;
+    240 is the one that binds.
+    """
+
+    detail = " ".join(detail.split())
+    if len(detail) <= limit:
+        return detail
+    return detail[:limit].rsplit(" ", 1)[0] + "..."
 
 
 def _sentences(note: str) -> List[str]:
@@ -130,14 +243,14 @@ class LanguageSearchBenchmark:
         "search_mrr": (
             "The application end to end: a query string in, ranked image ids out, "
             "through whatever database the submission built. This is the average "
-            "over four versions of every query (the caption unchanged, its "
-            "keywords only, its first three words, and one with a typo), so it "
-            "asks whether search holds up on what a person would actually type "
-            "rather than only on a caption handed back verbatim. The four are "
-            "listed separately further down, so a low score here can be traced "
-            "to the rewrite that caused it. Weak here while the two above are "
-            "strong points at the plumbing, meaning the database, the id "
-            "mapping, or the query path, rather than at the embeddings."
+            "over three rewrites of every query -- its keywords only, its first "
+            "three words, and one with a typo -- so it asks whether search holds "
+            "up on what a person would actually type. The caption unchanged is "
+            "run and reported beside them, not scored. All four are listed "
+            "separately further down, so a low score here can be traced to the "
+            "rewrite that caused it. Weak here while the two above are strong "
+            "points at the plumbing, meaning the database, the id mapping, or "
+            "the query path, rather than at the embeddings."
         ),
         "retrieval_recall_at_1": (
             "How often the caption's own image is the single top match. The "
@@ -181,9 +294,9 @@ class LanguageSearchBenchmark:
             "not scored, because those captions are in the file your code is "
             "handed: a submission that looked the query up in that file "
             "instead of embedding it would answer every one of them. Read it "
-            "next to the scored search number. Close together means your "
-            "embedding is doing the work. Far apart, with this one high, "
-            "means the query text is being matched rather than its meaning."
+            "next to the scored search number: the distance between them is "
+            "how far your results move when the wording changes. A large one, "
+            "with this rung high, is where to start looking."
         ),
         "retrieval_mrr_verbatim": (
             "The same reading for retrieval: the captions unchanged, "
@@ -338,10 +451,20 @@ class LanguageSearchBenchmark:
     sweep_x_key = "rung_index"
     sweep_y_key = "mrr"
     sweep_label_key = "rung"
+    #: Which metric the curve plots. `_rung_curve` reads
+    #: `search_mrr_{rung}`, and a runner with no way to ask fell back to
+    #: `primary_metric`, so run 1772 drew four search scores under the
+    #: label "overall".
+    sweep_metric = "search_mrr"
 
     def __init__(self) -> None:
         self.last_sweep: List[Dict[str, Any]] = []
         self.last_diagnostics: List[str] = []
+        #: Why this repository's weights do not decide an image step, set by
+        #: `_weights_of` while the repository is open and read by
+        #: `_image_note` when the binding is done. None until then, and on
+        #: an instance that only scores, which never searches a repository.
+        self._weights_note: Optional[str] = None
 
     def load_cases(self, tier: str, cache_root: Optional[Path] = None) -> Sequence[Any]:
         manifest = load_manifest(tier)
@@ -384,109 +507,108 @@ class LanguageSearchBenchmark:
         # kept, the primary becomes text_mrr, and a diagnostic that names
         # their own save path leads (docs/design/discovery-v2-brief.md,
         # "Absent weights", decided 2026-09-02).
-        withheld = self._withheld(outputs, cases)
+        unbound = _unbound_surfaces(outputs)
+        scored = {
+            getattr(case, "kind", None)
+            for case, output in zip(cases, outputs)
+            if output.get("ok")
+        }
+        withheld = self._withheld(unbound, scored)
+        leading = None
         if withheld is not None:
-            note, prefixes, primary = withheld
+            leading, prefixes, primary = withheld
             for key in list(metrics):
                 if key == "overall" or any(
                     key == prefix or key.startswith(prefix + "_") for prefix in prefixes
                 ):
                     metrics.pop(key, None)
-            # One sentence per diagnostic. The run page shows the first entry
-            # as the headline and the rest as notes, and the wire caps each
-            # entry at 240 characters; the whole note is 320 to 366, so as one
-            # entry it was cut mid-word on exactly the run whose note matters.
-            diagnostics[0:0] = _sentences(note)
             self.primary_metric_for_run = primary
         else:
             self.primary_metric_for_run = None
+        # Each surface the search never bound is said once, and the one this
+        # run leads with carries the withholding. Said here rather than per
+        # failed case, because a surface with nothing to run has no per-case
+        # failure to report (`metrics.component_scores` leaves those alone):
+        # the run that prompted this reached a student with the image note
+        # four times and the database note four more. Listed whether or not a
+        # number was withheld, so no absence can go unsaid.
+        #
+        # One sentence per diagnostic, because the run page shows the first
+        # entry as the headline and the rest as notes. A saved local report
+        # also caps an entry at 240 characters, and these notes run to 366,
+        # so as one entry the longest was cut mid-word on exactly the run
+        # whose note matters. The hosted wire allows 600 and wraps.
+        lead: List[str] = []
+        rest: List[str] = []
+        for surface, reason in unbound.items():
+            if surface != leading:
+                # "Also", not "separately": the branches bind in this order
+                # and a later one can fail because an earlier one did. A
+                # student whose database constructor takes the projection
+                # they have two copies of has written both functions this
+                # would otherwise call missing.
+                opener = "Also, " if leading is not None else ""
+                rest.extend(_sentences(opener + reason))
+                continue
+            # Which half is gone and which half still counts. A withheld
+            # overall is not a zero, and nothing else on the page says so.
+            # Read off the metrics that survived rather than restated, so
+            # the sentence cannot disagree with the numbers beside it.
+            lead = _sentences(
+                "overall withheld: {} The {} side is not measured; {}.".format(
+                    reason,
+                    "image" if surface == "image" else "search",
+                    _still_measured(metrics),
+                )
+            )
+        if lead and rest:
+            rest.append(
+                "A surface here can fail to bind because an earlier one did, "
+                "so start with the first."
+            )
+        diagnostics[0:0] = lead + rest
         self.last_diagnostics = diagnostics[:32]
         self.last_sweep = self._rung_curve(metrics)
         return metrics
 
     def _withheld(
-        self, outputs: Sequence[Dict[str, Any]], cases: Sequence[Any]
+        self, unbound: Dict[str, str], scored: Set[Any]
     ) -> Optional[Tuple[str, Tuple[str, ...], str]]:
-        """Which numbers this run may not report, and what leads instead.
+        """Which numbers this run may not report, and which surface leads.
 
-        Returns ``(diagnostic, metric prefixes to drop, primary metric)`` or
+        Returns ``(surface, metric prefixes to drop, primary metric)`` or
         None when every surface was bound. The image side missing withholds
         retrieval, search, and the overall (the decided policy); the search
         side missing with the image side bound withholds search and the
-        overall and leads with retrieval. Read off the binding's own record
-        of what did not bind, with the driver outputs as a second witness:
-        Bagel's first end-to-end run scored search 0.0 into an overall of
-        0.4183 with its prepare step bound to the wrong argument order,
-        which is a number nobody measured.
+        overall and leads with retrieval. Bagel's first end-to-end run
+        scored search 0.0 into an overall of 0.4183 with its prepare step
+        bound to the wrong argument order, which is a number nobody
+        measured.
+
+        ``unbound`` is read off the driver's outputs rather than off this
+        object. Falling back to this object's own state told a repository
+        whose two committed projections the search had refused to choose
+        between that it had no trained weights at all.
         """
 
-        note = self._unmeasured_image_side(outputs, cases)
-        if note is not None:
+        if "image" in unbound:
             # The median rank comes from the same retrieval cases that never
             # ran; an independent review found it published at 100.0.
-            return (
-                note,
-                ("retrieval_mrr", "retrieval_recall_at", "retrieval_median_rank", "search_mrr"),
-                "text_mrr",
-            )
-        absent = getattr(self, "_discovery_missing", {}) or {}
-        gone = [name for name in ("prepare", "search") if name in absent]
-        if not gone:
-            return None
-        for case, output in zip(cases, outputs):
-            if getattr(case, "kind", None) == "search" and output.get("ok"):
-                return None
-        return (
-            "overall withheld: no function in this repository answered a query "
-            "with image ids, so the search side is not measured; caption and "
-            "retrieval scores are. The search found {}: {}".format(
-                gone[0], absent[gone[0]]
-            ),
-            ("search_mrr",),
-            "retrieval_mrr",
-        )
-
-    def _unmeasured_image_side(
-        self, outputs: Sequence[Dict[str, Any]], cases: Sequence[Any]
-    ) -> Optional[str]:
-        """The diagnostic to lead with when the image side was never bound."""
-
-        from .discovered import NotBound
-
-        image_kinds = {"retrieval", "search"}
-        absent = getattr(self, "_discovery_missing", {}) or {}
-        for case, output in zip(cases, outputs):
-            if getattr(case, "kind", None) not in image_kinds:
-                continue
-            if output.get("ok"):
-                return None
-            # The binding is the record of what was not bound; the error
-            # string is only a second witness. A search case can fail in a
-            # prepare step that did bind, with an error that carries no
-            # mark, and reading the strings alone then averaged a zero into
-            # an overall for a repository whose image side was never built.
-            if "image" not in absent and NotBound.MARK not in str(output.get("error", "")):
-                return None
-        note = getattr(self, "_weights_note", None)
-        if note:
-            return note
-        root = getattr(self, "_discovery_root", None)
-        if root is None:
-            return "overall withheld: the image side has no trained weights to measure."
-        extras = getattr(self, "_discovery_extras", {}) or {}
-        absent = getattr(self, "_discovery_missing", {}) or {}
-        if "W" in extras and "image" in absent:
-            # The weights were found and read; their image step is what did
-            # not bind. Saying "no trained weights" here would send the team
-            # to commit a file that is already committed.
-            return (
-                "overall withheld: your trained weights were read from {}, but no "
-                "function in this repository turned descriptors into vectors with "
-                "them: {}".format(extras.get("weights_path", "the repository"), absent["image"])
-            )
-        from .roles import weights_diagnostic
-
-        return weights_diagnostic(Path(root))
+            prefixes = ["retrieval_mrr", "retrieval_recall_at", "retrieval_median_rank"]
+            if "search" not in scored:
+                # A database that projects the descriptors itself binds on a
+                # raw argument form with no image branch beside it
+                # (`roles.prepare_forms` 0 and 1), and its search cases then
+                # run and answer. Dropping that number because the image
+                # branch is absent would withhold a score four cases
+                # produced, which is the opposite of the reason any of this
+                # is withheld.
+                prefixes.append("search_mrr")
+            return ("image", tuple(prefixes), "text_mrr")
+        for surface in ("prepare", "search"):
+            if surface in unbound:
+                return (surface, ("search_mrr",), "retrieval_mrr")
+        return None
 
     @staticmethod
     def _rung_curve(metrics: Dict[str, float]) -> List[Dict[str, Any]]:
@@ -700,11 +822,14 @@ class LanguageSearchBenchmark:
         repository instead would throw away a text side that works over a
         question about the image side, which is the opposite of the decided
         policy (docs/design/discovery-v2-brief.md, "Absent weights").
+
+        Both sentences are written here, where the repository is open:
+        `weights_diagnostic` reads their save call and their `.gitignore`,
+        and scoring has neither.
         """
 
-        from .roles import AmbiguousWeights, loaded_model, weights_in
+        from .roles import AmbiguousWeights, loaded_model, weights_diagnostic, weights_in
 
-        self._discovery_root = Path(root)
         self._weights_note = None
         # One plugin serves one search, but a process that resolves several
         # repositories in turn (the corpus tool, a test) would otherwise
@@ -718,18 +843,10 @@ class LanguageSearchBenchmark:
             # what was scored.
             found = weights_in(Path(root), capture=capture)
         except AmbiguousWeights as error:
-            self._weights_note = (
-                "overall withheld: several files in this repository load as a "
-                "(512, D) projection and no load call in your code says which one "
-                "to score: {}. Load one of them by name in the script you run, or "
-                "remove the others, and run again.".format(
-                    ", ".join(
-                        sorted(p.relative_to(root).as_posix() for p in error.candidates)
-                    )
-                )
-            )
+            self._weights_note = _ambiguous_note(Path(root), error)
             return {}
         if found is None:
+            self._weights_note = weights_diagnostic(Path(root))
             return {}
         # No `weights_used` here: what `capture` retained is what the run
         # scored, and the SDK reports that. Naming the file again would be a
@@ -772,21 +889,64 @@ class LanguageSearchBenchmark:
 
         The weights the image branch bound with, if any, travel on the
         submission's extras as `W`; the adapter carries them so a scored run
-        projects with the same matrix the search proved.
+        projects with the same matrix the search proved. Why a branch is
+        absent travels the same way, because this is the last place that
+        knows: the search is finished and scoring is elsewhere.
         """
 
         from .discovered import build
 
-        found = getattr(submission, "discovery", None)
-        root = getattr(getattr(found, "root", None), "path", None)
-        if root is not None:
-            self._discovery_root = Path(root)
-        missing = getattr(submission, "missing", None) or {}
-        self._discovery_missing = {
-            name: str(getattr(refusal, "detail", refusal))[:200]
-            for name, refusal in dict(missing).items()
-        }
-        return build(submission, getattr(self, "_discovery_extras", {}))
+        missing = dict(getattr(submission, "missing", None) or {})
+        return build(
+            submission,
+            getattr(self, "_discovery_extras", {}),
+            self._image_note(missing),
+        )
+
+    def _image_note(self, missing: Dict[str, Any]) -> Optional[str]:
+        """Why this repository has no image step, when that can be said.
+
+        Three answers, and they send a student to three different places:
+        the weights are ambiguous, so choose one; the weights are absent,
+        so sync the file the local run used; the weights were read and
+        nothing took them, so write the function. None is the fourth
+        answer. The image branch can be refused for reasons that have
+        nothing to do with weights, and `discovered.DiscoveredSearch`
+        then reports what the search observed rather than a cause this
+        does not have.
+        """
+
+        if "image" not in missing:
+            return None
+        refusal = missing["image"]
+        if getattr(refusal, "ran_to_the_end", False):
+            # Their image step bound and ran; the search refused its answer.
+            # The weights scan has nothing to do with that, and leading with
+            # it sent a student to sync a file over a function that is
+            # already there and returning the wrong shape.
+            return (
+                "this run could not use what your image function returned. "
+                "Why: {}".format(_clipped(_refusal_reason(refusal)))
+            )
+        if self._weights_note:
+            return self._weights_note
+        extras = getattr(self, "_discovery_extras", {}) or {}
+        if "W" in extras:
+            # The weights were found and read; their image step is what did
+            # not bind. Saying "no trained weights" here would send the team
+            # to commit a file that is already committed. The refusal detail
+            # is discovery's own words and its length is not ours to
+            # control, so it starts its own sentence rather than running the
+            # first one past a saved report's 240-character cap.
+            return (
+                "your trained weights loaded from {}, but this run found no "
+                "function it could use to turn image descriptors into vectors. "
+                "Why: {}".format(
+                    extras.get("weights_path", "the repository"),
+                    _clipped(_refusal_reason(refusal)),
+                )
+            )
+        return None
 
     def cache_status(self, tier: str, cache_root: Optional[Path] = None) -> CacheStatus:
         return tier_status(tier)

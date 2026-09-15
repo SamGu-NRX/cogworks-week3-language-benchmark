@@ -107,20 +107,27 @@ _SKIP_DIRECTORIES = (".git", ".cogbench", "__pycache__", ".venv", "venv", "node_
 
 
 class AmbiguousWeights(RuntimeError):
-    """Several files could be the trained projection and their code names none.
+    """Several files could be the trained projection and their code picks none.
 
     Deliberately an error rather than a choice. Picking the newest file would
     bind differently against a squashed clone of the same repository, and
     picking the largest would be a guess about their training script. The
     image side is refused and every candidate is listed, which is a thing a
     student can act on in one commit.
+
+    Two repositories reach this and they need opposite advice. One names no
+    candidate at all, and its student adds a load. One loads two of them at
+    the same level, and its student removes a load. ``cited`` is what tells
+    them apart: the candidates their own source names, with where it names
+    each, empty when it names none.
     """
 
-    def __init__(self, candidates: Sequence[Path]) -> None:
+    def __init__(self, candidates: Sequence[Path], cited: Dict[Path, str]) -> None:
         self.candidates = [Path(path) for path in candidates]
+        self.cited = {Path(path): where for path, where in cited.items()}
         super().__init__(
             "several files could be the trained image projection and no source "
-            "file names one of them: {}".format(
+            "file names exactly one of them: {}".format(
                 ", ".join(sorted(str(path) for path in self.candidates))
             )
         )
@@ -708,7 +715,7 @@ def weights_in(
     top = {p: cites for p, cites in top.items() if cites}
     chosen = top if top else {p: [c for c, _ in cites] for p, cites in loads.items()}
     if len(chosen) != 1:
-        raise AmbiguousWeights(holding)
+        raise AmbiguousWeights(holding, {p: cites[0] for p, cites in chosen.items()})
     path, citations = next(iter(chosen.items()))
     return _read(path, citations[0], capture)
 
@@ -884,20 +891,31 @@ def gitignore_line(root: Path, target: str) -> Optional[int]:
 
 
 def weights_diagnostic(root: Path) -> str:
-    """Say why the image score is withheld and how local weights reach a hosted run.
+    """Say why there is no image score and how local weights reach a hosted run.
 
     The save target and ignore line come from the repository. The weights stay
     out of git because `cogworks sync` transfers the file used by the preceding
     local `cogworks run` to the hosted run.
+
+    Read at discovery time, where the repository is. What the run does with
+    this sentence -- lead with it, withhold an overall -- is the scorer's
+    decision and is not written into it here.
     """
 
-    lead = "overall withheld: the image side has no trained weights to measure."
+    # What the scan did, not what the repository contains. This runs
+    # whenever the image branch is absent, including when it was refused
+    # for a reason that has nothing to do with weights, and a repository
+    # holding trained parameters in a format this does not read would be
+    # told it has none.
+    lead = (
+        "this run found no file in this repository that loads as a (512, D) "
+        "projection, so there is no image embedding to score."
+    )
     where = save_call(root)
     if where is None:
         return (
             lead
-            + " Nothing under this repository loads as a (512, D) projection and no"
-            " source file saves one, so there is no image embedding to score."
+            + " It found no code that saves one either."
             " Keep the weights your training run produces out of git. Then run"
             " `cogworks run` locally and `cogworks sync`; the hosted run will fetch"
             " the weights the local run used."

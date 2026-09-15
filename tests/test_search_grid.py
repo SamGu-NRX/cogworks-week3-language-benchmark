@@ -304,12 +304,32 @@ class TestEveryMetricHasItsOwnFloor:
         assert metrics["search_chance"] == chance_mrr_at_k(pool, SEARCH_K)
         assert metrics["search_chance"] <= metrics["chance_mrr"]
 
-    def test_the_three_floors_are_reported_together(self, universe, cases):
+    def test_each_floor_is_published_beside_the_number_it_scales(
+        self, universe, cases
+    ):
+        """Three floors, three distinct values, each typed and related.
+
+        They were also written into a diagnostic, which printed the same
+        three numbers a second time and made a list of floors the headline
+        of a successful run.
+        """
+
+        benchmark = LanguageSearchBenchmark()
         outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
-        _metrics, diagnostics = _score(outputs, cases)
-        note = next(n for n in diagnostics if n.startswith("chance baselines"))
-        for name in ("text_mrr", "retrieval_mrr", "search_mrr"):
-            assert name in note
+        metrics = benchmark.score(outputs, cases)
+
+        # Which floor belongs to which number is the part a reader cannot
+        # guess; the two tests above own the claim that the values differ.
+        floors = {
+            "text_chance": "text_mrr",
+            "chance_mrr": "retrieval_mrr",
+            "search_chance": "search_mrr",
+        }
+        for floor, scales in floors.items():
+            assert floor in metrics
+            assert benchmark.metric_roles[floor] == "floor"
+            assert benchmark.metric_relations[floor] == scales
+        assert not any("chance baselines" in note for note in benchmark.last_diagnostics)
 
     def test_the_whole_pool_floor_is_the_k_capped_floor_at_full_depth(self):
         """`chance_mrr` delegates to `chance_mrr_at_k`, so the two cannot
@@ -407,6 +427,26 @@ class TestEveryNumberReachesThePageExplained:
                 assert key in benchmark.metric_relations, key
                 # And the thing it points at has to be a real metric.
                 assert benchmark.metric_relations[key] in benchmark.metric_roles
+
+    def test_the_curve_declares_the_metric_it_plots(self, universe, cases):
+        """The points are `search_mrr_{rung}`. A runner with no way to ask
+        fell back to `primary_metric` and labelled four search scores
+        "overall" (run 1772)."""
+
+        benchmark = LanguageSearchBenchmark()
+        outputs = run_cases(lambda resources: PerfectAdapter(universe), None, cases)
+        metrics = benchmark.score(outputs, cases)
+
+        assert benchmark.sweep_metric == "search_mrr"
+        assert benchmark.sweep_metric in benchmark.metric_labels
+        plotted = {
+            point[benchmark.sweep_label_key]: point[benchmark.sweep_y_key]
+            for point in benchmark.last_sweep
+        }
+        assert plotted == {
+            rung: metrics["{}_{}".format(benchmark.sweep_metric, rung)]
+            for rung in perturb.RUNGS
+        }
 
     def test_nothing_is_both_plotted_and_tabled(self, universe, cases):
         """A rung is read off the curve, where its exact value is printed

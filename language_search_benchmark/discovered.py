@@ -33,20 +33,75 @@ __all__ = ["DiscoveredSearch", "build"]
 
 
 class NotBound(CheckFailure):
-    #: A marker the scorer reads off the driver's error string to tell "this
-    #: surface was never bound" from "their function raised": the first
-    #: withholds the overall, the second scores zero as it always has.
-    MARK = "[not bound]"
-
     """A surface the search did not find, named with what it needs."""
+
+    @classmethod
+    def absent(cls, surface: str) -> "NotBound":
+        """A branch discovery never bound, named so the scorer can see it.
+
+        `surface` says which component's zero is not a zero. A field rather
+        than a marker in the message, which the scorer used to read out of
+        the error string. Which surfaces are absent, and what to say about
+        each, comes from `DiscoveredSearch.absent_surfaces`, not from here:
+        an absence that no case reached still has to be reported.
+        """
+
+        error = cls(_ABSENCE_ERRORS[surface])
+        error.surface = surface
+        return error
+
+
+#: What each surface says for itself when nothing told this run more, in
+#: the order the branches run. Written as what this run did rather than as
+#: what the repository holds: the search is a search, and a sentence about
+#: the repository is a claim it cannot make.
+#:
+#: This is also the component's own error, which the driver truncates at
+#: 200 characters, so each one is a single sentence.
+_ABSENCE_ERRORS = {
+    "text": "this run found no function it could use to turn captions into vectors.",
+    "image": (
+        "this run found no function it could use to turn image descriptors into "
+        "vectors."
+    ),
+    "prepare": (
+        "this run found no function it could use to build a searchable database "
+        "from image ids and descriptors."
+    ),
+    "search": (
+        "this run found no function it could use to answer a query string with "
+        "image ids."
+    ),
+}
+
+#: What the run says about each, which is the same sentence plus the
+#: contract for the image side: after the old sentence's claim about
+#: trained weights came out there was otherwise nothing there to act on.
+_ABSENCE_REASONS = dict(
+    _ABSENCE_ERRORS,
+    image=_ABSENCE_ERRORS["image"]
+    + " It looks for one that takes the descriptor array and returns one row per"
+    + " image, in the same space as your caption vectors.",
+)
 
 
 class DiscoveredSearch:
     """A team's own functions, wearing the interface the driver expects."""
 
-    def __init__(self, branches: Dict[str, Sequence[Any]], extras: Dict[str, Any]) -> None:
+    def __init__(
+        self,
+        branches: Dict[str, Sequence[Any]],
+        extras: Dict[str, Any],
+        image_note: Optional[str] = None,
+    ) -> None:
         self._branches = {name: tuple(steps) for name, steps in branches.items()}
         self._extras = dict(extras)
+        #: Why there is no image step, when the week can say: its `prepare`
+        #: hook is the only thing that can tell an absent projection from
+        #: two of them. Replaces the sentence in `_ABSENCE_REASONS`, which
+        #: says what the search did and claims nothing about why. The other
+        #: three surfaces have no such source, so they have no such field.
+        self._image_note = image_note
         self._store: Any = None
         #: What each branch produced in THIS run, keyed by branch name. A
         #: step in one branch that was bound with another branch's output
@@ -80,6 +135,31 @@ class DiscoveredSearch:
     def has_image_side(self) -> bool:
         return "image" in self._branches
 
+    @property
+    def absent_surfaces(self) -> Dict[str, str]:
+        """The branches that did not bind, and what to say about each.
+
+        The one record of the search that reaches scoring. A hosted run
+        searches a repository in a sandbox process and scores it in the
+        controller with a second plugin object, so anything this instance
+        knows and does not hand to the driver is gone by the time a
+        diagnostic is written. Everything downstream reads this.
+
+        A fact about the binding, so the driver reads it once rather than
+        collecting it from the surfaces the run happens to reach. Assembled
+        from the refusals themselves, an earlier failure hid a later
+        absence: a repository with no search branch whose bound prepare
+        step raises never reaches `search`, and the run then published a
+        search score of zero for a surface that was never there.
+        """
+
+        notes = dict(_ABSENCE_REASONS)
+        if self._image_note:
+            notes["image"] = self._image_note
+        return {
+            name: note for name, note in notes.items() if name not in self._branches
+        }
+
     # -- the protocol ------------------------------------------------------
 
     def _through(self, name: str, arguments: Sequence[Any]) -> Any:
@@ -94,26 +174,22 @@ class DiscoveredSearch:
 
     def embed_text(self, captions: Sequence[str]) -> np.ndarray:
         if "text" not in self._branches:
-            raise NotBound(
-                NotBound.MARK + " " + "no function in this repository turned captions into vectors."
-            )
+            raise NotBound.absent("text")
         return _matrix(self._through("text", [list(captions)]), len(list(captions)), "embed_text")
 
     def embed_images(self, descriptors: Any) -> np.ndarray:
         rows = int(np.asarray(descriptors).shape[0])
         if "image" not in self._branches:
-            raise NotBound(
-                NotBound.MARK + " " + "no trained image projection was found in this repository, so "
-                "the image half of the embedding space was never built."
-            )
+            # The old sentence asserted that no trained projection was
+            # found in the repository. On a repository holding two of them
+            # that was false, and it sent the student to commit a file that
+            # was already committed.
+            raise NotBound.absent("image")
         return _matrix(self._through("image", [np.asarray(descriptors)]), rows, "embed_images")
 
     def prepare_database(self, image_ids: Sequence[int], descriptors: Any) -> None:
         if "prepare" not in self._branches:
-            raise NotBound(
-                NotBound.MARK + " " + "no function in this repository built a searchable database "
-                "from image ids and descriptors."
-            )
+            raise NotBound.absent("prepare")
         # The prepare step was bound on one of several argument forms
         # (`roles.prepare_forms`): ids and raw descriptors either way round,
         # or ids and the image branch's projected matrix either way round.
@@ -137,10 +213,7 @@ class DiscoveredSearch:
 
     def search(self, query: str, k: int) -> List[int]:
         if "search" not in self._branches:
-            raise NotBound(
-                NotBound.MARK + " " + "no function in this repository answered a query string with "
-                "image ids."
-            )
+            raise NotBound.absent("search")
         # The search step was bound on the text branch's chain applied to
         # the query, not on the raw string (finding 3 of the engine review):
         # the same call has to be made here.
@@ -238,11 +311,17 @@ def _describe(value: Any) -> str:
     return "a {}".format(type(value).__name__)
 
 
-def build(submission: Any, extras: Optional[Dict[str, Any]] = None) -> DiscoveredSearch:
+def build(
+    submission: Any,
+    extras: Optional[Dict[str, Any]] = None,
+    image_note: Optional[str] = None,
+) -> DiscoveredSearch:
     """Wrap a resolved ``cogbench.resolve.Submission``.
 
     The branches are the binding; a role made of branches leaves
     ``Submission.chain`` empty on purpose and ``ready`` reads the branches.
+    ``image_note`` is why there is no image step, when the week knows;
+    it travels no other way. See ``DiscoveredSearch.absent_surfaces``.
     """
 
     branches = dict(getattr(submission, "branches", {}) or {})
@@ -252,4 +331,4 @@ def build(submission: Any, extras: Optional[Dict[str, Any]] = None) -> Discovere
                 getattr(getattr(submission, "verdict", None), "headline", "")
             )
         )
-    return DiscoveredSearch(branches, dict(extras or {}))
+    return DiscoveredSearch(branches, dict(extras or {}), image_note)
