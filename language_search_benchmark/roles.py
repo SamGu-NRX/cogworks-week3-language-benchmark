@@ -902,14 +902,20 @@ def weights_diagnostic(root: Path) -> str:
     decision and is not written into it here.
     """
 
-    lead = "the image side has no trained weights to measure."
+    # What the scan did, not what the repository contains. This runs
+    # whenever the image branch is absent, including when it was refused
+    # for a reason that has nothing to do with weights, and a repository
+    # holding trained parameters in a format this does not read would be
+    # told it has none.
+    lead = (
+        "this run found no file in this repository that loads as a (512, D) "
+        "projection, so there is no image embedding to score."
+    )
     where = save_call(root)
     if where is None:
         return (
             lead
-            + " Nothing under this repository loads as a (512, D) projection and"
-            " this run found no code that saves one, so there is no image embedding"
-            " to score."
+            + " It found no code that saves one either."
             " Keep the weights your training run produces out of git. Then run"
             " `cogworks run` locally and `cogworks sync`; the hosted run will fetch"
             " the weights the local run used."

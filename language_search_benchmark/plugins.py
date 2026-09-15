@@ -30,22 +30,25 @@ _SURFACES = ("text", "image", "prepare", "search")
 def _unbound_surfaces(outputs: Sequence[Dict[str, Any]]) -> Dict[str, str]:
     """The surfaces the search never bound, and what to say about each.
 
-    Read off `notBound` on the driver's outputs, which is the record that
-    survives the process boundary between the search and scoring
-    (`discovered.NotBound.absent`). One entry per surface however many
-    cases needed it: the four retrieval cases and the four search cases
-    fail on the same two absences.
+    Read off `absent_surfaces`, which the driver takes from the binding
+    itself and puts on the run's first output. That record is the whole of
+    what reaches the scorer: the hosted evaluation searches a repository in
+    a sandbox process and scores it in the controller, so the instance that
+    knows why a branch did not bind is not the instance that reports it.
+
+    From the binding rather than from the failures, because an earlier
+    failure can stop the run reaching a later absence, and an absence
+    nothing reached is still an absence.
     """
 
-    found: Dict[str, str] = {}
+    found: Dict[str, Any] = {}
     for output in outputs:
-        record = output.get("notBound")
-        if not isinstance(record, dict):
-            continue
-        surface = str(record.get("surface", ""))
-        if surface and surface not in found:
-            found[surface] = str(record.get("note") or output.get("error", ""))
-    return {name: found[name] for name in _SURFACES if name in found}
+        record = output.get("absent_surfaces")
+        if isinstance(record, dict):
+            found.update(record)
+    return {
+        name: str(found[name]) for name in _SURFACES if name in found and found[name]
+    }
 
 
 def _ambiguous_note(root: Path, error: Any) -> str:
@@ -88,6 +91,21 @@ def _ambiguous_note(root: Path, error: Any) -> str:
             ", ".join("{} at {}".format(name, cited[name]) for name in sorted(cited))
         )
     )
+
+
+def _refusal_reason(refusal: Any) -> str:
+    """Discovery's reason for a branch, in its own words.
+
+    `detail` names the hand-off that failed, which is the right headline
+    and is sometimes not the reason; the SDK puts the reason underneath in
+    `notes` when the search learned one (`cogbench.pipeline.Refusal`). A
+    repository refused three stages away from anything `detail` names is
+    the case that field exists for, and this diagnostic is the wrong place
+    to repeat the mistake of reporting only the headline.
+    """
+
+    learned = " ".join(str(note) for note in getattr(refusal, "notes", ()) or ())
+    return learned or str(getattr(refusal, "detail", refusal))
 
 
 def _clipped(detail: str, limit: int = 180) -> str:
@@ -506,17 +524,18 @@ class LanguageSearchBenchmark:
                 opener = "Separately, " if leading is not None else ""
                 rest.extend(_sentences(opener + reason))
                 continue
-            headline = "overall withheld: " + reason
-            if surface != "image":
-                # Which half is gone and which half still counts. A student
-                # whose search surface is absent still has two measured
-                # scores on the page and should not read the withheld
-                # overall as a zero.
-                headline += (
-                    " The search side is not measured; your caption and "
-                    "retrieval scores are."
+            # Which half is gone and which half still counts. A withheld
+            # overall is not a zero, and nothing else on the page says so.
+            measured = (
+                "your caption score is"
+                if surface == "image"
+                else "your caption and retrieval scores are"
+            )
+            lead = _sentences(
+                "overall withheld: {} The {} side is not measured; {}.".format(
+                    reason, "image" if surface == "image" else "search", measured
                 )
-            lead = _sentences(headline)
+            )
         diagnostics[0:0] = lead + rest
         self.last_diagnostics = diagnostics[:32]
         self.last_sweep = self._rung_curve(metrics)
@@ -844,18 +863,14 @@ class LanguageSearchBenchmark:
 
         from .discovered import build
 
-        missing = {
-            name: str(getattr(refusal, "detail", refusal))
-            for name, refusal in dict(getattr(submission, "missing", None) or {}).items()
-        }
-        note = self._image_note(missing)
+        missing = dict(getattr(submission, "missing", None) or {})
         return build(
             submission,
             getattr(self, "_discovery_extras", {}),
-            {} if note is None else {"image": note},
+            self._image_note(missing),
         )
 
-    def _image_note(self, missing: Dict[str, str]) -> Optional[str]:
+    def _image_note(self, missing: Dict[str, Any]) -> Optional[str]:
         """Why this repository has no image step, when that can be said.
 
         Three answers, and they send a student to three different places:
@@ -885,7 +900,7 @@ class LanguageSearchBenchmark:
                 "function it could use to turn image descriptors into vectors. "
                 "Why: {}".format(
                     extras.get("weights_path", "the repository"),
-                    _clipped(missing["image"]),
+                    _clipped(_refusal_reason(missing["image"])),
                 )
             )
         return None

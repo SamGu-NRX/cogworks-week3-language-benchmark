@@ -308,9 +308,12 @@ class TestMissingWeightsGuidance:
 
         # No "overall withheld" here: whether an overall is published is the
         # scorer's decision, and this sentence is written while the
-        # repository is open, one process before that decision exists.
+        # repository is open, one process before that decision exists. The
+        # lead reports what the scan did, because this also runs when the
+        # image branch was refused for a reason that is not about weights.
         assert roles.weights_diagnostic(repository) == (
-            "the image side has no trained weights to measure. "
+            "this run found no file in this repository that loads as a (512, D) "
+            "projection, so there is no image embedding to score. "
             "Your training.py saves to results/modelweights.pkl (training.py:2), and it "
             "matches .gitignore line 1. Keep that weights file out of git. Then run "
             "`cogworks run` locally and `cogworks sync`; the hosted run will fetch the "

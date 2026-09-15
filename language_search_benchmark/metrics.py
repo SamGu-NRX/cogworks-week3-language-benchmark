@@ -233,7 +233,7 @@ def summarize_norms(matrix: np.ndarray, name: str) -> Optional[str]:
     return None
 
 
-def _failure_of(output: Dict) -> Optional[str]:
+def _failure_of(output: Dict, absent: Sequence[str]) -> Optional[str]:
     """Why a failed output did not score, or None when this is not the place.
 
     A surface the search never bound is not a component that scored zero:
@@ -241,11 +241,27 @@ def _failure_of(output: Dict) -> Optional[str]:
     number it withholds (`plugins.LanguageSearchBenchmark.score`). Reporting
     it here as well put the same sentence in front of a student four times,
     once per retrieval case, and four more for the database.
+
+    Silent only for a surface that run also reports. A failure claiming a
+    surface nobody recorded is a failure like any other, and dropping it on
+    the strength of that claim alone would let an exception out of student
+    code delete its own report.
     """
 
-    if output.get("notBound"):
+    if output.get("not_bound") in absent:
         return None
     return str(output.get("error", "no output"))
+
+
+def _absent_in(outputs: Sequence[Dict]) -> List[str]:
+    """The surfaces the driver recorded as never bound, for `_failure_of`."""
+
+    absent: List[str] = []
+    for output in outputs:
+        record = output.get("absent_surfaces")
+        if isinstance(record, dict):
+            absent.extend(str(name) for name in record)
+    return absent
 
 
 def _listed(names: Sequence[str]) -> str:
@@ -284,7 +300,10 @@ def component_scores(
 
     ``outputs[i]`` is the driver's dict for ``cases[i]``; a failed component
     carries ``{"ok": False, "error": ...}`` and scores zero with a
-    diagnostic, leaving the other components intact.
+    diagnostic, leaving the other components intact. The exception is a
+    surface the search never bound: nothing of theirs ran, so its zero is
+    not a finding here and `plugins.LanguageSearchBenchmark.score` reports
+    the absence once for the whole run.
 
     ``search_mrr`` is the mean over the whole rewrite grid, so several of the
     cases feed one component score; ``k_search`` is the depth the search
@@ -305,6 +324,7 @@ def component_scores(
         )
 
     diagnostics: List[str] = []
+    absent = _absent_in(outputs)
     # Keyed by kind, and for search by kind AND rung. Several search cases
     # share one kind, one per query rewrite, and a plain by-kind dict would
     # keep whichever came last, so the reported verbatim rung would silently
@@ -339,7 +359,7 @@ def component_scores(
             ranks = text_first_relevant_ranks(embeddings, groups, case.tie_break_seed)
             text_score = mrr(ranks)
         else:
-            reason = _failure_of(output)
+            reason = _failure_of(output, absent)
             if reason is not None:
                 diagnostics.append("text component scored 0: {}".format(reason))
 
@@ -376,7 +396,7 @@ def component_scores(
                 "median_rank": median_rank(ranks),
             }
         else:
-            reason = _failure_of(output)
+            reason = _failure_of(output, absent)
             if reason is not None:
                 diagnostics.append("retrieval component scored 0: {}".format(reason))
 
@@ -397,7 +417,7 @@ def component_scores(
         if case.gold_rows is None:
             raise ValueError("Retrieval case has no gold rows; scoring requires the controller copy.")
         if not output.get("ok"):
-            reason = _failure_of(output)
+            reason = _failure_of(output, absent)
             if reason is not None:
                 retrieval_failures.append((rung, reason))
             retrieval_rung_scores[rung] = 0.0
@@ -494,7 +514,7 @@ def component_scores(
         if case.gold_image_ids is None:
             raise ValueError("Search case has no gold ids; scoring requires the controller copy.")
         if not output.get("ok"):
-            reason = _failure_of(output)
+            reason = _failure_of(output, absent)
             if reason is not None:
                 search_failures.append((rung, reason))
             rung_scores[rung] = 0.0
