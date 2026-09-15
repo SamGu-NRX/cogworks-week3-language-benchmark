@@ -233,6 +233,50 @@ def summarize_norms(matrix: np.ndarray, name: str) -> Optional[str]:
     return None
 
 
+def _failure_of(output: Dict) -> Optional[str]:
+    """Why a failed output did not score, or None when this is not the place.
+
+    A surface the search never bound is not a component that scored zero:
+    nothing of theirs ran, and the run reports the absence once, beside the
+    number it withholds (`plugins.LanguageSearchBenchmark.score`). Reporting
+    it here as well put the same sentence in front of a student four times,
+    once per retrieval case, and four more for the database.
+    """
+
+    if output.get("notBound"):
+        return None
+    return str(output.get("error", "no output"))
+
+
+def _listed(names: Sequence[str]) -> str:
+    if len(names) == 1:
+        return names[0]
+    return "{} and {}".format(", ".join(names[:-1]), names[-1])
+
+
+def _grouped(failures: Sequence[Tuple[str, str]], label: str) -> List[str]:
+    """One line per distinct reason, naming every rung that gave it.
+
+    The rungs differ only in how the query was rewritten, so a submission
+    that breaks on one usually breaks on all of them with the same message.
+    Which rungs failed is worth saying; saying why three times is not.
+    """
+
+    order: List[str] = []
+    rungs: Dict[str, List[str]] = {}
+    for rung, reason in failures:
+        if reason not in rungs:
+            rungs[reason] = []
+            order.append(reason)
+        rungs[reason].append(rung)
+    return [
+        "the {} {}{} scored 0: {}".format(
+            _listed(rungs[reason]), label, "" if len(rungs[reason]) == 1 else "s", reason
+        )
+        for reason in order
+    ]
+
+
 def component_scores(
     outputs: Sequence[Dict], cases: Sequence, k_search: int
 ) -> Tuple[Dict[str, float], List[str]]:
@@ -295,9 +339,9 @@ def component_scores(
             ranks = text_first_relevant_ranks(embeddings, groups, case.tie_break_seed)
             text_score = mrr(ranks)
         else:
-            diagnostics.append(
-                "text component scored 0: {}".format(output.get("error", "no output"))
-            )
+            reason = _failure_of(output)
+            if reason is not None:
+                diagnostics.append("text component scored 0: {}".format(reason))
 
     retrieval = {
         "mrr": 0.0,
@@ -332,9 +376,9 @@ def component_scores(
                 "median_rank": median_rank(ranks),
             }
         else:
-            diagnostics.append(
-                "retrieval component scored 0: {}".format(output.get("error", "no output"))
-            )
+            reason = _failure_of(output)
+            if reason is not None:
+                diagnostics.append("retrieval component scored 0: {}".format(reason))
 
     # The verbatim retrieval score, computed above, is now REPORTED and not
     # SCORED. Its queries are captions read straight out of the annotations
@@ -347,16 +391,15 @@ def component_scores(
     # scores 1.00 next to 0.03. That gap is the reading.
     retrieval_verbatim = retrieval["mrr"]
     retrieval_rung_scores: Dict[str, float] = {"verbatim": retrieval_verbatim}
+    retrieval_failures: List[Tuple[str, str]] = []
     for case, output in retrieval_rungs:
         rung = getattr(case, "rung", "verbatim")
         if case.gold_rows is None:
             raise ValueError("Retrieval case has no gold rows; scoring requires the controller copy.")
         if not output.get("ok"):
-            diagnostics.append(
-                "the {} retrieval rung scored 0: {}".format(
-                    rung, output.get("error", "no output")
-                )
-            )
+            reason = _failure_of(output)
+            if reason is not None:
+                retrieval_failures.append((rung, reason))
             retrieval_rung_scores[rung] = 0.0
             continue
         order = rank_matrix(
@@ -365,6 +408,7 @@ def component_scores(
             case.tie_break_seed,
         )
         retrieval_rung_scores[rung] = mrr(ranks_of_gold(order, case.gold_rows))
+    diagnostics.extend(_grouped(retrieval_failures, "retrieval rung"))
 
     # The same refusal the search grid makes further down, and for the same
     # reason. Without it, a retrieval component that ran with no rewrites
@@ -444,14 +488,15 @@ def component_scores(
         verbatim_search.append(by_kind["search"])
 
     rung_scores: Dict[str, float] = {}
+    search_failures: List[Tuple[str, str]] = []
     for case, output in scored_rungs + verbatim_search:
         rung = getattr(case, "rung", "verbatim")
         if case.gold_image_ids is None:
             raise ValueError("Search case has no gold ids; scoring requires the controller copy.")
         if not output.get("ok"):
-            diagnostics.append(
-                "the {} query rung scored 0: {}".format(rung, output.get("error", "no output"))
-            )
+            reason = _failure_of(output)
+            if reason is not None:
+                search_failures.append((rung, reason))
             rung_scores[rung] = 0.0
             continue
         ranks, foreign = search_ranks(
@@ -463,6 +508,7 @@ def component_scores(
                 "the {} query rung returned {} ids outside the pinned pool "
                 "(they cannot match).".format(rung, foreign)
             )
+    diagnostics.extend(_grouped(search_failures, "query rung"))
 
     # An incomplete grid refuses rather than averaging over what happened to
     # arrive. Dividing the rungs present by four would under-report, and

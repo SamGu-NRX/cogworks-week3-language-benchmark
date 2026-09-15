@@ -47,7 +47,14 @@ def _error_output(kind: str, error: BaseException, extra: Sequence[str] = ()) ->
     first = _compiler_line(error)
     lines = [first or (str(error).splitlines()[0][:200] if str(error) else type(error).__name__)]
     lines.extend(str(item)[:200] for item in extra)
-    return {"ok": False, "kind": kind, "error": " | ".join(lines)}
+    output: Dict[str, Any] = {"ok": False, "kind": kind, "error": " | ".join(lines)}
+    # A surface the search never bound rides out on the output dict, which
+    # is the whole of what reaches the scorer, and `error` is truncated for
+    # display. See `discovered.NotBound.absent` for why that matters.
+    surface = getattr(error, "surface", None)
+    if surface:
+        output["notBound"] = {"surface": str(surface), "note": str(getattr(error, "note", ""))}
+    return output
 
 
 def _rounded(matrix: np.ndarray) -> List[List[float]]:

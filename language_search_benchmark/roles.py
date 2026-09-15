@@ -884,20 +884,25 @@ def gitignore_line(root: Path, target: str) -> Optional[int]:
 
 
 def weights_diagnostic(root: Path) -> str:
-    """Say why the image score is withheld and how local weights reach a hosted run.
+    """Say why there is no image score and how local weights reach a hosted run.
 
     The save target and ignore line come from the repository. The weights stay
     out of git because `cogworks sync` transfers the file used by the preceding
     local `cogworks run` to the hosted run.
+
+    Read at discovery time, where the repository is. What the run does with
+    this sentence -- lead with it, withhold an overall -- is the scorer's
+    decision and is not written into it here.
     """
 
-    lead = "overall withheld: the image side has no trained weights to measure."
+    lead = "the image side has no trained weights to measure."
     where = save_call(root)
     if where is None:
         return (
             lead
-            + " Nothing under this repository loads as a (512, D) projection and no"
-            " source file saves one, so there is no image embedding to score."
+            + " Nothing under this repository loads as a (512, D) projection and"
+            " this run found no code that saves one, so there is no image embedding"
+            " to score."
             " Keep the weights your training run produces out of git. Then run"
             " `cogworks run` locally and `cogworks sync`; the hosted run will fetch"
             " the weights the local run used."

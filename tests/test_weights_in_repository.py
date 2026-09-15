@@ -306,8 +306,11 @@ class TestMissingWeightsGuidance:
         )
         _write(repository, ".gitignore", "*.pkl\n")
 
+        # No "overall withheld" here: whether an overall is published is the
+        # scorer's decision, and this sentence is written while the
+        # repository is open, one process before that decision exists.
         assert roles.weights_diagnostic(repository) == (
-            "overall withheld: the image side has no trained weights to measure. "
+            "the image side has no trained weights to measure. "
             "Your training.py saves to results/modelweights.pkl (training.py:2), and it "
             "matches .gitignore line 1. Keep that weights file out of git. Then run "
             "`cogworks run` locally and `cogworks sync`; the hosted run will fetch the "
