@@ -243,14 +243,14 @@ class LanguageSearchBenchmark:
         "search_mrr": (
             "The application end to end: a query string in, ranked image ids out, "
             "through whatever database the submission built. This is the average "
-            "over four versions of every query (the caption unchanged, its "
-            "keywords only, its first three words, and one with a typo), so it "
-            "asks whether search holds up on what a person would actually type "
-            "rather than only on a caption handed back verbatim. The four are "
-            "listed separately further down, so a low score here can be traced "
-            "to the rewrite that caused it. Weak here while the two above are "
-            "strong points at the plumbing, meaning the database, the id "
-            "mapping, or the query path, rather than at the embeddings."
+            "over three rewrites of every query -- its keywords only, its first "
+            "three words, and one with a typo -- so it asks whether search holds "
+            "up on what a person would actually type. The caption unchanged is "
+            "run and reported beside them, not scored. All four are listed "
+            "separately further down, so a low score here can be traced to the "
+            "rewrite that caused it. Weak here while the two above are strong "
+            "points at the plumbing, meaning the database, the id mapping, or "
+            "the query path, rather than at the embeddings."
         ),
         "retrieval_recall_at_1": (
             "How often the caption's own image is the single top match. The "
@@ -294,9 +294,9 @@ class LanguageSearchBenchmark:
             "not scored, because those captions are in the file your code is "
             "handed: a submission that looked the query up in that file "
             "instead of embedding it would answer every one of them. Read it "
-            "next to the scored search number. Close together means your "
-            "embedding is doing the work. Far apart, with this one high, "
-            "means the query text is being matched rather than its meaning."
+            "next to the scored search number: the distance between them is "
+            "how far your results move when the wording changes. A large one, "
+            "with this rung high, is where to start looking."
         ),
         "retrieval_mrr_verbatim": (
             "The same reading for retrieval: the captions unchanged, "
