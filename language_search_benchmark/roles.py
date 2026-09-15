@@ -101,8 +101,11 @@ MAX_WEIGHT_BYTES = 200 * 1024 * 1024
 #: else.
 LOAD_TIMEOUT_SECONDS = 20
 
-#: Directories never walked when looking for weights.
-_SKIP_DIRECTORIES = (".git", "__pycache__", ".venv", "venv", "node_modules")
+#: Directories never walked when looking for weights. `.cogbench` holds the
+#: copies `capture` retained, under the same names as the originals, so a
+#: repository that resolved once read as having two candidate files the
+#: second time.
+_SKIP_DIRECTORIES = (".git", ".cogbench", "__pycache__", ".venv", "venv", "node_modules")
 
 
 class AmbiguousWeights(RuntimeError):

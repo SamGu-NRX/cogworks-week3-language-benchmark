@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import os
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Tuple, Any, Callable, Dict, List, Optional, Sequence
+from typing import (
+    Tuple, Any, Callable, Dict, Iterator, List, Mapping, Optional, Sequence,
+)
 
 from . import __version__, perturb
 from .contracts import Resources
@@ -467,22 +470,21 @@ class LanguageSearchBenchmark:
             # an overall for a repository whose image side was never built.
             if "image" not in absent and NotBound.MARK not in str(output.get("error", "")):
                 return None
-        note = getattr(self, "_weights_note", None)
-        if note:
-            return note
+        report = getattr(self, "_weights_report", {}) or {}
+        if report.get("note"):
+            return report["note"]
         root = getattr(self, "_discovery_root", None)
         if root is None:
             return "overall withheld: the image side has no trained weights to measure."
-        extras = getattr(self, "_discovery_extras", {}) or {}
         absent = getattr(self, "_discovery_missing", {}) or {}
-        if "W" in extras and "image" in absent:
+        if report.get("path") and "image" in absent:
             # The weights were found and read; their image step is what did
             # not bind. Saying "no trained weights" here would send the team
             # to commit a file that is already committed.
             return (
                 "overall withheld: your trained weights were read from {}, but no "
                 "function in this repository turned descriptors into vectors with "
-                "them: {}".format(extras.get("weights_path", "the repository"), absent["image"])
+                "them: {}".format(report["path"], absent["image"])
             )
         from .roles import weights_diagnostic
 
@@ -581,6 +583,7 @@ class LanguageSearchBenchmark:
             extras=extras,
             resource_files=files,
             prepare=self._weights_of,
+            construct=self._weights_model_for,
             weights_consumed=self._weights_consumed,
             expects="every case the bound surfaces cover running, with finite caption embeddings",
         )
@@ -657,18 +660,25 @@ class LanguageSearchBenchmark:
     def _weights_of(
         self,
         root: Path,
-        modules: Sequence[Any] = (),
+        # Their modules, handed positionally by the SDK and unread: choosing
+        # the file is a question about the repository, and the part that ran
+        # their code is now `_weights_model_for`.
+        _modules: Sequence[Any] = (),
         capture: Optional[Callable[[Path], Path]] = None,
     ) -> Dict[str, Any]:
         """The trained projection this repository committed, for the pool.
 
         Read once the root is known, which is after `discovery()` and before
         the search. `W` is the (512, D) matrix their image step takes as an
-        argument or their database class takes in its constructor;
-        `weights_model` is one of their own model objects loaded from the
-        same file (`roles.loaded_model`), for a team whose encoder is an
-        object rather than a matrix (Bagel). Absent weights leave both out,
-        the image branch does not bind, and `score` withholds the overall.
+        argument or their database class takes in its constructor. Absent
+        weights leave it out, the image branch does not bind, and `score`
+        withholds the overall.
+
+        Data only. The pool's other weight name, `weights_model`, is one of
+        their own objects, so `_weights_model_for` builds it once per reading
+        out of the file named here. Returned from here it was one instance,
+        built under the search's namespace and held after that namespace was
+        gone.
 
         Several weight files with no load call to decide between them are
         the same outcome with a different sentence: the image side is not
@@ -678,15 +688,9 @@ class LanguageSearchBenchmark:
         policy (docs/design/discovery-v2-brief.md, "Absent weights").
         """
 
-        from .roles import AmbiguousWeights, loaded_model, weights_in
+        from .roles import AmbiguousWeights, weights_in
 
         self._discovery_root = Path(root)
-        self._weights_note = None
-        # One plugin serves one search, but a process that resolves several
-        # repositories in turn (the corpus tool, a test) would otherwise
-        # carry the previous repository's matrix into this one's pool.
-        for name in ("W", "weights_model", "weights_cited", "weights_path"):
-            self._discovery_extras.pop(name, None)
         try:
             # `capture` is the SDK's; when it offers one, the winning file is
             # retained before anything loads it and both loaders below read
@@ -694,7 +698,7 @@ class LanguageSearchBenchmark:
             # what was scored.
             found = weights_in(Path(root), capture=capture)
         except AmbiguousWeights as error:
-            self._weights_note = (
+            return {"weights_report": {"note": (
                 "overall withheld: several files in this repository load as a "
                 "(512, D) projection and no load call in your code says which one "
                 "to score: {}. Load one of them by name in the script you run, or "
@@ -703,25 +707,51 @@ class LanguageSearchBenchmark:
                         sorted(p.relative_to(root).as_posix() for p in error.candidates)
                     )
                 )
-            )
-            return {}
+            )}}
         if found is None:
             return {}
         # No `weights_used` here: what `capture` retained is what the run
         # scored, and the SDK reports that. Naming the file again would be a
         # second answer that could disagree with the first.
-        supplied: Dict[str, Any] = {"W": found.matrix}
-        # Their own `load` reads this path, so it gets the retained copy too.
-        # The matrix and the model must come from one set of bytes or the
-        # report would describe only half of what scored.
-        model = loaded_model(modules, found.source)
-        if model is not None:
-            supplied["weights_model"] = model[1]
-            self._discovery_extras["weights_model_label"] = model[0]
-        self._discovery_extras.update(supplied)
-        self._discovery_extras["weights_cited"] = found.cited
-        self._discovery_extras["weights_path"] = found.path.relative_to(root).as_posix()
-        return supplied
+        #
+        # `weights_report` is what `score` says about this repository's image
+        # side, carried here so it arrives on the submission it describes.
+        return {
+            "W": found.matrix,
+            "weights_source": found.source,
+            "weights_report": {
+                "path": found.path.relative_to(root).as_posix(),
+                "cited": found.cited,
+            },
+        }
+
+    @contextmanager
+    def _weights_model_for(
+        self, _root: Path, namespace: Sequence[Any], inputs: Mapping[str, Any]
+    ) -> Iterator[Mapping[str, Any]]:
+        """Their own encoder, filled from the retained file, for one reading.
+
+        A team whose image side is an object rather than a matrix saves its
+        parameters and reads them back with a method of their own class
+        (Bagel's `ImageToCaption().load(path)`). The object is theirs, so it
+        is built from `namespace`, the reading that is about to use it, and
+        from the file `prepare` chose and the SDK retained, so the model and
+        the matrix come from one set of bytes.
+
+        Nothing under that name when the repository has no weights, or when no
+        class of theirs loads them and encodes afterwards; an image side that
+        is a plain matrix binds on `W` alone.
+
+        Nothing is released on the way out. The value is an instance of their
+        class, with whatever lifecycle they gave it and no `close` this
+        benchmark knows of, so letting go of the reference is the whole of it.
+        """
+
+        from .roles import loaded_model
+
+        source = inputs.get("weights_source")
+        loaded = loaded_model(namespace, source) if source is not None else None
+        yield {} if loaded is None else {"weights_model": loaded[1]}
 
     def _accepts(self, chains: Any, *_: Any):
         """The week's acceptance test, closed over the discovery fixture."""
@@ -749,19 +779,30 @@ class LanguageSearchBenchmark:
         The weights the image branch bound with, if any, travel on the
         submission's extras as `W`; the adapter carries them so a scored run
         projects with the same matrix the search proved.
+
+        What `score` will say about the image side is read off this submission
+        too, beside its missing branches and its root. All three describe one
+        repository, and a plugin that resolves several in turn had only its
+        last answer to report from: with two weighted repositories, the second
+        one's ambiguity note was what the first one's run page led with.
         """
 
         from .discovered import build
 
-        found = getattr(submission, "discovery", None)
-        root = getattr(getattr(found, "root", None), "path", None)
-        if root is not None:
+        # Off the record rather than off `submission.discovery`, which a run
+        # lets go of once it has a reading of its own; the root it read is
+        # reported either way.
+        read = submission.to_dict().get("discovery") or {}
+        root = read.get("root")
+        if root:
             self._discovery_root = Path(root)
         missing = getattr(submission, "missing", None) or {}
         self._discovery_missing = {
             name: str(getattr(refusal, "detail", refusal))[:200]
             for name, refusal in dict(missing).items()
         }
+        prepared = getattr(submission, "prepared", None) or {}
+        self._weights_report = dict(prepared.get("weights_report") or {})
         return build(submission, getattr(self, "_discovery_extras", {}))
 
     def cache_status(self, tier: str, cache_root: Optional[Path] = None) -> CacheStatus:
