@@ -87,9 +87,6 @@ class _Bound(DiscoveredSearch):
         super().__init__({name: () for name in self.branches}, {}, image_note)
         self._working = PerfectAdapter(universe)
 
-    def __getattr__(self, name):
-        raise AttributeError(name)
-
     def embed_text(self, captions):
         return self._working.embed_text(captions)
 
