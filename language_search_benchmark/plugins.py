@@ -48,6 +48,63 @@ def _unbound_surfaces(outputs: Sequence[Dict[str, Any]]) -> Dict[str, str]:
     return {name: found[name] for name in _SURFACES if name in found}
 
 
+def _ambiguous_note(root: Path, error: Any) -> str:
+    """What to say when more than one file could be the projection.
+
+    ``error`` is a `roles.AmbiguousWeights`, untyped here because this
+    module reaches `roles` through deferred imports.
+
+    Three sentences, because `score` splits a note into one diagnostic per
+    sentence and the run page leads with the first: what happened, the
+    evidence, what to do. The paths are in the second sentence rather than
+    the headline, which is set in serif and was already two lines without
+    them.
+
+    The two ways to reach this refusal need opposite instructions
+    (`roles.AmbiguousWeights`). Saying that nothing in their code loads one
+    of these files by name is plainly false to a student whose two training
+    scripts each load one, and the advice that follows it is work they have
+    already done.
+    """
+
+    files = sorted(path.relative_to(root).as_posix() for path in error.candidates)
+    cited = {
+        path.relative_to(root).as_posix(): where for path, where in error.cited.items()
+    }
+    if not cited:
+        return (
+            "several files in this repository load as a (512, D) projection and "
+            "nothing in your code loads one of them by name, so this run could not "
+            "tell which one to score. The files are {}. Load one by name in the "
+            "script you run, or remove the others, and run again.".format(
+                ", ".join(files)
+            )
+        )
+    return (
+        "several files in this repository load as a (512, D) projection and your "
+        "code loads more than one of them, so this run could not tell which one "
+        "to score. Your code loads {}. Keep the load for the one you score, drop "
+        "the rest, and run again.".format(
+            ", ".join("{} at {}".format(name, cited[name]) for name in sorted(cited))
+        )
+    )
+
+
+def _clipped(detail: str, limit: int = 180) -> str:
+    """Discovery's own words, short enough to finish the sentence they end.
+
+    Their length is not ours to control and the wire caps a diagnostic at
+    240 characters, so this cuts first and leaves room for the few words
+    this benchmark puts in front of them. At a word, because a sentence
+    that stops mid-word reads as a fault in the report rather than a limit.
+    """
+
+    detail = " ".join(detail.split())
+    if len(detail) <= limit:
+        return detail
+    return detail[:limit].rsplit(" ", 1)[0] + "..."
+
+
 def _sentences(note: str) -> List[str]:
     """Split a diagnostic at sentence ends, keeping abbreviations like `e.g.`
     and dotted paths whole: a boundary is a period followed by a space and a
@@ -443,7 +500,11 @@ class LanguageSearchBenchmark:
         rest: List[str] = []
         for surface, reason in unbound.items():
             if surface != leading:
-                rest.extend(_sentences(reason))
+                # A reader who has just been told what to do about the
+                # headline needs to know the next note is a different
+                # problem and not more of that one.
+                opener = "Separately, " if leading is not None else ""
+                rest.extend(_sentences(opener + reason))
                 continue
             headline = "overall withheld: " + reason
             if surface != "image":
@@ -730,21 +791,7 @@ class LanguageSearchBenchmark:
             # what was scored.
             found = weights_in(Path(root), capture=capture)
         except AmbiguousWeights as error:
-            # Three sentences, because `score` splits a note into one
-            # diagnostic per sentence and the run page leads with the first:
-            # what happened, which files, what to do. The paths are in the
-            # second sentence rather than the headline, which is set in
-            # serif and was already two lines without them.
-            self._weights_note = (
-                "several files in this repository load as a (512, D) projection and "
-                "nothing in your code loads one of them by name, so this run could "
-                "not tell which one to score. The files are {}. Load one by name in "
-                "the script you run, or remove the others, and run again.".format(
-                    ", ".join(
-                        sorted(p.relative_to(root).as_posix() for p in error.candidates)
-                    )
-                )
-            )
+            self._weights_note = _ambiguous_note(Path(root), error)
             return {}
         if found is None:
             self._weights_note = weights_diagnostic(Path(root))
@@ -798,7 +845,7 @@ class LanguageSearchBenchmark:
         from .discovered import build
 
         missing = {
-            name: str(getattr(refusal, "detail", refusal))[:200]
+            name: str(getattr(refusal, "detail", refusal))
             for name, refusal in dict(getattr(submission, "missing", None) or {}).items()
         }
         note = self._image_note(missing)
@@ -834,9 +881,12 @@ class LanguageSearchBenchmark:
             # control, so it starts its own sentence rather than running the
             # first one past the wire's 240-character cap.
             return (
-                "your trained weights loaded from {}, but this run could not use "
-                "any of your functions as the image step. What the search found: "
-                "{}".format(extras.get("weights_path", "the repository"), missing["image"])
+                "your trained weights loaded from {}, but this run found no "
+                "function it could use to turn image descriptors into vectors. "
+                "Why: {}".format(
+                    extras.get("weights_path", "the repository"),
+                    _clipped(missing["image"]),
+                )
             )
         return None
 

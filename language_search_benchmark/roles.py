@@ -107,20 +107,27 @@ _SKIP_DIRECTORIES = (".git", ".cogbench", "__pycache__", ".venv", "venv", "node_
 
 
 class AmbiguousWeights(RuntimeError):
-    """Several files could be the trained projection and their code names none.
+    """Several files could be the trained projection and their code picks none.
 
     Deliberately an error rather than a choice. Picking the newest file would
     bind differently against a squashed clone of the same repository, and
     picking the largest would be a guess about their training script. The
     image side is refused and every candidate is listed, which is a thing a
     student can act on in one commit.
+
+    Two repositories reach this and they need opposite advice. One names no
+    candidate at all, and its student adds a load. One loads two of them at
+    the same level, and its student removes a load. ``cited`` is what tells
+    them apart: the candidates their own source names, with where it names
+    each, empty when it names none.
     """
 
-    def __init__(self, candidates: Sequence[Path]) -> None:
+    def __init__(self, candidates: Sequence[Path], cited: Dict[Path, str]) -> None:
         self.candidates = [Path(path) for path in candidates]
+        self.cited = {Path(path): where for path, where in cited.items()}
         super().__init__(
             "several files could be the trained image projection and no source "
-            "file names one of them: {}".format(
+            "file names exactly one of them: {}".format(
                 ", ".join(sorted(str(path) for path in self.candidates))
             )
         )
@@ -708,7 +715,7 @@ def weights_in(
     top = {p: cites for p, cites in top.items() if cites}
     chosen = top if top else {p: [c for c, _ in cites] for p, cites in loads.items()}
     if len(chosen) != 1:
-        raise AmbiguousWeights(holding)
+        raise AmbiguousWeights(holding, {p: cites[0] for p, cites in chosen.items()})
     path, citations = next(iter(chosen.items()))
     return _read(path, citations[0], capture)
 

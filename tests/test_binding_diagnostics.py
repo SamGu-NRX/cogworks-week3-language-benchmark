@@ -24,7 +24,7 @@ import pytest
 
 from language_search_benchmark.discovered import DiscoveredSearch, NotBound
 from language_search_benchmark.drivers import run_cases
-from language_search_benchmark.plugins import LanguageSearchBenchmark
+from language_search_benchmark.plugins import LanguageSearchBenchmark, _sentences
 
 from .fixtures.synthetic import PerfectAdapter, Universe
 
@@ -131,6 +131,42 @@ class TestTheCauseSurvivesTheInstanceBoundary:
         # 240-character cap splits off into its own entry.
         assert any("Load one by name in the script you run" in note for note in diagnostics)
 
+    def test_two_load_calls_are_not_reported_as_no_load_call(
+        self, universe, cases, repository
+    ):
+        """The other way into the same refusal, which needs the other advice.
+
+        `roles.AmbiguousWeights` is raised both when their code names none of
+        the candidates and when it names more than one. Telling the second
+        student that nothing in their code loads one by name is false, and
+        the instruction that follows is work they have already done.
+        """
+
+        for name, module in (
+            ("data/W_embed.npy", "train.py"),
+            ("models/W_other.npy", "embed.py"),
+        ):
+            path = repository / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            np.save(path, np.ones((512, 200), dtype=np.float32))
+            (repository / module).write_text(
+                "import numpy as np\nW = np.load({!r})\n".format(Path(name).name)
+            )
+
+        note = _discovery_note(repository)
+        _metrics, diagnostics = _scored(universe, cases, {"image": note})
+
+        assert diagnostics[0].endswith(
+            "your code loads more than one of them, so this run could not tell "
+            "which one to score."
+        )
+        assert any(
+            "data/W_embed.npy at train.py:2" in note
+            and "models/W_other.npy at embed.py:2" in note
+            for note in diagnostics
+        )
+        assert "nothing in your code loads one of them" not in " ".join(diagnostics)
+
     def test_genuinely_missing_weights_keep_the_local_sync_instruction(
         self, universe, cases, repository
     ):
@@ -184,6 +220,8 @@ class TestEachAbsenceIsSaidOnce:
         assert sum("image descriptors into vectors" in note for note in binding) == 1
         assert sum("searchable database" in note for note in binding) == 1
         assert len(set(diagnostics)) == len(diagnostics)
+        # The second finding is a different problem, not more of the first.
+        assert any(note.startswith("Separately, ") for note in diagnostics)
 
     def test_the_image_side_leads_and_its_numbers_are_withheld(self, universe, cases):
         metrics, _diagnostics = _scored(universe, cases)
@@ -282,6 +320,21 @@ class TestWhichAnswerDiscoveryGives:
 
         assert note.startswith("your trained weights loaded from data/W_embed.npy")
         assert "nothing accepted the input" in note
+
+    def test_a_long_refusal_detail_is_cut_at_a_word(self):
+        """The wire caps a diagnostic at 240 characters and the detail is
+        discovery's, not ours; a sentence that stops mid-word reads as a
+        fault in the report."""
+
+        plugin = LanguageSearchBenchmark()
+        plugin._discovery_extras = {"W": object(), "weights_path": "data/W_embed.npy"}
+
+        note = plugin._image_note({"image": "overlong " * 60})
+        tail = note.split("Why: ", 1)[1]
+
+        assert tail.endswith("...")
+        assert not tail[:-3].endswith("overlon")
+        assert max(len(sentence) for sentence in _sentences(note)) <= 240
 
     def test_a_bound_image_branch_has_nothing_to_explain(self):
         plugin = LanguageSearchBenchmark()
