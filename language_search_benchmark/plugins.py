@@ -111,10 +111,12 @@ def _refusal_reason(refusal: Any) -> str:
 def _clipped(detail: str, limit: int = 180) -> str:
     """Discovery's own words, short enough to finish the sentence they end.
 
-    Their length is not ours to control and the wire caps a diagnostic at
-    240 characters, so this cuts first and leaves room for the few words
-    this benchmark puts in front of them. At a word, because a sentence
-    that stops mid-word reads as a fault in the report rather than a limit.
+    Their length is not ours to control and a saved local report caps a
+    diagnostic at 240 characters, so this cuts first and leaves room for
+    the few words this benchmark puts in front of them. At a word, because
+    a sentence that stops mid-word reads as a fault in the report rather
+    than a limit. The hosted wire allows 600 and wraps rather than cutting;
+    240 is the one that binds.
     """
 
     detail = " ".join(detail.split())
@@ -510,10 +512,11 @@ class LanguageSearchBenchmark:
         # four times and the database note four more. Listed whether or not a
         # number was withheld, so no absence can go unsaid.
         #
-        # One sentence per diagnostic. The run page shows the first entry as
-        # the headline and the rest as notes, and the wire caps each entry at
-        # 240 characters; the whole note is 320 to 366, so as one entry it was
-        # cut mid-word on exactly the run whose note matters.
+        # One sentence per diagnostic, because the run page shows the first
+        # entry as the headline and the rest as notes. A saved local report
+        # also caps an entry at 240 characters, and these notes run to 366,
+        # so as one entry the longest was cut mid-word on exactly the run
+        # whose note matters. The hosted wire allows 600 and wraps.
         lead: List[str] = []
         rest: List[str] = []
         for surface, reason in unbound.items():
@@ -894,7 +897,7 @@ class LanguageSearchBenchmark:
             # to commit a file that is already committed. The refusal detail
             # is discovery's own words and its length is not ours to
             # control, so it starts its own sentence rather than running the
-            # first one past the wire's 240-character cap.
+            # first one past a saved report's 240-character cap.
             return (
                 "your trained weights loaded from {}, but this run found no "
                 "function it could use to turn image descriptors into vectors. "

@@ -137,8 +137,8 @@ class TestTheCauseSurvivesTheInstanceBoundary:
         assert "no trained weights" not in " ".join(diagnostics)
         assert "no trained image projection" not in " ".join(diagnostics)
         assert any("data/W_embed.npy, models/W_other.npy" in note for note in diagnostics)
-        # The action, which is the half of the sentence the wire's
-        # 240-character cap splits off into its own entry.
+        # The action, which `score` splits into its own entry so a saved
+        # report's 240-character cap cannot cut it.
         assert any("Load one by name in the script you run" in note for note in diagnostics)
 
     def test_two_load_calls_are_not_reported_as_no_load_call(
@@ -364,8 +364,8 @@ class TestWhichAnswerDiscoveryGives:
         assert "nothing accepted the input" in note
 
     def test_a_long_refusal_detail_is_cut_at_a_word(self):
-        """The wire caps a diagnostic at 240 characters and the detail is
-        discovery's, not ours; a sentence that stops mid-word reads as a
+        """A saved report caps a diagnostic at 240 characters and the detail
+        is discovery's, not ours; a sentence that stops mid-word reads as a
         fault in the report."""
 
         plugin = LanguageSearchBenchmark()
