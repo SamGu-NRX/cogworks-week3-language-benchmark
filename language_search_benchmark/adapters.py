@@ -83,6 +83,21 @@ class AdaptedSearchAdapter:
         return None
 
     @property
+    def image_needs_database(self) -> bool:
+        """Whether `embed_images` needs `prepare_database` to have run first.
+
+        Forwarded only from a `DiscoveredSearch`, for the reason
+        `absent_surfaces` is: the driver reorders calls on it, and a
+        submission's own attribute of that name is not ours to act on.
+        """
+
+        from .discovered import DiscoveredSearch
+
+        if isinstance(self._target, DiscoveredSearch):
+            return self._target.image_needs_database
+        return False
+
+    @property
     def has_search(self) -> bool:
         return self._search_fn is not None
 

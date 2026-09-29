@@ -136,6 +136,23 @@ class DiscoveredSearch:
         return "image" in self._branches
 
     @property
+    def image_needs_database(self) -> bool:
+        """Whether an image step is a method of the object prepare builds.
+
+        Lashika's `ImageDatabase(ids, descriptors, W).descriptor_to_embedding`
+        reads its projection off `self`. The search carried it into the image
+        branch with `branch="prepare"`, and the SDK takes it off this run's
+        prepare output or refuses (`cogbench.pipeline._rebound`), so it cannot
+        run until `prepare_database` has. The driver reads this to build the
+        database first.
+        """
+
+        return any(
+            getattr(step, "branch", None) == "prepare"
+            for step in self._branches.get("image", ())
+        )
+
+    @property
     def absent_surfaces(self) -> Dict[str, str]:
         """The branches that did not bind, and what to say about each.
 
@@ -193,20 +210,33 @@ class DiscoveredSearch:
         # The prepare step was bound on one of several argument forms
         # (`roles.prepare_forms`): ids and raw descriptors either way round,
         # or ids and the image branch's projected matrix either way round.
-        # The scored run hands it the same form, made from this run's
-        # values; the image branch runs first so the projected forms exist.
+        # The scored run hands it the same form, made from this run's values.
+        #
+        # The image branch runs first only when prepare depends on it: a
+        # projected form is made from its output, and a prepare step that is
+        # a method of the object the image branch built (`branch="image"`)
+        # needs that object. Otherwise it does not run, because the prepare
+        # constructor may itself be the image step's owner
+        # (`image_needs_database`) and the SDK refuses that step until the
+        # owner exists. The search cannot have bound a dependency both ways:
+        # each branch is offered the other's output only after the other
+        # bound.
         from .roles import prepare_forms
 
-        projected = None
-        if "image" in self._branches:
-            projected = self._through("image", [np.asarray(descriptors)])
-        forms = prepare_forms(list(image_ids), np.asarray(descriptors), projected)
-        first = self._branches["prepare"][0]
-        which = getattr(first, "form", None) or 0
+        ids = list(image_ids)
+        raw = np.asarray(descriptors)
+        forms = prepare_forms(ids, raw)
+        chain = self._branches["prepare"]
+        which = getattr(chain[0], "form", None) or 0
+        needs_image = which >= len(forms) or any(
+            getattr(step, "branch", None) == "image" for step in chain
+        )
+        if needs_image and "image" in self._branches:
+            forms = prepare_forms(ids, raw, self._through("image", [raw]))
         if which >= len(forms):
             raise NotBound(
                 "{} was bound on argument form {} and this run has only {} forms; "
-                "the image branch did not run".format(first.label, which, len(forms))
+                "the image branch did not run".format(chain[0].label, which, len(forms))
             )
         self._store = self._through("prepare", list(forms[which]))
         self._extras["store"] = self._store

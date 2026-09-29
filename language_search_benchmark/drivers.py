@@ -103,6 +103,27 @@ def run_with_adapter(adapter: Any, cases: Sequence[Any]) -> List[Dict[str, Any]]
     # the comparison because shared pools share objects and distinct pools
     # never do.
     prepared_pool: Any = None
+
+    def prepare(image_ids: Any, descriptors: Any) -> None:
+        nonlocal prepared_pool
+        if (
+            prepared_pool is not None
+            and prepared_pool[0] is image_ids
+            and prepared_pool[1] is descriptors
+        ):
+            return
+        # A raising prepare must not leave the stale pair cached, so clear
+        # before the call and record after it succeeds.
+        prepared_pool = None
+        adapter.prepare_database(image_ids, descriptors)
+        prepared_pool = (image_ids, descriptors)
+
+    # Whether the image encoder is a method of the database, and so has no
+    # owner until prepare_database has built one. Only a discovered binding
+    # can say so (`DiscoveredSearch.image_needs_database`); a submission's
+    # own adapter embeds images on its own, and the order it is called in
+    # does not change.
+    image_needs_database = bool(getattr(adapter, "image_needs_database", False))
     for case in cases:
         kind = getattr(case, "kind", "?")
         try:
@@ -111,6 +132,16 @@ def run_with_adapter(adapter: Any, cases: Sequence[Any]) -> List[Dict[str, Any]]
                 outputs.append({"ok": True, "kind": kind, "embeddings": _rounded(embeddings)})
             elif kind == "retrieval":
                 text_matrix = adapter.embed_text(case.queries)
+                if image_needs_database:
+                    if case.database is None:
+                        raise CheckFailure(
+                            "the image encoder is a method of the database, and this "
+                            "retrieval case names no pool to build it from."
+                        )
+                    # Built from the pair the search cases hold, so the search
+                    # finds this database already built and the index is built
+                    # once per pool, as it is when retrieval does not need it.
+                    prepare(*case.database)
                 image_matrix = adapter.embed_images(case.descriptors)
                 if text_matrix.shape[1] != image_matrix.shape[1]:
                     raise CheckFailure(
@@ -133,16 +164,7 @@ def run_with_adapter(adapter: Any, cases: Sequence[Any]) -> List[Dict[str, Any]]
                         "the submission exposes no search(query, k) surface; the search "
                         "component scores zero until one is added."
                     )
-                if (
-                    prepared_pool is None
-                    or prepared_pool[0] is not case.image_ids
-                    or prepared_pool[1] is not case.descriptors
-                ):
-                    # A raising prepare must not leave the stale pair cached,
-                    # so clear before the call and record after it succeeds.
-                    prepared_pool = None
-                    adapter.prepare_database(case.image_ids, case.descriptors)
-                    prepared_pool = (case.image_ids, case.descriptors)
+                prepare(case.image_ids, case.descriptors)
                 rankings = [adapter.search(query, case.k) for query in case.queries]
                 validated = validate_rankings(
                     rankings, len(case.queries), case.image_ids, case.k, "search"

@@ -86,9 +86,10 @@ def test_retrieval_is_at_its_floor(null_metrics):
 
     This fixture reaches it a weaker way than the real exploit does, and the
     reason is worth writing down. The driver embeds the retrieval queries
-    before it calls `prepare_database`, and `RetrievalCase` carries no image
-    ids, so a submission cannot learn the pool row order in time from this
-    synthetic universe. Against the real benchmark it can: the descriptor
+    before it calls `prepare_database`, and calls it from a retrieval case
+    only for a discovered image encoder that is a method of the database, so
+    a submission cannot learn the pool row order in time from this synthetic
+    universe. Against the real benchmark it can: the descriptor
     matrix is shared with the search case, whose `image_ids` name the same
     rows, and both are pinned artifacts a submission may inspect ahead of
     time. That is how the measured 1.0000 was reached.

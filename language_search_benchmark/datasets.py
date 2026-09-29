@@ -31,7 +31,7 @@ import urllib.request
 import zipfile
 from dataclasses import dataclass, replace
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -143,6 +143,19 @@ class RetrievalCase:
     #: submission is handed, which is why it is reported and not scored; see
     #: docs/decisions/week3-verbatim-probes.md.
     rung: str = "verbatim"
+    #: The `(image_ids, descriptors)` pair the search cases build their
+    #: database from: those same objects, not copies. An image encoder can be
+    #: a method of that database (`ImageDatabase.descriptor_to_embedding`,
+    #: reading the projection off `self`), and then it has no owner until the
+    #: database exists. The driver builds it from this pair, so the owner holds
+    #: this run's pool, and the search cases find it already built rather than
+    #: building a second one. Not `descriptors`, which retrieval ranks and a
+    #: submission's `prepare_database` may modify in place.
+    #:
+    #: Last and optional because cases are also written out by hand: the
+    #: platform's runner tests and a saved environment construct this class
+    #: without it. `build_cases` always sets it.
+    database: Optional[Tuple[List[int], np.ndarray]] = None
 
 
 @dataclass
@@ -563,6 +576,8 @@ def build_cases(
       Nothing in the contract asks a submission's `prepare_database` to leave
       the pool alone, and the retrieval rewrites are ranked after it runs;
       sharing one array let an in-place prepare move all three of them.
+      A retrieval case whose image encoder needs the database builds it from
+      the search pair (`RetrievalCase.database`) for the same reason.
     """
 
     seed = int(tie_break_seed)
@@ -578,6 +593,7 @@ def build_cases(
             descriptors=pool_descriptors,
             gold_rows=None,
             tie_break_seed=seed,
+            database=(search_image_ids, search_descriptors),
             rung=rung,
         )
 
