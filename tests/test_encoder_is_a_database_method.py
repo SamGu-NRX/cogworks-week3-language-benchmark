@@ -332,9 +332,11 @@ def _discovered(repository, form, matrix):
     """Resolve `FORMS[form]` with `matrix` on disk, and check what bound.
 
     Every branch comes from discovery itself. The projected forms' search
-    step needs cogbench 7886034 or later: before it, renewing a binding did
-    not rebuild the image branch whose output the projected prepare form is
-    made from, so the search branch was refused.
+    step binds only with an SDK whose renewal rebuilds an earlier branch that
+    a later branch's fixture reads, first written as cogbench 7886034 and
+    verified here with the published cb8b582 (SamGu-NRX/CogPortal#48).
+    Without that fix the image branch the projected prepare form is made from
+    was not rebuilt, and the search branch was refused.
     """
 
     _write(repository, matrix, source=FORMS[form])

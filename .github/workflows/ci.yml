@@ -17,5 +17,13 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: python -m pip install -e .[test]
+      # Test-only. The package does not depend on the SDK, but every test that
+      # drives discovery skips without it (`pytest.importorskip("cogbench")`).
+      # Pinned to a published SDK revision (SamGu-NRX/CogPortal#48) that
+      # carries the branch-renewal fix the projected-store tests need.
+      - run: >-
+          python -m pip install
+          "cogworks-benchmark @ git+https://github.com/SamGu-NRX/CogPortal.git@cb8b5829df946b4cd564dabf9362f0f91541de54#subdirectory=python/cogbench"
+      - run: python -c "import cogbench; print(cogbench.__version__, cogbench.__file__)"
       - run: python -m ruff check language_search_benchmark tools
       - run: python -m pytest tests -q
