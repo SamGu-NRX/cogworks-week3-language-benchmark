@@ -88,6 +88,30 @@ class TheSharingPolicyIsPartOfTheGrid(unittest.TestCase):
         for case in retrievals:
             self.assertIs(case.descriptors, retrievals[0].descriptors, case.rung)
 
+    def test_every_retrieval_case_names_the_search_pool_as_its_database(self):
+        """The driver builds a database-owned image encoder's owner from this
+        pair, and the search then finds it built only if these are the very
+        objects it compares by identity."""
+
+        cases = grid()
+        search = next(case for case in cases if case.kind == "search")
+        for case in cases:
+            if case.kind == "retrieval":
+                self.assertIs(case.database[0], search.image_ids, case.rung)
+                self.assertIs(case.database[1], search.descriptors, case.rung)
+                self.assertIsNot(case.database[1], case.descriptors, case.rung)
+        restored = attach_gold(
+            cases,
+            text_group_rows=[0, 0, 1],
+            retrieval_gold_rows=[0, 1, 2],
+            search_gold_image_ids=[10, 11, 12],
+        )
+        restored_search = next(case for case in restored if case.kind == "search")
+        for case in restored:
+            if case.kind == "retrieval":
+                self.assertIs(case.database[0], restored_search.image_ids, case.rung)
+                self.assertIs(case.database[1], restored_search.descriptors, case.rung)
+
     def test_search_works_on_a_copy_so_a_mutating_prepare_cannot_reach_retrieval(self):
         cases = grid()
         search = next(case for case in cases if case.kind == "search")
@@ -213,10 +237,17 @@ class MaterializeCasesResolvesAManifestAndNothingElse(unittest.TestCase):
             for field in fields(left):
                 a = getattr(left, field.name)
                 b = getattr(right, field.name)
-                if isinstance(a, np.ndarray):
-                    np.testing.assert_array_equal(a, b, field.name)
+                name = "{}.{}".format(left.kind, field.name)
+                if isinstance(a, tuple):  # `RetrievalCase.database`: (ids, matrix)
+                    self.assertEqual(len(a), len(b), name)
+                    pairs = list(zip(a, b))
                 else:
-                    self.assertEqual(a, b, "{}.{}".format(left.kind, field.name))
+                    pairs = [(a, b)]
+                for x, y in pairs:
+                    if isinstance(x, np.ndarray):
+                        np.testing.assert_array_equal(x, y, name)
+                    else:
+                        self.assertEqual(x, y, name)
 
 
 if __name__ == "__main__":
