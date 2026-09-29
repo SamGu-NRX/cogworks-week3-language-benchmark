@@ -318,40 +318,45 @@ def _assert_scored_with(found, projection):
     return images, rankings
 
 
-def _with_search(found, form):
-    """`found`, with a projected store's search step written down.
-
-    The SDK does not currently bind it: renewing the binding runs only the
-    branches a step names as an input (`cogbench.resolve._taken_by`), so the
-    image branch that a projected prepare form is made from is not run, the
-    form index is out of range, and the search branch is refused. Written the
-    way `_resolve_branches` carries a store's method: taken off whatever the
-    prepare branch built in this run, by attribute and owner, sharing the
-    constructor's construction handle.
-    """
-
-    from cogbench.pipeline import Candidate
-
-    if form < 2:
-        return found
-    constructor = found.branches["prepare"][0]
-    store = constructor.call
-    search = Candidate(
-        "database.CaptionImageQuery.search", store.search, "database",
-        attribute="search", owner=store, branch="prepare",
-        receiver=constructor.receiver,
-    )
-    return replace(found, branches=dict(found.branches, search=(search,)))
+#: The search step each form's repository binds: a method of the object the
+#: prepare branch built, carried into the search branch.
+SEARCH_LABELS = {
+    0: "database.ImageDatabase.query",
+    1: "database.ImageDatabase.query",
+    2: "database.CaptionImageQuery.search",
+    3: "database.CaptionImageQuery.search",
+}
 
 
 def _discovered(repository, form, matrix):
-    """Resolve `FORMS[form]` with `matrix` on disk; check the form it bound."""
+    """Resolve `FORMS[form]` with `matrix` on disk, and check what bound.
+
+    Every branch comes from discovery itself. The projected forms' search
+    step needs cogbench 7886034 or later: before it, renewing a binding did
+    not rebuild the image branch whose output the projected prepare form is
+    made from, so the search branch was refused.
+    """
 
     _write(repository, matrix, source=FORMS[form])
     found = _resolve(repository)
     assert found.ready, found.verdict.headline
-    assert found.branches["prepare"][0].form == form
-    return _with_search(found, form)
+    constructor = found.branches["prepare"][0]
+    assert constructor.form == form
+    assert isinstance(constructor.call, type)
+    search = found.branches["search"]
+    assert [step.label for step in search] == [SEARCH_LABELS[form]]
+    assert search[0].branch == "prepare"
+    assert search[0].owner is constructor.call
+    image = found.branches["image"][0]
+    # Forms 0 and 1 are the database's own method, which needs its owner;
+    # the projected forms' encoder is standalone and runs first.
+    if form < 2:
+        assert image.branch == "prepare"
+        assert image.owner is constructor.call
+    else:
+        assert image.branch is None
+        assert image.label == "database.descriptor_to_embedding"
+    return found
 
 
 def _digest(path):
@@ -456,10 +461,6 @@ class TestTheDatabaseIsBuiltBeforeItsEncoderRuns:
         self, repository, form
     ):
         found = _discovered(repository, form, A)
-        image = found.branches["image"][0]
-        # Forms 0 and 1 are the database's own method, which needs its owner;
-        # the projected forms' encoder is standalone and runs first.
-        assert (image.branch == "prepare") is (form < 2)
         store = found.branches["prepare"][0].call
         before = len(store.built)
 
