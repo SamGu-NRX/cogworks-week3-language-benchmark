@@ -316,8 +316,9 @@ class TestMissingWeightsGuidance:
             "projection, so there is no image embedding to score. "
             "Your training.py saves to results/modelweights.pkl (training.py:2), and it "
             "matches .gitignore line 1. Keep that weights file out of git. Then run "
-            "`cogworks run` locally and `cogworks sync`; the hosted run will fetch the "
-            "weights the local run used."
+            "`cogworks run` locally and `cogworks sync` on the commit you'll evaluate. "
+            "A hosted run fetches only the weights synced from its own commit, so after "
+            "a new commit, run both again."
         )
 
 

@@ -201,7 +201,8 @@ class TestTheCauseSurvivesTheInstanceBoundary:
             "loads as a (512, D) projection"
         )
         assert "results/modelweights.pkl" in joined
-        assert "cogworks sync" in joined
+        assert "`cogworks sync` on the commit you'll evaluate" in joined
+        assert "after a new commit, run both again" in joined
 
     def test_a_refusal_this_cannot_explain_states_only_what_was_observed(
         self, universe, cases
