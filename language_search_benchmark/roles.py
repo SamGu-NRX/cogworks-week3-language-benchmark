@@ -895,7 +895,7 @@ def weights_diagnostic(root: Path) -> str:
 
     The save target and ignore line come from the repository. The weights stay
     out of git because `cogworks sync` transfers the file used by the preceding
-    local `cogworks run` to the hosted run.
+    local `cogworks run` to a hosted run of the same commit, and to no other.
 
     Read at discovery time, where the repository is. What the run does with
     this sentence -- lead with it, withhold an overall -- is the scorer's
@@ -917,8 +917,9 @@ def weights_diagnostic(root: Path) -> str:
             lead
             + " It found no code that saves one either."
             " Keep the weights your training run produces out of git. Then run"
-            " `cogworks run` locally and `cogworks sync`; the hosted run will fetch"
-            " the weights the local run used."
+            " `cogworks run` locally and `cogworks sync` on the commit you'll evaluate."
+            " A hosted run fetches only the weights synced from its own commit, so"
+            " after a new commit, run both again."
         )
     source, line, target = where
     sentence = "{} Your {} saves to {} ({}:{})".format(lead, source, target, source, line)
@@ -928,7 +929,9 @@ def weights_diagnostic(root: Path) -> str:
     return (
         sentence
         + ". Keep that weights file out of git. Then run `cogworks run` locally"
-        " and `cogworks sync`; the hosted run will fetch the weights the local run used."
+        " and `cogworks sync` on the commit you'll evaluate. A hosted run fetches"
+        " only the weights synced from its own commit, so after a new commit, run"
+        " both again."
     )
 
 
