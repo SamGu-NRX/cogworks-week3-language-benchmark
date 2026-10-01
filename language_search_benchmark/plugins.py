@@ -119,6 +119,33 @@ def _still_measured(metrics: Dict[str, float]) -> str:
     return "your {} and {} scores are".format(", ".join(names[:-1]), names[-1])
 
 
+def _search_against_retrieval(metrics: Dict[str, float]) -> str:
+    """Search and retrieval on the same queries, as one sentence.
+
+    Both average the same three rewritten query sets over the same image
+    pool (`datasets.build_cases`). Retrieval ranks the submission's
+    embeddings, unit-normalized and rounded (`drivers._rounded`), over the
+    whole pool. Search goes through the submission's own search code and is
+    scored on its first `SEARCH_K` results, so a search that returns the
+    embedding ranking exactly still scores below retrieval when a correct
+    image sits past that cut. The sentence describes how each number was
+    measured and claims nothing about which difference produced a gap.
+    Text MRR ranks captions among captions, so setting it beside these
+    would compare unlike scales.
+
+    The numbers are stated and not judged. No measurement says how large a
+    gap matters, so its size is left to the reader.
+    """
+
+    return (
+        "On the same rewritten queries, your search scored {:.3f} and a direct "
+        "ranking of your embeddings scored {:.3f}; search runs through your own "
+        "code and is scored on its first {} results.".format(
+            metrics["search_mrr"], metrics["retrieval_mrr"], SEARCH_K
+        )
+    )
+
+
 def _clipped(detail: str, limit: int = 180) -> str:
     """Discovery's own words, short enough to finish the sentence they end.
 
@@ -496,9 +523,6 @@ class LanguageSearchBenchmark:
 
     def score(self, outputs: Sequence[Dict[str, Any]], cases: Sequence[Any]) -> Dict[str, float]:
         metrics, diagnostics = component_scores(outputs, cases, SEARCH_K)
-        for output in outputs:
-            for mapping in output.get("mappings", []):
-                diagnostics.append("adapter: {}".format(mapping))
         # A submission with no image side (discovery found text but no
         # trained weights) has retrieval and search cases that never ran.
         # The driver scores those as zero with a diagnostic, and an overall
@@ -567,6 +591,23 @@ class LanguageSearchBenchmark:
                 "so start with the first."
             )
         diagnostics[0:0] = lead + rest
+        # A run where every case ran and nothing was withheld wrote nothing
+        # above, so the run page had no sentence to lead with
+        # (run_d11b5e5e2e). Only such a run gets this finding: a failed case
+        # puts a zero into the numbers it compares, and its own note leads.
+        clean = not unbound and all(output.get("ok") for output in outputs)
+        if clean and {"retrieval", "search"} <= scored:
+            diagnostics.append(_search_against_retrieval(metrics))
+        # Last, because they say how the benchmark called the code rather
+        # than anything it measured. On a clean run with nothing else to
+        # say, the first of them used to become the headline. A complete
+        # grid always has something above them now; a hand-built case list
+        # without retrieval or search can still end up with one first.
+        diagnostics.extend(
+            "adapter: {}".format(mapping)
+            for output in outputs
+            for mapping in output.get("mappings", [])
+        )
         self.last_diagnostics = diagnostics[:32]
         self.last_sweep = self._rung_curve(metrics)
         return metrics
