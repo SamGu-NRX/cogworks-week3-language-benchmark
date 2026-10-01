@@ -303,6 +303,22 @@ class TestASurfaceThatIsAbsentButNotUnmeasured:
         )
 
 
+@pytest.mark.parametrize(
+    "branches", [("text", "image"), ("text", "prepare", "search")]
+)
+def test_a_withheld_run_gets_no_search_against_retrieval_finding(
+    universe, cases, branches
+):
+    """One of the two numbers that sentence compares is withheld here, so
+    writing it would publish the number the run refuses to publish."""
+
+    half_bound = type("HalfBound", (_Bound,), {"branches": branches})
+    _metrics, diagnostics = _score(universe, cases, half_bound(universe))
+
+    assert diagnostics[0].startswith("overall withheld: ")
+    assert not any("On the same rewritten queries" in note for note in diagnostics)
+
+
 class TestAComponentThatRanAndFailedIsStillItsOwnFinding:
     def test_their_own_error_is_reported_per_component(self, universe, cases):
         """A bound function that raises is not an absent surface.
