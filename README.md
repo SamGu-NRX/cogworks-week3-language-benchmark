@@ -62,12 +62,21 @@ telling you what to add, never a guess.
 
 ## Data
 
-The three course files you already have are the only inputs: the COCO 2014
-captions, the ResNet-18 descriptor pickle, and the 200-d GloVe embeddings.
-The benchmark verifies them by checksum and caches them. Files the course's
-`cogworks-data` package already fetched are found and reused automatically;
-you can also point `COGWORKS_LANGUAGE_DATA` at a folder that holds them.
-No image files are needed to score a run.
+Three course files are the only inputs: the COCO 2014 captions, the
+ResNet-18 descriptor pickle, and the 200-d GloVe embeddings. pip installs the
+scorer but not these files, which come to about 935 MB, so fetch them once
+before the first `cogworks check`:
+
+```
+python -m language_search_benchmark.fetch
+```
+
+It verifies each file by checksum and keeps it in a cache folder. Copies the
+course's `cogworks-data` package already fetched are reused instead of
+downloaded, including its zipped GloVe, which is unzipped once. You can also
+point `COGWORKS_LANGUAGE_DATA` at a folder that already holds all three.
+Running it again downloads nothing that is already in place. No image files
+are needed to score a run.
 
 The evaluation splits are fixed files in `language_search_benchmark/manifests/`,
 built once with a recorded seed. The official run on the portal uses a
@@ -79,6 +88,7 @@ From your repo, with the course environment active:
 
 ```
 python -m pip install -e .
+python -m language_search_benchmark.fetch   # once per machine
 cogworks check --benchmark language-search
 cogworks test  --benchmark language-search   # small split, a couple of minutes
 cogworks run   --benchmark language-search   # the public evaluation split

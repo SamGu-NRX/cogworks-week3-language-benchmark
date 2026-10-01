@@ -83,6 +83,20 @@ ARTIFACTS: Dict[str, Dict[str, Any]] = {
     },
 }
 
+#: The command that fills the cache and runs nothing else. The missing-file
+#: messages below name it because that is where a cold machine first learns
+#: the data is missing; they used to say `cogworks test`, which searches the
+#: repository before loading any data and so stopped on the same message.
+FETCH_COMMAND = "python -m language_search_benchmark.fetch"
+
+
+def megabytes(size: int) -> str:
+    return "{:,} MB".format(int(round(size / 1e6)))
+
+
+#: What a cold cache downloads, for the messages that warn about it.
+FETCH_TOTAL = megabytes(sum(int(spec["size"]) for spec in ARTIFACTS.values()))
+
 #: Where the course's cogworks-data package caches the same files; adopted
 #: (after hash verification) so students never download twice.
 COURSE_CACHE_APP = "cog_data"
@@ -244,10 +258,20 @@ def _verify(path: Path, size: int, sha256: str, root: Path, key: str) -> bool:
     return True
 
 
+def _discard(temp_name: Optional[str]) -> None:
+    if temp_name is None:
+        return
+    try:
+        os.unlink(temp_name)
+    except OSError:
+        pass
+
+
 def _download(urls: Sequence[str], dest: Path, size: int, sha256: str) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     last_error: Optional[Exception] = None
     for url in urls:
+        temp_name: Optional[str] = None
         try:
             with tempfile.NamedTemporaryFile(dir=str(dest.parent), delete=False) as stream:
                 temp_name = stream.name
@@ -269,10 +293,13 @@ def _download(urls: Sequence[str], dest: Path, size: int, sha256: str) -> None:
             return
         except (OSError, DatasetError) as error:
             last_error = error
-            try:
-                os.unlink(temp_name)
-            except OSError:
-                pass
+            _discard(temp_name)
+        except BaseException:
+            # Ctrl-C is not an OSError. Without this, stopping halfway through
+            # the 693 MB GloVe file leaves the partial file in the cache folder
+            # under a random name, one more for every interrupted attempt.
+            _discard(temp_name)
+            raise
     raise DatasetError(
         "Could not fetch {}: {}".format(dest.name, last_error)
     ) from last_error
@@ -305,33 +332,51 @@ def _ensure_glove(root: Path) -> Path:
         str(spec["filename"]), target, int(spec["size"]), str(spec["sha256"])
     ) and _verify(target, int(spec["size"]), str(spec["sha256"]), root, "glove"):
         return target
-    try:
-        _download(
-            [str(url) for url in spec["urls"]],
-            target,
-            int(spec["size"]),
-            str(spec["sha256"]),
-        )
-        if _verify(target, int(spec["size"]), str(spec["sha256"]), root, "glove"):
-            return target
-    except DatasetError:
-        pass  # fall through to the zipped Dropbox copy
     archive = spec["archive"]
     zip_path = root / str(archive["filename"])
-    if not _verify(zip_path, int(archive["size"]), str(archive["sha256"]), root, "glove-zip"):
+
+    def have_zip() -> bool:
+        return _verify(zip_path, int(archive["size"]), str(archive["sha256"]), root, "glove-zip")
+
+    # cogworks-data keeps GloVe only as this zip (its registry has no unzipped
+    # 200-d file), so a student who fetched it for the course has these exact
+    # bytes. Unzipping them beats downloading 693 MB again.
+    zipped = have_zip() or (
+        _adopt_from_course_cache(
+            str(archive["filename"]), zip_path, int(archive["size"]), str(archive["sha256"])
+        )
+        and have_zip()
+    )
+    if not zipped:
+        try:
+            _download(
+                [str(url) for url in spec["urls"]],
+                target,
+                int(spec["size"]),
+                str(spec["sha256"]),
+            )
+            if _verify(target, int(spec["size"]), str(spec["sha256"]), root, "glove"):
+                return target
+        except DatasetError:
+            pass  # fall through to the zipped Dropbox copy
         _download(
             [str(url) for url in archive["urls"]],
             zip_path,
             int(archive["size"]),
             str(archive["sha256"]),
         )
-        if not _verify(zip_path, int(archive["size"]), str(archive["sha256"]), root, "glove-zip"):
+        if not have_zip():
             raise DatasetError("The GloVe archive failed verification after download.")
-    with zipfile.ZipFile(str(zip_path)) as bundle:
-        with tempfile.NamedTemporaryFile(dir=str(root), delete=False) as stream:
-            temp_name = stream.name
-            with bundle.open(str(archive["member"])) as member:
-                shutil.copyfileobj(member, stream, length=1024 * 1024)
+    temp_name: Optional[str] = None
+    try:
+        with zipfile.ZipFile(str(zip_path)) as bundle:
+            with tempfile.NamedTemporaryFile(dir=str(root), delete=False) as stream:
+                temp_name = stream.name
+                with bundle.open(str(archive["member"])) as member:
+                    shutil.copyfileobj(member, stream, length=1024 * 1024)
+    except BaseException:
+        _discard(temp_name)
+        raise
     os.replace(temp_name, str(target))
     if not _verify(target, int(spec["size"]), str(spec["sha256"]), root, "glove"):
         raise DatasetError("The extracted GloVe file failed verification.")
@@ -349,11 +394,13 @@ def _missing_message(target: Path) -> str:
     if target.is_file():
         return (
             "{} exists but does not match its checksum pin (wrong or corrupted "
-            "copy). Delete it and run `cogworks test` to fetch a clean one.".format(target)
+            "copy). Run `{}` to replace it with a clean one.".format(target, FETCH_COMMAND)
         )
     return (
-        "{} is not cached. Run `cogworks test` to fetch it, or point {} at a "
-        "directory that already has the course files.".format(target, DATA_ENV)
+        "{} is not cached. Run `{}` to fetch the course files (about {}, once), "
+        "or point {} at a folder that already has them.".format(
+            target, FETCH_COMMAND, FETCH_TOTAL, DATA_ENV
+        )
     )
 
 
