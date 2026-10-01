@@ -83,6 +83,20 @@ ARTIFACTS: Dict[str, Dict[str, Any]] = {
     },
 }
 
+#: The command that fills the cache and runs nothing else. The missing-file
+#: messages below name it because that is where a cold machine first learns
+#: the data is missing; they used to say `cogworks test`, which searches the
+#: repository before loading any data and so stopped on the same message.
+FETCH_COMMAND = "python -m language_search_benchmark.fetch"
+
+
+def megabytes(size: int) -> str:
+    return "{:,} MB".format(int(round(size / 1e6)))
+
+
+#: What a cold cache downloads, for the messages that warn about it.
+FETCH_TOTAL = megabytes(sum(int(spec["size"]) for spec in ARTIFACTS.values()))
+
 #: Where the course's cogworks-data package caches the same files; adopted
 #: (after hash verification) so students never download twice.
 COURSE_CACHE_APP = "cog_data"
@@ -244,10 +258,20 @@ def _verify(path: Path, size: int, sha256: str, root: Path, key: str) -> bool:
     return True
 
 
+def _discard(temp_name: Optional[str]) -> None:
+    if temp_name is None:
+        return
+    try:
+        os.unlink(temp_name)
+    except OSError:
+        pass
+
+
 def _download(urls: Sequence[str], dest: Path, size: int, sha256: str) -> None:
     dest.parent.mkdir(parents=True, exist_ok=True)
     last_error: Optional[Exception] = None
     for url in urls:
+        temp_name: Optional[str] = None
         try:
             with tempfile.NamedTemporaryFile(dir=str(dest.parent), delete=False) as stream:
                 temp_name = stream.name
@@ -269,10 +293,13 @@ def _download(urls: Sequence[str], dest: Path, size: int, sha256: str) -> None:
             return
         except (OSError, DatasetError) as error:
             last_error = error
-            try:
-                os.unlink(temp_name)
-            except OSError:
-                pass
+            _discard(temp_name)
+        except BaseException:
+            # Ctrl-C is not an OSError. Without this, stopping halfway through
+            # the 693 MB GloVe file leaves the partial file in the cache folder
+            # under a random name, one more for every interrupted attempt.
+            _discard(temp_name)
+            raise
     raise DatasetError(
         "Could not fetch {}: {}".format(dest.name, last_error)
     ) from last_error
@@ -349,11 +376,13 @@ def _missing_message(target: Path) -> str:
     if target.is_file():
         return (
             "{} exists but does not match its checksum pin (wrong or corrupted "
-            "copy). Delete it and run `cogworks test` to fetch a clean one.".format(target)
+            "copy). Run `{}` to replace it with a clean one.".format(target, FETCH_COMMAND)
         )
     return (
-        "{} is not cached. Run `cogworks test` to fetch it, or point {} at a "
-        "directory that already has the course files.".format(target, DATA_ENV)
+        "{} is not cached. Run `{}` to fetch the course files (up to {}, once), "
+        "or point {} at a folder that already has them.".format(
+            target, FETCH_COMMAND, FETCH_TOTAL, DATA_ENV
+        )
     )
 
 
