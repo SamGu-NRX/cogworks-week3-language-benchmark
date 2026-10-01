@@ -332,33 +332,51 @@ def _ensure_glove(root: Path) -> Path:
         str(spec["filename"]), target, int(spec["size"]), str(spec["sha256"])
     ) and _verify(target, int(spec["size"]), str(spec["sha256"]), root, "glove"):
         return target
-    try:
-        _download(
-            [str(url) for url in spec["urls"]],
-            target,
-            int(spec["size"]),
-            str(spec["sha256"]),
-        )
-        if _verify(target, int(spec["size"]), str(spec["sha256"]), root, "glove"):
-            return target
-    except DatasetError:
-        pass  # fall through to the zipped Dropbox copy
     archive = spec["archive"]
     zip_path = root / str(archive["filename"])
-    if not _verify(zip_path, int(archive["size"]), str(archive["sha256"]), root, "glove-zip"):
+
+    def have_zip() -> bool:
+        return _verify(zip_path, int(archive["size"]), str(archive["sha256"]), root, "glove-zip")
+
+    # cogworks-data keeps GloVe only as this zip (its registry has no unzipped
+    # 200-d file), so a student who fetched it for the course has these exact
+    # bytes. Unzipping them beats downloading 693 MB again.
+    zipped = have_zip() or (
+        _adopt_from_course_cache(
+            str(archive["filename"]), zip_path, int(archive["size"]), str(archive["sha256"])
+        )
+        and have_zip()
+    )
+    if not zipped:
+        try:
+            _download(
+                [str(url) for url in spec["urls"]],
+                target,
+                int(spec["size"]),
+                str(spec["sha256"]),
+            )
+            if _verify(target, int(spec["size"]), str(spec["sha256"]), root, "glove"):
+                return target
+        except DatasetError:
+            pass  # fall through to the zipped Dropbox copy
         _download(
             [str(url) for url in archive["urls"]],
             zip_path,
             int(archive["size"]),
             str(archive["sha256"]),
         )
-        if not _verify(zip_path, int(archive["size"]), str(archive["sha256"]), root, "glove-zip"):
+        if not have_zip():
             raise DatasetError("The GloVe archive failed verification after download.")
-    with zipfile.ZipFile(str(zip_path)) as bundle:
-        with tempfile.NamedTemporaryFile(dir=str(root), delete=False) as stream:
-            temp_name = stream.name
-            with bundle.open(str(archive["member"])) as member:
-                shutil.copyfileobj(member, stream, length=1024 * 1024)
+    temp_name: Optional[str] = None
+    try:
+        with zipfile.ZipFile(str(zip_path)) as bundle:
+            with tempfile.NamedTemporaryFile(dir=str(root), delete=False) as stream:
+                temp_name = stream.name
+                with bundle.open(str(archive["member"])) as member:
+                    shutil.copyfileobj(member, stream, length=1024 * 1024)
+    except BaseException:
+        _discard(temp_name)
+        raise
     os.replace(temp_name, str(target))
     if not _verify(target, int(spec["size"]), str(spec["sha256"]), root, "glove"):
         raise DatasetError("The extracted GloVe file failed verification.")
@@ -379,7 +397,7 @@ def _missing_message(target: Path) -> str:
             "copy). Run `{}` to replace it with a clean one.".format(target, FETCH_COMMAND)
         )
     return (
-        "{} is not cached. Run `{}` to fetch the course files (up to {}, once), "
+        "{} is not cached. Run `{}` to fetch the course files (about {}, once), "
         "or point {} at a folder that already has them.".format(
             target, FETCH_COMMAND, FETCH_TOTAL, DATA_ENV
         )

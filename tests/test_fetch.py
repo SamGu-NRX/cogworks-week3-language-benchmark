@@ -7,9 +7,11 @@ folder, because the real one on a developer's machine may hold the real files.
 """
 
 import hashlib
+import io
 import os
 import subprocess
 import sys
+import zipfile
 
 import pytest
 
@@ -20,6 +22,14 @@ CONTENT = {
     "descriptors": b"descriptor bytes",
     "glove": b"the 0.1 0.2\n",
 }
+GLOVE_ZIP = "glove.6B.200d.txt.w2v.zip"
+
+
+def _zipped_glove():
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as bundle:
+        bundle.writestr("glove.6B.200d.txt.w2v", CONTENT["glove"])
+    return buffer.getvalue()
 
 
 @pytest.fixture
@@ -38,6 +48,15 @@ def world(tmp_path, monkeypatch):
             "size": len(body),
             "sha256": hashlib.sha256(body).hexdigest(),
         }
+    archive = _zipped_glove()
+    (upstream / GLOVE_ZIP).write_bytes(archive)
+    table["glove"]["archive"] = {
+        "filename": GLOVE_ZIP,
+        "urls": [(upstream / GLOVE_ZIP).as_uri()],
+        "size": len(archive),
+        "sha256": hashlib.sha256(archive).hexdigest(),
+        "member": "glove.6B.200d.txt.w2v",
+    }
     monkeypatch.setattr(datasets, "ARTIFACTS", table)
 
     data = tmp_path / "data"
@@ -60,7 +79,7 @@ def world(tmp_path, monkeypatch):
 def _cut_upstream(world):
     """Any download attempted after this fails, so reuse is observable."""
 
-    for spec in world["table"].values():
+    for spec in [*world["table"].values(), world["table"]["glove"]["archive"]]:
         spec["urls"] = [(world["upstream"] / "gone" / str(spec["filename"])).as_uri()]
 
 
@@ -95,16 +114,67 @@ def test_second_run_reuses_the_cache_without_downloading(world, capsys):
     assert "getting" not in out
 
 
-def test_course_cache_copies_are_adopted_instead_of_downloaded(world, capsys):
+def _course_cache(world, glove_zipped=True):
+    """What cogworks-data leaves behind: captions and descriptors as-is, and
+    GloVe only as the zip its registry names."""
+
     world["course"].mkdir()
-    for name, body in CONTENT.items():
-        (world["course"] / str(datasets.ARTIFACTS[name]["filename"])).write_bytes(body)
+    for name in ("captions", "descriptors"):
+        (world["course"] / str(datasets.ARTIFACTS[name]["filename"])).write_bytes(CONTENT[name])
+    if glove_zipped:
+        (world["course"] / GLOVE_ZIP).write_bytes(_zipped_glove())
+    else:
+        (world["course"] / "glove.6B.200d.txt.w2v").write_bytes(CONTENT["glove"])
+
+
+@pytest.mark.parametrize("glove_zipped", [True, False])
+def test_course_cache_copies_are_adopted_instead_of_downloaded(world, capsys, glove_zipped):
+    _course_cache(world, glove_zipped)
     _cut_upstream(world)
 
     assert fetch.main([]) == 0
 
     for name, body in CONTENT.items():
         assert (world["data"] / str(datasets.ARTIFACTS[name]["filename"])).read_bytes() == body
+    # The unzipped copy is what the benchmark reads; the zip it came from is
+    # not kept twice, and the course's own copy is left alone.
+    assert not (world["data"] / GLOVE_ZIP).exists()
+    if glove_zipped:
+        assert (world["course"] / GLOVE_ZIP).is_file()
+
+
+def test_an_interrupted_unzip_leaves_no_partial_file(world, monkeypatch, capsys):
+    _course_cache(world)
+    _cut_upstream(world)
+
+    def interrupted(source, target, length=0):
+        target.write(b"partial")
+        raise KeyboardInterrupt
+
+    # Adoption links or copies whole files; only the unzip streams.
+    monkeypatch.setattr(datasets.shutil, "copyfileobj", interrupted)
+
+    assert fetch.main([]) == 130
+
+    assert not list(world["data"].glob("tmp*"))
+    assert not (world["data"] / "glove.6B.200d.txt.w2v").exists()
+
+
+def test_a_folder_it_cannot_write_to_is_reported_not_raised(world, monkeypatch, capsys):
+    world["data"].mkdir()
+    (world["data"] / "captions_train2014.json").write_bytes(CONTENT["captions"])
+
+    def unwritable(root, state):
+        raise PermissionError(13, "Permission denied", str(root / "cache-state.json"))
+
+    # Checking a file already present records the result in the folder.
+    monkeypatch.setattr(datasets, "_save_state", unwritable)
+
+    assert fetch.main([]) == 1
+
+    err = capsys.readouterr().err
+    assert "Permission denied" in err
+    assert "write to the folder above" in err
 
 
 def test_a_folder_that_already_has_the_files_is_used_in_place(world, capsys):

@@ -71,13 +71,12 @@ before the first `cogworks check`:
 python -m language_search_benchmark.fetch
 ```
 
-It verifies each file by checksum and keeps it in a cache folder. A matching
-copy the course's `cogworks-data` package already fetched is reused instead
-of downloaded (it usually has the captions and descriptors; it keeps GloVe
-zipped, so that one is downloaded). You can also point
-`COGWORKS_LANGUAGE_DATA` at a folder that already holds all three. Running it
-again downloads nothing that is already in place. No image files are needed
-to score a run.
+It verifies each file by checksum and keeps it in a cache folder. Copies the
+course's `cogworks-data` package already fetched are reused instead of
+downloaded, including its zipped GloVe, which is unzipped once. You can also
+point `COGWORKS_LANGUAGE_DATA` at a folder that already holds all three.
+Running it again downloads nothing that is already in place. No image files
+are needed to score a run.
 
 The evaluation splits are fixed files in `language_search_benchmark/manifests/`,
 built once with a recorded seed. The official run on the portal uses a
