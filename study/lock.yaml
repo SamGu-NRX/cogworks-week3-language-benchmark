@@ -1,0 +1,142 @@
+# study/lock.yaml — pre-registered configuration.
+# Committed to obv/products-language-validity-20261009 BEFORE any arm was evaluated.
+# Any later change is a deviation and is logged in study/REPORT.md under "Deviations".
+
+study_id: products-language-validity-20261009
+created: 2026-10-09
+base_branch: fix/weights-exact-commit-20261001
+pr_branch: obv/products-language-validity-20261009
+scorer_under_study: retrieval-v4 (plugins.LanguageSearchBenchmark.scorer_version)
+
+environment:
+  python: "3.13.14"
+  numpy: "2.3.5"
+  gensim: "4.4.0"
+  scipy: "1.17.1"
+  host: sandbox cmp_A82357hd (SamGu-NRX/cogworks-week3-language-benchmark)
+
+data:  # sha256 pins from language_search_benchmark.datasets.ARTIFACTS, verified by fetch
+  captions_sha256: dd8c9636dc11740f956e36728866ea0c4ebe4988dcbdc5e712b7c2267f152d12
+  descriptors_sha256: d56e267dacd39608b4aae581595f8fa8ec55457ab59b713df1eafa93e1023450
+  glove_sha256: dcee6ecdefebb5a884b23f2353561cc5f0527e59592525c0e3f4a31d81d91272
+manifests: [language-search-public-test-v1, language-search-public-evaluation-v1]
+
+cases:
+  tiers: [test, evaluation]          # both public tiers, every arm
+  rungs: [verbatim, keywords, truncated, typo]
+  scored_aggregates: retrieval-v4 definitions (rewritten rungs only; verbatim reported)
+  selection_rule: >
+    Locked before evaluation. Every arm runs every case on every tier; no arm,
+    rung, tier, or query may be dropped after seeing scores. A failed or
+    unavailable arm is recorded with its status and error and kept in the report.
+
+seeds:  # all fixed before first run
+  bootstrap: 20261009
+  natural_sample: 20261009
+  reference_training: 20261001
+  lookup_codebook: 20261001
+  judge_shortlist: 20261009
+
+arms:
+  reference:
+    what: >
+      Course-style reimplementation: IDF-weighted GloVe-200 caption embedding
+      (log(N/df) over all 414,113 corpus annotations; lowercase + punctuation
+      strip; OOV contributes zero; empty captions embed as zero vectors),
+      image side a linear projection W (512->200) trained by ridge regression
+      from ResNet-18 descriptors to their image's mean caption embedding over
+      all described images with descriptors; lambda picked by gold-pair cosine
+      on a fixed seeded validation slice (grid {1e-2, 1, 100}); search is the
+      submission's own index (prepare_database stores embeddings, search ranks
+      by cosine, ties by pool order).
+    label: >
+      Reimplemented for this study. The staff reference submission is not in
+      this repository; quoted historical reference numbers (0.6925/0.6594 test)
+      come from that unavailable implementation and are cited, not reproduced.
+  lookup-derived:
+    what: >
+      Full lookup baseline with self-contained rewrite inversion and no
+      benchmark-package imports. Own stopword list (superset assumptions
+      allowed), derived keys (keyword-set, first-three-content-words), typo
+      repair by deletion-neighborhood edit distance <= 1 against the corpus
+      vocabulary. Answers via one 512-d Gaussian codebook keyed by image id
+      (the checks.MAX_DIM ceiling blocks raw one-hots over the 700-image
+      pool). Search ranks pool images by content-token overlap with the
+      query after typo repair, ties by pool order.
+    label: realistic cheater (no access to perturb internals)
+  lookup-oracle:
+    what: lookup-derived but building keys with the benchmark's own perturb module.
+    label: upper bound; submissions do not receive the package
+  lookup-exact:
+    what: exact-string dictionary lookup only (the existing test_lookup_shortcut route).
+    label: what the current guards measure
+  mistake-no-idf: reference with uniform word weights
+  mistake-raw-count: reference weighting words by raw corpus count
+  mistake-perword-norm: reference averaging L2-normalized word vectors
+  mistake-raw-descriptor: >
+    embed_images returns raw 512-d descriptors (no learned projection); text
+    side zero-padded to 512
+  mistake-oov-crash: reference but embed_text raises on any vocabulary-missing token
+  mistake-memsearch: reference embeddings; search answers by exact-string lookup only
+  control-constant: identical row vectors everywhere (all-ties)
+  control-zero: all-zero embeddings; empty rankings
+  control-random: fixed-seed Gaussian, uncorrelated
+  control-shuffled: reference embeddings with rows permuted inside each batch (right vectors, wrong pairing)
+  control-poolorder: search returns pool order; inert embeddings
+
+audits:
+  multi_relevant:
+    established: >
+      Exact caption-text duplicates across distinct images (annotation-level
+      facts). Measured corpus-wide and in-pool. Pre-measured at lock time:
+      in-pool duplicates are 0 on both tiers; corpus-level duplicates exist
+      (1/20 test queries, 10/150 evaluation queries) but never land in-pool.
+    interpretive: >
+      Token-Jaccard near-duplicate bands (thresholds 0.6, 0.8) between each
+      query caption and every other pool image's captions on evaluation; plus
+      agent judgment of the top non-gold pool image per evaluation query
+      (bounded 150 judgments) under the reference arm. ALL agent-authored
+      labels are interpretive, not independent human truth, and are reported
+      separately from established facts.
+  natural_queries:
+    established: >
+      Co-captions of evaluation-tier query images (up to 2 per image, seeded
+      sample, excluding the scored query caption), scored through retrieval
+      and search on the same pool. COCO annotation establishes their
+      relevance; the strings are natural sentences, not rewrites.
+    interpretive: >
+      The 10 staff showcase captions (absent from COCO by design); gold must
+      be judged; agent-authored, interpretive, reported separately.
+    conditions_rule: >
+      Rewritten captions and natural queries are different conditions. No
+      pooling, no averaging across conditions, no claim that agent-authored
+      relevance is independent human truth.
+  prototypes:
+    what: >
+      Best-rank-among-established/interpretive-relevant MRR and recall@k over
+      relevant sets, computed from saved raw ranks of the reference and
+      lookup arms. Carries a comparability warning everywhere it appears:
+      these are NOT retrieval-v4 metrics and are not comparable to published
+      numbers.
+
+stats:
+  paired_bootstrap:
+    reps: 10000
+    ci: 0.95
+    unit: query for retrieval/search and natural-established; image for text (queries cluster by image)
+  survival: >
+    For each prespecified arm pair, the sign of the paired difference per
+    tier x component x rung; ordering flips are reported, not smoothed.
+
+validation:
+  reference_implementations: pure-python, derived from first principles, compared against
+    language_search_benchmark.metrics on hand cases, seeded random matrices,
+    Monte Carlo checks of every closed-form floor on the real group structures,
+    tie/permutation probes, and a rounding-flip probe replicating the driver's
+    normalize->round(5dp) path.
+  gate: no variant difference is interpreted before the validation table passes.
+
+outputs:
+  layout: study/results/<tier>/<arm>.json + study/results/manifests/ + study/results/validation/
+  raw: per-query ranks, per-query rankings, per-caption ranks, gold, status, error strings
+  replay: python -m study.run_study --replay   (uses lock.yaml; deterministic)
