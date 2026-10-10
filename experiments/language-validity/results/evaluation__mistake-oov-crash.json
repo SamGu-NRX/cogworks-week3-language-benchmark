@@ -1,0 +1,83 @@
+{
+ "tier": "evaluation",
+ "arm": "mistake-oov-crash",
+ "search_k": 50,
+ "manifest_digests": {
+  "public-test.json": "78a0a194519852ceacd9a4f0688927859eac377b267ebc5c83a91e812b8894a7",
+  "public-evaluation.json": "638526642e7c25ecb1a9ca68aa633d769cd87e9d91eedd243a577143c99c427a"
+ },
+ "env": {
+  "python": "3.13.14",
+  "numpy": "2.3.5",
+  "machine": "x86_64"
+ },
+ "git": {
+  "git_head": "b3952213c8dbd736da59c9e130a5863f078d66e2",
+  "git_dirty": "?? experiments/language-validity/results/\n?? study/results/"
+ },
+ "started_utc": "2026-10-10T19:08:54Z",
+ "status": "ok",
+ "error": null,
+ "metrics": {
+  "overall": 0.0,
+  "text_mrr": 0.0,
+  "retrieval_mrr": 0.0,
+  "search_mrr": 0.0,
+  "retrieval_recall_at_1": 0.0,
+  "retrieval_recall_at_5": 0.0,
+  "retrieval_recall_at_10": 0.0,
+  "retrieval_median_rank": 700.0,
+  "chance_mrr": 0.01018430016513033,
+  "text_chance": 0.03997975884400964,
+  "search_chance": 0.006427436197613463,
+  "search_mrr_keywords": 0.0,
+  "search_mrr_truncated": 0.0,
+  "search_mrr_typo": 0.0,
+  "search_mrr_verbatim": 0.0,
+  "retrieval_mrr_keywords": 0.0,
+  "retrieval_mrr_truncated": 0.0,
+  "retrieval_mrr_typo": 0.0,
+  "retrieval_mrr_verbatim": 0.0
+ },
+ "diagnostics": [
+  "text component scored 0: embed_text raised: unseen word \"that's\" in \"Girl in the street with a skateboard that's off the ground.\". A per-item retry also failed: embed_text returned inconsistent widths per item: [5800, 6200, 6",
+  "retrieval component scored 0: embed_text raised: unseen word \"doesn't\" in \"A double bed doesn't provide enough room for her overweight \". A per-item retry also failed: embed_text returned inconsistent widths per item: [6600, 6800,",
+  "the keywords retrieval rung scored 0: embed_text raised: unseen word \"doesn't\" in \"double bed doesn't provide enough room overweight body.\". A per-item retry also failed: embed_text returned inconsistent widths per item: [3600, 3800, 4000",
+  "the truncated retrieval rung scored 0: embed_text raised: unseen word \"doesn't\" in \"double bed doesn't\". A per-item retry also failed: embed_text returned inconsistent widths per item: [2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000]..",
+  "the typo retrieval rung scored 0: embed_text raised: unseen word 'cimfortable' in 'A very clean, modern living area has a very cimfortable couc'. A per-item retry also failed: embed_text returned inconsistent widths per item: [6600, 6",
+  "the keywords query rung scored 0: unseen word \"doesn't\" in \"double bed doesn't provide enough room overweight body.\" | the submission raised while running",
+  "the truncated query rung scored 0: unseen word \"doesn't\" in \"double bed doesn't\" | the submission raised while running",
+  "the typo query rung scored 0: unseen word 'cimfortable' in 'A very clean, modern living area has a very cimfortable couc' | the submission raised while running",
+  "the verbatim query rung scored 0: unseen word \"doesn't\" in \"A double bed doesn't provide enough room for her overweight \" | the submission raised while running"
+ ],
+ "evidence": {
+  "text": {
+   "failed": "embed_text raised: unseen word \"that's\" in \"Girl in the street with a skateboard that's off the ground.\". A per-item retry also failed: embed_text returned inconsistent widths per item: [5800, 6200, 6"
+  },
+  "retrieval-verbatim": {
+   "failed": "embed_text raised: unseen word \"doesn't\" in \"A double bed doesn't provide enough room for her overweight \". A per-item retry also failed: embed_text returned inconsistent widths per item: [6600, 6800,"
+  },
+  "retrieval-keywords": {
+   "failed": "embed_text raised: unseen word \"doesn't\" in \"double bed doesn't provide enough room overweight body.\". A per-item retry also failed: embed_text returned inconsistent widths per item: [3600, 3800, 4000"
+  },
+  "retrieval-truncated": {
+   "failed": "embed_text raised: unseen word \"doesn't\" in \"double bed doesn't\". A per-item retry also failed: embed_text returned inconsistent widths per item: [2600, 2800, 3000, 3200, 3400, 3600, 3800, 4000].."
+  },
+  "retrieval-typo": {
+   "failed": "embed_text raised: unseen word 'cimfortable' in 'A very clean, modern living area has a very cimfortable couc'. A per-item retry also failed: embed_text returned inconsistent widths per item: [6600, 6"
+  },
+  "search-verbatim": {
+   "failed": "unseen word \"doesn't\" in \"A double bed doesn't provide enough room for her overweight \" | the submission raised while running"
+  },
+  "search-keywords": {
+   "failed": "unseen word \"doesn't\" in \"double bed doesn't provide enough room overweight body.\" | the submission raised while running"
+  },
+  "search-truncated": {
+   "failed": "unseen word \"doesn't\" in \"double bed doesn't\" | the submission raised while running"
+  },
+  "search-typo": {
+   "failed": "unseen word 'cimfortable' in 'A very clean, modern living area has a very cimfortable couc' | the submission raised while running"
+  }
+ },
+ "finished_utc": "2026-10-10T19:09:20Z"
+}

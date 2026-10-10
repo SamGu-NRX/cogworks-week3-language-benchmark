@@ -1,0 +1,66 @@
+{
+  "study_id": "products-language-validity-20261009",
+  "created": "2026-10-09",
+  "base_branch": "fix/weights-exact-commit-20261001",
+  "scorer_under_study": "retrieval-v4 (plugins.LanguageSearchBenchmark.scorer_version)",
+  "purpose": "Measure lookup-shortcut validity and false-negative risk in retrieval-v4 scoring. This manifest freezes the configuration; run.py never writes to it.",
+  "manifests": [
+    "language-search-public-test-v1",
+    "language-search-public-evaluation-v1"
+  ],
+  "tiers": ["test", "evaluation"],
+  "rungs": ["verbatim", "keywords", "truncated", "typo"],
+  "scored_rungs": ["keywords", "truncated", "typo"],
+  "search_k": 3,
+  "arms": [
+    "reference",
+    "lookup-derived",
+    "lookup-oracle",
+    "lookup-exact",
+    "mistake-no-idf",
+    "mistake-raw-count",
+    "mistake-perword-norm",
+    "mistake-raw-descriptor",
+    "mistake-oov-crash",
+    "mistake-memsearch",
+    "control-constant",
+    "control-zero",
+    "control-random",
+    "control-shuffled",
+    "control-poolorder"
+  ],
+  "seeds": {
+    "bootstrap": 20261009,
+    "natural_sample": 20261009,
+    "reference_training": 20261001,
+    "lookup_codebook": 20261001,
+    "judge_shortlist": 20261009
+  },
+  "data_sha256": {
+    "captions": "dd8c9636dc11740f956e36728866ea0c4ebe4988dcbdc5e712b7c2267f152d12",
+    "descriptors": "d56e267dacd39608b4aae581595f8fa8ec55457ab59b713df1eafa93e1023450",
+    "glove": "dcee6ecdefebb5a884b23f2353561cc5f0527e59592525c0e3f4a31d81d91272"
+  },
+  "stats": {
+    "paired_bootstrap": {"reps": 10000, "ci": 0.95, "unit": "query for retrieval/search; image for text"}
+  },
+  "audit_bounds": {
+    "natural_co_captions_per_image": 2,
+    "judge_shortlist_max": 150,
+    "jaccard_thresholds": [0.6, 0.8]
+  },
+  "labels": {
+    "reference": "reimplementation; the staff reference submission is not in this repository",
+    "lookup-derived": "realistic cheater (no access to perturb internals)",
+    "lookup-oracle": "upper bound; submissions do not receive the package",
+    "lookup-exact": "what the current guards measure",
+    "interpretive_labels": "agent-authored relevance judgments are interpretive, not independent human truth"
+  },
+  "established_at_lock": {
+    "in_pool_exact_caption_duplicates": {"test": 0, "evaluation": 0},
+    "corpus_level_duplicates": {"test": 1, "evaluation": 10},
+    "mean_co_captions_per_query_image": 4
+  },
+  "results_dir": "results",
+  "no_paid_or_live_endpoints": "All arms run offline against pinned public artifacts; no paid service or live model endpoint is contacted."
+}

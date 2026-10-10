@@ -1,0 +1,403 @@
+{
+  "study_id": "products-language-validity-20261009",
+  "purpose": "independent metric validation for the retrieval-v4 scorer",
+  "lock_reference": "study/lock.yaml @ 9cc48e2",
+  "module": "study/validate_metrics.py",
+  "environment": {
+    "python": "3.13.14",
+    "numpy": "2.3.5",
+    "platform": "Linux-6.1.158+-x86_64-with-glibc2.41"
+  },
+  "seed": 20261009,
+  "tolerances": {
+    "noise_relative": 1e-12,
+    "rationale": "published iterative floor products carry ~1e-16 relative float error; gates sit at noise scale, above float noise and far below anything that moves a reported digit"
+  },
+  "families": {
+    "mrr_summation": {
+      "status": "PASS",
+      "gate": "published mrr bit-equals the pairwise replica for every n <= 1024 (covers pools 100/700); misses and floor sums too",
+      "measurements": {
+        "mean_cases_checked": 438,
+        "mean_bit_mismatches_within_limit": 0,
+        "mean_bit_mismatches_beyond_limit": 0,
+        "max_n_probed": 5000,
+        "mismatches_beyond_limit_n": [],
+        "mrr_with_misses_cases": 396,
+        "mrr_with_misses_bit_mismatches": 0,
+        "chance_mrr_at_k_cases": 8,
+        "chance_mrr_at_k_bit_mismatches": 0,
+        "rung_grid_mean_cases": 50,
+        "rung_grid_mean_bit_mismatches": 4,
+        "rung_grid_mean_max_relative_deviation": 2.2244958257008627e-16,
+        "builtin_sum_compensated": true
+      },
+      "notes": [
+        "Replica is numpy's documented pairwise reduction: 8 accumulators, 128-element block, split above; bit-exact through every n probed (including n > 1024), so bit-level comparison of MRR is achievable.",
+        "The scorer's rung-grid mean uses the builtin sum (metrics.py:479, :574). On CPython >= 3.12 builtin sum is Neumaier-compensated, so grid means are NOT bit-identical to np.mean-style replicas: last-bit differences on a fraction of random 3-rung grids (<= 1 ulp). Bit-reproducing published grid means requires the same builtin-sum implementation (CPython >= 3.12); np.mean-based replicas differ in the final bit."
+      ]
+    },
+    "permutation": {
+      "status": "PASS",
+      "gate": "published ranks == reference ranks on every random matrix; metric values invariant under permutation within 1e-12 relative",
+      "measurements": {
+        "rank_agreement_cases": 9,
+        "rank_mismatches": 0,
+        "mrr_value_permutation_trials": 40,
+        "mrr_value_bit_exact": 21,
+        "mrr_value_max_relative_deviation": 3.478552751039904e-16,
+        "column_relabel_trials": 10,
+        "column_relabel_ranks_equal": true,
+        "column_relabel_tie_rows": 0,
+        "column_relabel_max_relative_deviation": 0.0
+      },
+      "notes": [
+        "Permutation invariance of the mrr VALUE holds to <= 1 ulp but is NOT bit-for-bit: np.mean's pairwise reduction is order-dependent (19 of 40 permuted rank vectors differed in the last bit). Compare values at noise scale."
+      ]
+    },
+    "ties": {
+      "status": "PASS",
+      "gate": "published lexsort order == Python tuple-sort order on every probe input",
+      "measurements": {
+        "cases_checked": 21,
+        "order_mismatches": [],
+        "all_tie_order_is_permutation_order": true,
+        "negative_zero_treated_as_tie": true,
+        "neg_inf_sorts_last": true
+      },
+      "notes": [
+        "np.lexsort agrees with a tuple sort on (-score, seeded permutation) for exact ties, mixed 0.0/-0.0, -inf diagonal masking, and 1e300-scale scores: no tie-semantics discrepancy exists."
+      ]
+    },
+    "floors": {
+      "status": "PASS",
+      "gate": "every published floor within 1e-12 relative of the exact rational value",
+      "measurements": {
+        "text_chance_floor": {
+          "uneven_6_2_2_2": {
+            "published": 0.4717471561627405,
+            "exact_rational": 0.4717471561627406,
+            "exact_fraction": "251729/533610",
+            "relative_error": 2.3534281237768784e-16
+          },
+          "uniform_5x10": {
+            "published": 0.23007582652139924,
+            "exact_rational": 0.23007582652139927,
+            "exact_fraction": "8199675096021474398231/35639011798828962123600",
+            "relative_error": 1.2063664416760175e-16
+          },
+          "pair_and_triple": {
+            "published": 0.6416666666666666,
+            "exact_rational": 0.6416666666666667,
+            "exact_fraction": "77/120",
+            "relative_error": 1.7302177007145295e-16
+          },
+          "singletons_plus_pair": {
+            "published": 0.5208333333333333,
+            "exact_rational": 0.5208333333333334,
+            "exact_fraction": "25/48",
+            "relative_error": 2.1316282072803005e-16
+          },
+          "all_singletons": {
+            "published": 0.0,
+            "exact_rational": 0.0,
+            "exact_fraction": "0/1",
+            "relative_error": 0.0
+          }
+        },
+        "chance_mrr": {
+          "pool_3": {
+            "published": 0.611111111111111,
+            "exact": 0.6111111111111112,
+            "relative_error": 1.816728585750256e-16,
+            "bit_equal": false
+          },
+          "pool_10": {
+            "published": 0.2928968253968254,
+            "exact": 0.2928968253968254,
+            "relative_error": 0.0,
+            "bit_equal": true
+          },
+          "pool_100": {
+            "published": 0.05187377517639621,
+            "exact": 0.0518737751763962,
+            "relative_error": 1.3376496852815505e-16,
+            "bit_equal": false
+          },
+          "pool_700": {
+            "published": 0.01018430016513033,
+            "exact": 0.01018430016513033,
+            "relative_error": 0.0,
+            "bit_equal": true
+          }
+        },
+        "chance_mrr_first_relevant": {
+          "pool_5_relevant_1": {
+            "published": 0.45666666666666667,
+            "exact": 0.45666666666666667,
+            "relative_error": 0.0
+          },
+          "pool_5_relevant_2": {
+            "published": 0.6416666666666667,
+            "exact": 0.6416666666666667,
+            "relative_error": 0.0
+          },
+          "pool_5_relevant_4": {
+            "published": 0.9,
+            "exact": 0.9,
+            "relative_error": 0.0
+          },
+          "pool_5_relevant_5": {
+            "published": 1.0,
+            "exact": 1.0,
+            "relative_error": 0.0
+          },
+          "pool_11_relevant_1": {
+            "published": 0.27453430407975865,
+            "exact": 0.27453430407975865,
+            "relative_error": 0.0
+          },
+          "pool_11_relevant_2": {
+            "published": 0.403975468975469,
+            "exact": 0.403975468975469,
+            "relative_error": 0.0
+          },
+          "pool_11_relevant_5": {
+            "published": 0.6689600082457223,
+            "exact": 0.6689600082457225,
+            "relative_error": 3.319250810034519e-16
+          },
+          "pool_11_relevant_11": {
+            "published": 1.0,
+            "exact": 1.0,
+            "relative_error": 0.0
+          },
+          "pool_99_relevant_1": {
+            "published": 0.052296742602420385,
+            "exact": 0.052296742602420405,
+            "relative_error": 3.980492985954778e-16
+          },
+          "pool_99_relevant_2": {
+            "published": 0.08525260240080856,
+            "exact": 0.08525260240080858,
+            "relative_error": 1.627843305306869e-16
+          },
+          "pool_99_relevant_5": {
+            "published": 0.1628444307529624,
+            "exact": 0.16284443075296248,
+            "relative_error": 5.113268317613125e-16
+          },
+          "pool_99_relevant_99": {
+            "published": 1.0,
+            "exact": 1.0,
+            "relative_error": 0.0
+          },
+          "pool_699_relevant_1": {
+            "published": 0.010196826243437257,
+            "exact": 0.010196826243437282,
+            "relative_error": 2.3817340890069545e-15
+          },
+          "pool_699_relevant_2": {
+            "published": 0.017557540241153802,
+            "exact": 0.017557540241153753,
+            "relative_error": 2.7664613983626436e-15
+          },
+          "pool_699_relevant_5": {
+            "published": 0.036289555473592305,
+            "exact": 0.03628955547359227,
+            "relative_error": 9.560455912661464e-16
+          },
+          "pool_699_relevant_699": {
+            "published": 1.0,
+            "exact": 1.0,
+            "relative_error": 0.0
+          }
+        },
+        "max_relative_error_text_floor": 2.3534281237768784e-16,
+        "max_relative_error_harmonic": 1.816728585750256e-16,
+        "max_relative_error_first_relevant": 2.7664613983626436e-15,
+        "monte_carlo": {
+          "pool": 20,
+          "relevant": 4,
+          "trials": 100000,
+          "exact": 0.41515442913184675,
+          "simulated_mean": 0.41292309101274544,
+          "relative_error": 0.005374718327749485
+        }
+      },
+      "notes": [
+        "The exact rational for group sizes [6, 2, 2, 2] differs from the published iterative product by ~2e-16 relative -- noise-scale, so floor comparisons must gate at ~1e-12, not 1e-15."
+      ]
+    },
+    "rounding": {
+      "status": "PASS",
+      "gate": "exact ties survive rounding with zero flips; every observed flip sits inside the rounding noise bound; a minimal rank-flip counterexample exists",
+      "measurements": {
+        "plain_gaussian": {
+          "rows": 40,
+          "order_flip_rows": 0,
+          "gold_rank_flips": 0,
+          "order_flip_rate": 0.0,
+          "gold_rank_flip_rate": 0.0,
+          "mrr_raw": 0.08513871892580827,
+          "mrr_rounded": 0.08513871892580827,
+          "pooled_order_flip_rows": 14,
+          "pooled_rows": 800
+        },
+        "near_tie_injected": {
+          "pooled_order_flip_rows": 322,
+          "pooled_rows": 800
+        },
+        "evaluation_like_150x700_dim200": {
+          "pooled_order_flip_rows": 446,
+          "pooled_rows": 450,
+          "gold_rank_flips": 9,
+          "rounding_noise_bound": 0.00011819819419785011
+        },
+        "constant_matrix_flips": 0,
+        "constant_rounds_constant": true,
+        "constant_gemm_score_spans": [
+          0.0,
+          0.0
+        ],
+        "counterexample": {
+          "flips": true,
+          "t1": 1e-05,
+          "t2": 3.0000000000000004e-05,
+          "raw_cosines": [
+            0.99999999995,
+            0.9999999995500002
+          ],
+          "raw_gap": 3.999998110515435e-10,
+          "rounded_scores": [
+            1.0000020331,
+            1.0000091042
+          ],
+          "gold_rank_raw": 1,
+          "gold_rank_rounded": 2
+        }
+      },
+      "notes": [
+        "Rounding preserves order EXCEPT at near-ties: at the evaluation shape (150x700, dim 200) essentially every row's deep order moves (min adjacent gaps ~1e-6 sit far below the ~1.4e-4 rounding noise), but gold-rank movement stays rare, and MRR only weights rank 1. The counterexample shows gold rank 1 -> 2 is reachable."
+      ]
+    },
+    "truncation": {
+      "status": "PASS",
+      "gate": "truncation is lossless when the tail is already zero: scores, ranks, and mrr all bit-identical",
+      "measurements": {
+        "lossless_scores": true,
+        "lossless_ranks": true,
+        "lossless_mrr": true,
+        "sweep": {
+          "keep_10": {
+            "mrr": 0.01382254724570167,
+            "mrr_delta": 0.00043802980498914255,
+            "max_abs_score_error_over_scale": 1.2640497499706018,
+            "gold_rank_flips": 149
+          },
+          "keep_25": {
+            "mrr": 0.009393125334819941,
+            "mrr_delta": -0.003991392105892586,
+            "max_abs_score_error_over_scale": 1.1608666191239838,
+            "gold_rank_flips": 149
+          },
+          "keep_50": {
+            "mrr": 0.007066929595252799,
+            "mrr_delta": -0.006317587845459729,
+            "max_abs_score_error_over_scale": 1.014234003141579,
+            "gold_rank_flips": 150
+          },
+          "keep_100": {
+            "mrr": 0.0074010428578405755,
+            "mrr_delta": -0.005983474582871952,
+            "max_abs_score_error_over_scale": 0.7525628374318526,
+            "gold_rank_flips": 148
+          },
+          "keep_150": {
+            "mrr": 0.010931235089083502,
+            "mrr_delta": -0.0024532823516290256,
+            "max_abs_score_error_over_scale": 0.5541732445879028,
+            "gold_rank_flips": 149
+          },
+          "keep_200": {
+            "mrr": 0.013384517440712528,
+            "mrr_delta": 0.0,
+            "max_abs_score_error_over_scale": 0.0,
+            "gold_rank_flips": 0
+          }
+        }
+      },
+      "notes": [
+        "The benchmark's 'truncated' rung truncates caption TEXT (3 content words) upstream; this probe models the vector-level consequence: embeddings supported on few dimensions. MRR degrades smoothly as the query support shrinks; the scorer itself has no truncation path that could misbehave (losslessness is bit-exact)."
+      ]
+    },
+    "precision": {
+      "status": "PASS",
+      "gate": "float32 round-trip score error stays below 1e-5 of score scale (measured 3.80e-08); rounding noise dominates it",
+      "measurements": {
+        "float32_max_abs_error_over_scale": 3.7997453527322785e-08,
+        "float32_max_relative_error_big_entries": 3.1083360635799624e-07,
+        "float32_gold_rank_flips": 0,
+        "float32_rows_probed": 450,
+        "float32_max_mrr_delta": 0.0,
+        "near_parallel_collapse": {
+          "eps_0.0001": {
+            "raw_cosine": 0.9999999800000001,
+            "rounded_rows_identical": false,
+            "rounded_score_gap": 4.286427553790162e-06
+          },
+          "eps_1e-05": {
+            "raw_cosine": 0.9999999998,
+            "rounded_rows_identical": false,
+            "rounded_score_gap": 5.057095953109325e-06
+          },
+          "eps_1e-06": {
+            "raw_cosine": 0.9999999999979999,
+            "rounded_rows_identical": false,
+            "rounded_score_gap": 2.70649310518678e-07
+          },
+          "eps_1e-08": {
+            "raw_cosine": 0.9999999999999998,
+            "rounded_rows_identical": true,
+            "rounded_score_gap": 0.0
+          }
+        }
+      },
+      "notes": [
+        "float32 submission precision is ~3 orders of magnitude finer than the 5-dp payload rounding (measured 4e-8 vs ~1.4e-4 of score scale at dim 200): the payload rounding dominates. Near-parallel images within ~1e-5 cosine collapse to identical rounded vectors and become exact ties resolved by the seeded permutation."
+      ]
+    }
+  },
+  "discrepancies": [
+    {
+      "family": "rounding",
+      "kind": "published-vs-ideal counterexample",
+      "description": "The driver's normalize->round(5) pipeline flips a constructible near-tie: raw cosines 0.99999999995 vs 0.9999999995500002 (gap 4.00e-10) order correctly, rounded scores 1.0000020331 vs 1.0000091042 invert it, moving gold rank 1 -> 2. Every measured flip sits inside the rounding noise bound, so this is the bound's edge, not a bug."
+    },
+    {
+      "family": "permutation",
+      "kind": "not bit-exact under relabeling",
+      "description": "mrr is invariant to rank permutation only to <= 1 ulp: the pairwise reduction is order-dependent (19 of 40 trials differ in the final bit). Cross-run comparisons must use noise-scale tolerance."
+    },
+    {
+      "family": "floors",
+      "kind": "iterative-product rounding",
+      "description": "Published text_chance_floor([6, 2, 2, 2]) = 0.4717471561627405 vs exact rational 0.4717471561627406 (251729/533610) -- relative error 2.35e-16, noise-scale. Floor tolerances must be ~1e-12, not 1e-15."
+    },
+    {
+      "family": "mrr_summation",
+      "kind": "grid aggregation is not np.mean",
+      "description": "The published grid mean aggregates rung MRRs with the builtin sum (metrics.py:479, :574), which CPython >= 3.12 computes with Neumaier compensation (proved on-box: sum([1e16, 1.0, -1e16]) == 1.0 while the naive loop gives 0.0). It differs from an np.mean-style (pairwise) replica in the last bit on 4/50 random 3-rung grids (<= 2.2e-16 relative). Per-rung metric values are bit-reproducible; the grid mean reproduces bit-for-bit only with the same builtin-sum implementation (CPython >= 3.12)."
+    },
+    {
+      "family": "rounding",
+      "kind": "deep-order noise at evaluation shape",
+      "description": "At the evaluation shape (150x700, dim 200) the 5-dp payload rounding perturbs scores by up to ~1.4e-4, far above typical adjacent-score gaps (~1e-6) deep in a 700-item ranking: 446/450 rows have some order movement, 9/450 gold ranks move. MRR is largely insulated because it weights rank 1 only."
+    }
+  ],
+  "summary": {
+    "families_passed": 7,
+    "families_total": 7,
+    "overall": "PASS"
+  }
+}
