@@ -255,6 +255,11 @@
           "rounding_noise_bound": 0.00011819819419785011
         },
         "constant_matrix_flips": 0,
+        "constant_rounds_constant": true,
+        "constant_gemm_score_spans": [
+          0.0,
+          0.0
+        ],
         "counterexample": {
           "flips": true,
           "t1": 1e-05,

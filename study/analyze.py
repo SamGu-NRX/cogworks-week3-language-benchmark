@@ -20,8 +20,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 
-SEED_ANALYSIS = 20261001
-DRAWS = 2000
+SEED_ANALYSIS = 20261009
+DRAWS = 10000
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
 #: Locked comparisons, as (arm_a, arm_b): the reference against every lookup,
