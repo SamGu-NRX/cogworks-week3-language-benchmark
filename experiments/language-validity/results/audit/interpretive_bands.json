@@ -1,0 +1,1961 @@
+{
+ "condition": "interpretive-bands",
+ "tier": "evaluation",
+ "n_queries": 150,
+ "count_top_nongold_jaccard_ge_0.8": 0,
+ "count_top_nongold_jaccard_ge_0.6": 0,
+ "count_exact_text_duplicate": 0,
+ "interpretive_label": "Token Jaccard is a string proxy, not a relevance judgment. Bands name candidates for judging, not counts of wrong answers.",
+ "per_query": [
+  {
+   "query_caption_id": 387680,
+   "gold_image_id": 260721,
+   "top_nongold_image_id": 88925,
+   "top_nongold_jaccard": 0.2162,
+   "top_nongold_captions": [
+    "A round living room with sofa, TV and an abstract painting.",
+    "A living room area with an oval wall and various pieces of furniture and modern style decorations.",
+    "A semi-circle living room with a couch and large screen TV.",
+    "A living room filled with furniture and a flat screen TV.",
+    "A living room with dim lighting, a couch, TV, and paintings."
+   ]
+  },
+  {
+   "query_caption_id": 493656,
+   "gold_image_id": 459354,
+   "top_nongold_image_id": 550104,
+   "top_nongold_jaccard": 0.1613,
+   "top_nongold_captions": [
+    "A plane that is flying low to the ground.",
+    "A white and blue airplane landing at an airport. ",
+    "a plane flying not far from the ground ready to land",
+    "An airplane flying close to the ground in an air field.",
+    "An airplane flying in the air and a jet parked."
+   ]
+  },
+  {
+   "query_caption_id": 424795,
+   "gold_image_id": 403250,
+   "top_nongold_image_id": 35712,
+   "top_nongold_jaccard": 0.3043,
+   "top_nongold_captions": [
+    "A cat sitting on a bench in a flower bed.",
+    "A cat laying on a bench in a park.",
+    "A black cat laying down on a stone bench. ",
+    "A cat is sitting on the bench in front of the bushes.",
+    "a black cat sitting on a concrete park bench"
+   ]
+  },
+  {
+   "query_caption_id": 239763,
+   "gold_image_id": 547752,
+   "top_nongold_image_id": 174889,
+   "top_nongold_jaccard": 0.1739,
+   "top_nongold_captions": [
+    "A kitchen with a refrigerator and a stove with brown cabinets.",
+    "A refrigerator next to a stove with an oven beneath it.",
+    "A kitchen focused on the oven and refrigerator.. ",
+    "A refrigerator and an oven and stove combination.",
+    "A kitchen area with a stove next to a refrigerator."
+   ]
+  },
+  {
+   "query_caption_id": 528523,
+   "gold_image_id": 375528,
+   "top_nongold_image_id": 366022,
+   "top_nongold_jaccard": 0.2667,
+   "top_nongold_captions": [
+    "A man who is sitting at a bar.",
+    "a man sitting at a bar with a bottle of beer ",
+    "A man is sitting at a bar with a bottle of beer.",
+    "A man sitting near a bar with a beer bottle.",
+    "A man sitting at a bar with a bottle of beer."
+   ]
+  },
+  {
+   "query_caption_id": 334173,
+   "gold_image_id": 482634,
+   "top_nongold_image_id": 363504,
+   "top_nongold_jaccard": 0.2308,
+   "top_nongold_captions": [
+    "A young boy standing on top of a grass covered field.",
+    "A boy running in a park with a baseball glove.",
+    "A young boy is holding a baseball mitt in a grassy field.",
+    "A small child is wearing a baseball glove.",
+    "a young boy running in the grass holding a baseball mitt"
+   ]
+  },
+  {
+   "query_caption_id": 570437,
+   "gold_image_id": 42849,
+   "top_nongold_image_id": 106671,
+   "top_nongold_jaccard": 0.2222,
+   "top_nongold_captions": [
+    "A couple of kites flying in the cloudy sky.",
+    "A group of kites in a cloudy sky.",
+    "Several different types of kites fly in the air. ",
+    "Many kites are soaring high above the landscape.",
+    "Several different kinds of kites flying in an overcast sky."
+   ]
+  },
+  {
+   "query_caption_id": 389640,
+   "gold_image_id": 7583,
+   "top_nongold_image_id": 561724,
+   "top_nongold_jaccard": 0.0833,
+   "top_nongold_captions": [
+    "A woman walking behind cattle in the sand.",
+    "Villager walking behind three large cows in front of thatched roof hut",
+    "A woman walks in her village near a hut and some cows.",
+    "A woman herds cows through her small village.",
+    "There is a person herding cows in a village"
+   ]
+  },
+  {
+   "query_caption_id": 220820,
+   "gold_image_id": 246409,
+   "top_nongold_image_id": 559490,
+   "top_nongold_jaccard": 0.2917,
+   "top_nongold_captions": [
+    "A cat that is sitting down near a bag.",
+    "A black cat sits on a table beside a bag.",
+    "a black cat sitting on a counter next to a purse",
+    "A cat sitting on a counter near a bag.",
+    "A black cat sitting on top of papers near a bag. "
+   ]
+  },
+  {
+   "query_caption_id": 775524,
+   "gold_image_id": 232311,
+   "top_nongold_image_id": 10097,
+   "top_nongold_jaccard": 0.1515,
+   "top_nongold_captions": [
+    "A person practicing a trick at a skate park. ",
+    "a person jumping a skate board in the air",
+    "A man jumps a skateboard onto a platform at a skatepark. ",
+    "A person's feet seen in mid air as he jumps off his skateboard.",
+    "A skateboarder has his feet off the board before a landing"
+   ]
+  },
+  {
+   "query_caption_id": 557502,
+   "gold_image_id": 89694,
+   "top_nongold_image_id": 514125,
+   "top_nongold_jaccard": 0.2,
+   "top_nongold_captions": [
+    "A large black cat is lying on a computer keyboard.",
+    "a cat laying on a keyboard for a computer",
+    "A black bear sleeping on top of a computer keyboard surrounded with checks.",
+    "A cat laying across a keyboard.on a desk.",
+    "A black cat on top of a computer keyboard."
+   ]
+  },
+  {
+   "query_caption_id": 436329,
+   "gold_image_id": 503089,
+   "top_nongold_image_id": 403534,
+   "top_nongold_jaccard": 0.2857,
+   "top_nongold_captions": [
+    "A group of motorcycles parked in front of a school bus.",
+    "Motorcycles are parked in front of a yellow bus.",
+    "Motorcycles parked in a row in front of a school bus.",
+    "Parked motorcycles and an old yellow school bus",
+    "Fancy motorcycles parked in a row near a bus."
+   ]
+  },
+  {
+   "query_caption_id": 183399,
+   "gold_image_id": 328969,
+   "top_nongold_image_id": 514034,
+   "top_nongold_jaccard": 0.2308,
+   "top_nongold_captions": [
+    "A chocolate cake with chocolate frosting and zebra top",
+    "A cupcake with the face of a zebra on top.",
+    "A cake of some sort with a cow design on top.",
+    "A chocolate cupcake with a chocolate cow face on it.",
+    "Chocolate cupcake with a monsters face frosted on top."
+   ]
+  },
+  {
+   "query_caption_id": 734037,
+   "gold_image_id": 313220,
+   "top_nongold_image_id": 496926,
+   "top_nongold_jaccard": 0.2258,
+   "top_nongold_captions": [
+    "Two laptops sitting on a desk next to some pens and pencils next to a chair.",
+    "two laptops on a black table a black chair and some pillows",
+    "Two computer screens are glowing in a dim room.",
+    "A small computer desk with two machines open and waiting.",
+    "Home office with two laptops sitting open on desk."
+   ]
+  },
+  {
+   "query_caption_id": 475240,
+   "gold_image_id": 521205,
+   "top_nongold_image_id": 392186,
+   "top_nongold_jaccard": 0.35,
+   "top_nongold_captions": [
+    "A dog laying on the bed next to a book.",
+    "A small dog sits on a bed with striped sheets.",
+    "A dog laying on a bed with a book with a picture of a bear.",
+    "a dog on a bed with a book",
+    "A dog laying on a bed with a large book."
+   ]
+  },
+  {
+   "query_caption_id": 579128,
+   "gold_image_id": 384957,
+   "top_nongold_image_id": 497390,
+   "top_nongold_jaccard": 0.2273,
+   "top_nongold_captions": [
+    "A chocolate cookie with whipped cream and chocolate square.",
+    "chocolate pastry with whipped cream and chocolate on top",
+    "A chocolate dessert is topped with whipped cream.",
+    "This is a chocolate cake with whipped cream and a chocolate on top.",
+    "A piece of chocolate cake topped with whipped cream and chocolate."
+   ]
+  },
+  {
+   "query_caption_id": 738951,
+   "gold_image_id": 89236,
+   "top_nongold_image_id": 267830,
+   "top_nongold_jaccard": 0.2917,
+   "top_nongold_captions": [
+    "A man in a blue jacket holding a black snowboard.",
+    "A man standing in the snow with a snow board",
+    "The man is standing in the snow with his snow board.",
+    "a man holding a ski board while standing on a snow covered bank.",
+    "a person holding a snow board on a snowy surface"
+   ]
+  },
+  {
+   "query_caption_id": 827058,
+   "gold_image_id": 428629,
+   "top_nongold_image_id": 292112,
+   "top_nongold_jaccard": 0.2333,
+   "top_nongold_captions": [
+    "Man posing in an old black and white photograph in front of an old plane.",
+    "this is a old photo of a man and a airplane",
+    "A black and white photo of a man in front of a plane.",
+    "A pilot stands in front a plane with a large group of people around it.",
+    "A man standing in front of a propeller plain."
+   ]
+  },
+  {
+   "query_caption_id": 306213,
+   "gold_image_id": 522079,
+   "top_nongold_image_id": 173475,
+   "top_nongold_jaccard": 0.3,
+   "top_nongold_captions": [
+    "A large ship sailing down river with city in the background",
+    "A military boat floating on a large body of water next to a city with tall buildings.",
+    "an image of a boat in the water with people on board",
+    "A large boat in the a river with building behind",
+    "A military ships sailing on a body of water."
+   ]
+  },
+  {
+   "query_caption_id": 462410,
+   "gold_image_id": 217119,
+   "top_nongold_image_id": 44353,
+   "top_nongold_jaccard": 0.2069,
+   "top_nongold_captions": [
+    "A surfer rides his board up and over a wave.",
+    "A man that is on a surfboard in the water.",
+    "a guy doing a trick on his surf board",
+    "a young man is surfing the waves in the ocean",
+    "A man riding a wave on top of a surfboard."
+   ]
+  },
+  {
+   "query_caption_id": 186544,
+   "gold_image_id": 193488,
+   "top_nongold_image_id": 458083,
+   "top_nongold_jaccard": 0.1923,
+   "top_nongold_captions": [
+    "A cat sits next to several different stuffed animals.",
+    "A cat is sitting with a stuffed pig",
+    "A cat sitting on a pile of stuffed animals.",
+    "A cat is sitting next to two stuffed animals. ",
+    "A cat sitting in the middle of several stuffed animals."
+   ]
+  },
+  {
+   "query_caption_id": 445134,
+   "gold_image_id": 564759,
+   "top_nongold_image_id": 356253,
+   "top_nongold_jaccard": 0.1212,
+   "top_nongold_captions": [
+    "This is a very neat and tidy kitchen.",
+    "A empty kitchen that has a table in front of a sink.",
+    "A kitchen decorated in kitchen accessories and kitchen furniture. ",
+    "a kitchen with a sink table chair and a view ouside trough the windows",
+    "a kitchen with white cupboards and applicances "
+   ]
+  },
+  {
+   "query_caption_id": 683775,
+   "gold_image_id": 567240,
+   "top_nongold_image_id": 392186,
+   "top_nongold_jaccard": 0.125,
+   "top_nongold_captions": [
+    "A dog laying on the bed next to a book.",
+    "A small dog sits on a bed with striped sheets.",
+    "A dog laying on a bed with a book with a picture of a bear.",
+    "a dog on a bed with a book",
+    "A dog laying on a bed with a large book."
+   ]
+  },
+  {
+   "query_caption_id": 781854,
+   "gold_image_id": 305901,
+   "top_nongold_image_id": 392186,
+   "top_nongold_jaccard": 0.125,
+   "top_nongold_captions": [
+    "A dog laying on the bed next to a book.",
+    "A small dog sits on a bed with striped sheets.",
+    "A dog laying on a bed with a book with a picture of a bear.",
+    "a dog on a bed with a book",
+    "A dog laying on a bed with a large book."
+   ]
+  },
+  {
+   "query_caption_id": 27261,
+   "gold_image_id": 423829,
+   "top_nongold_image_id": 399378,
+   "top_nongold_jaccard": 0.28,
+   "top_nongold_captions": [
+    "a clock tower in the middle of a park ",
+    "A clock tower in the middle of walkways. ",
+    "A clock tower built in the center of a pathway in a park.",
+    "A clock tower sitting on the side of a walkway.",
+    "A clock tower with a steeple and a bell on it in a town square."
+   ]
+  },
+  {
+   "query_caption_id": 788653,
+   "gold_image_id": 505264,
+   "top_nongold_image_id": 470613,
+   "top_nongold_jaccard": 0.3,
+   "top_nongold_captions": [
+    "A large elephant standing in a grass field.",
+    "A baby elephant standing on a lush green field.",
+    "there is a baby elephant standing in a field with tall grass",
+    "A elephant that is standing in the grass.",
+    "A baby elephant is standing in a field. "
+   ]
+  },
+  {
+   "query_caption_id": 377429,
+   "gold_image_id": 511553,
+   "top_nongold_image_id": 399534,
+   "top_nongold_jaccard": 0.2258,
+   "top_nongold_captions": [
+    "A view of a tall building with a clock on it.",
+    " The cars are parked on the side of the road.",
+    "A large clock tower looms above a city street.",
+    "Cars are parked along a street with buildings of old architecture",
+    "There are vehicles driving down the city street."
+   ]
+  },
+  {
+   "query_caption_id": 607501,
+   "gold_image_id": 83427,
+   "top_nongold_image_id": 540479,
+   "top_nongold_jaccard": 0.25,
+   "top_nongold_captions": [
+    "A skier skiing on a snowy hill during the day.",
+    "A person in the snow on some skis.",
+    "a skier skis down hill of a mountain",
+    "A man is going down a hill on snow skis.",
+    "A man is skiing down a snowy slope."
+   ]
+  },
+  {
+   "query_caption_id": 711851,
+   "gold_image_id": 44353,
+   "top_nongold_image_id": 56118,
+   "top_nongold_jaccard": 0.24,
+   "top_nongold_captions": [
+    "A man doing skateboard tricks on a railing",
+    "A man riding a rail with a skateboard.",
+    "Man on skate board riding a stair rail up.",
+    "A skateboard doing a trick on the railing to some steps.",
+    "a man grinding his skateboard down a handrail"
+   ]
+  },
+  {
+   "query_caption_id": 542872,
+   "gold_image_id": 495122,
+   "top_nongold_image_id": 174889,
+   "top_nongold_jaccard": 0.2857,
+   "top_nongold_captions": [
+    "A kitchen with a refrigerator and a stove with brown cabinets.",
+    "A refrigerator next to a stove with an oven beneath it.",
+    "A kitchen focused on the oven and refrigerator.. ",
+    "A refrigerator and an oven and stove combination.",
+    "A kitchen area with a stove next to a refrigerator."
+   ]
+  },
+  {
+   "query_caption_id": 567356,
+   "gold_image_id": 227903,
+   "top_nongold_image_id": 245425,
+   "top_nongold_jaccard": 0.3636,
+   "top_nongold_captions": [
+    "A baseball player is standing on a base.",
+    "A man standing on top of a base on a baseball field.",
+    "a baseball player stepping off the base during a game",
+    "A baseball player stepping on the first base bag.",
+    "Man comes to a stop by a base on a baseball field"
+   ]
+  },
+  {
+   "query_caption_id": 256594,
+   "gold_image_id": 521533,
+   "top_nongold_image_id": 149774,
+   "top_nongold_jaccard": 0.1905,
+   "top_nongold_captions": [
+    "A woman smiling while holding a tennis racket.",
+    "A woman on a court with a tennis racket.",
+    "A woman smiling while holding a tennis racquet.",
+    "A smiling brunette woman holding a tennis racquet.",
+    "A woman is smiling and holding a tennis racket."
+   ]
+  },
+  {
+   "query_caption_id": 234790,
+   "gold_image_id": 412302,
+   "top_nongold_image_id": 91541,
+   "top_nongold_jaccard": 0.1852,
+   "top_nongold_captions": [
+    "A man eating at a table with a horse looking over a fence ",
+    "there is a man eating at a table while a horse watches",
+    "A person sitting at a table and a horse looking over a fence. ",
+    "A man sitting at a table wearing sunglasses while smiling and a horse is looking over a fence ",
+    "A man is eating outside while a horse is standing nearby."
+   ]
+  },
+  {
+   "query_caption_id": 394683,
+   "gold_image_id": 491241,
+   "top_nongold_image_id": 189459,
+   "top_nongold_jaccard": 0.2222,
+   "top_nongold_captions": [
+    "Two brown cows looking at the camera. ",
+    "A couple of brown cows standing in the middle of a field.",
+    "Some very cute brown cows in a big field.",
+    "Two brown cows are walking together eating grass",
+    "Cows standing in a field looking at the camera "
+   ]
+  },
+  {
+   "query_caption_id": 721811,
+   "gold_image_id": 204529,
+   "top_nongold_image_id": 246409,
+   "top_nongold_jaccard": 0.2308,
+   "top_nongold_captions": [
+    "A white toaster sitting on a counter next to a bottle of alcohol.",
+    "A toaster sitting on a counter top with a bottle of champagne.",
+    "A bottle of wine and a toaster on a counter top. ",
+    "A bottle of champagne leans on the lever of a toaster.  ",
+    "A wine bottle leaning against a toaster on a counter."
+   ]
+  },
+  {
+   "query_caption_id": 303598,
+   "gold_image_id": 208898,
+   "top_nongold_image_id": 8187,
+   "top_nongold_jaccard": 0.1724,
+   "top_nongold_captions": [
+    "A train that is sitting on the tracks.",
+    "A train runs along a track by a man on a bicycle.",
+    "A train on the tracks near a building and someone on a bicycle.",
+    "a red train that is on a old track",
+    "A man on a bicycle rides along by a parked train. "
+   ]
+  },
+  {
+   "query_caption_id": 490720,
+   "gold_image_id": 386401,
+   "top_nongold_image_id": 148852,
+   "top_nongold_jaccard": 0.2143,
+   "top_nongold_captions": [
+    "two people standing near a stand with pots",
+    "A man standing next to a woman in an office",
+    "two people stand in front of a company display.",
+    "a man and woman dressed nicely standing side by side",
+    "A man and woman are next to poster displays."
+   ]
+  },
+  {
+   "query_caption_id": 43598,
+   "gold_image_id": 115191,
+   "top_nongold_image_id": 394974,
+   "top_nongold_jaccard": 0.2143,
+   "top_nongold_captions": [
+    "Several zebras are grazing in a sandy area.",
+    "A group of zebras grazing on a sandy zoo lot.",
+    "A herd of zebra standing on top of a dirt field.",
+    "One Zebra, two Zebras, three Zebras in a row.",
+    "three zebras near one another on a dirt ground "
+   ]
+  },
+  {
+   "query_caption_id": 768787,
+   "gold_image_id": 187683,
+   "top_nongold_image_id": 323462,
+   "top_nongold_jaccard": 0.2857,
+   "top_nongold_captions": [
+    "A cup of coffee sitting next to a keyboard ",
+    "A cup on a desk with a keyboard and mouse.",
+    "a cup with coffee sitting by a keyboard",
+    "A computer mouse and a  plate on a desk.",
+    "a table with a mouse and a keyboard on it"
+   ]
+  },
+  {
+   "query_caption_id": 768767,
+   "gold_image_id": 313914,
+   "top_nongold_image_id": 237923,
+   "top_nongold_jaccard": 0.1081,
+   "top_nongold_captions": [
+    "There is no image here to provide a caption for.",
+    "a woman in a black shirt taking a selfie with a mirror",
+    "An Asian woman taking a selfie in the mirror",
+    "A woman in black shirt holding a white cellphone by mirror.",
+    "Woman in hotel room taking selfie with cell phone camera."
+   ]
+  },
+  {
+   "query_caption_id": 98433,
+   "gold_image_id": 336563,
+   "top_nongold_image_id": 56118,
+   "top_nongold_jaccard": 0.2083,
+   "top_nongold_captions": [
+    "A man doing skateboard tricks on a railing",
+    "A man riding a rail with a skateboard.",
+    "Man on skate board riding a stair rail up.",
+    "A skateboard doing a trick on the railing to some steps.",
+    "a man grinding his skateboard down a handrail"
+   ]
+  },
+  {
+   "query_caption_id": 342491,
+   "gold_image_id": 196065,
+   "top_nongold_image_id": 285074,
+   "top_nongold_jaccard": 0.2381,
+   "top_nongold_captions": [
+    "A bathroom with a sink, toilet, mirror and tub.",
+    "A bathroom area with a tub, sink and toilet.",
+    "a bathroom with a brown cabinet and sink, a toilet and a tub",
+    "A sink, toilet, tub and shower in a bathroom.",
+    "A bathroom has a large mirror over a sink."
+   ]
+  },
+  {
+   "query_caption_id": 605961,
+   "gold_image_id": 50358,
+   "top_nongold_image_id": 112959,
+   "top_nongold_jaccard": 0.2143,
+   "top_nongold_captions": [
+    "A girl enjoying a pizza out in a green forest-like area.",
+    "A little girl outside eating pizza and looking around",
+    "A young girl in pajamas holding a pizza crust",
+    "A girl holding a pizza crust and looking to the side.",
+    "A little girl is eating some pizza outside."
+   ]
+  },
+  {
+   "query_caption_id": 434335,
+   "gold_image_id": 234236,
+   "top_nongold_image_id": 564235,
+   "top_nongold_jaccard": 0.2059,
+   "top_nongold_captions": [
+    "Computers and other electronics sitting on a cluttered desk.",
+    "Assortment of electronic equipment on small desk in room.",
+    "A cluttered computer desk with camera, book, headphones and other objects.",
+    "a bunch of stuff is on a wood desk",
+    "A cluttered desk with a computer, camera, and headphones."
+   ]
+  },
+  {
+   "query_caption_id": 104837,
+   "gold_image_id": 371718,
+   "top_nongold_image_id": 86065,
+   "top_nongold_jaccard": 0.2903,
+   "top_nongold_captions": [
+    "A large group of people are enjoying a meal together. ",
+    "Several people eating together at a long table.",
+    "People seated at tables covered with white clothes eating food.",
+    "The group of friends is enjoying a mean in a restaurant.",
+    "A group of people sitting down at a table having a meal."
+   ]
+  },
+  {
+   "query_caption_id": 219847,
+   "gold_image_id": 434493,
+   "top_nongold_image_id": 541643,
+   "top_nongold_jaccard": 0.3636,
+   "top_nongold_captions": [
+    "Two people flying a green kite in a field.",
+    "Two persons are flying a kite in the field.",
+    "Two people lying a kite in the countryside.",
+    "two people standing around while playing with a green kite ",
+    "two men play with a kite in a grass field "
+   ]
+  },
+  {
+   "query_caption_id": 474165,
+   "gold_image_id": 361480,
+   "top_nongold_image_id": 275372,
+   "top_nongold_jaccard": 0.1333,
+   "top_nongold_captions": [
+    "A large body of water filled with boats.",
+    "A row of sailboats sitting in a harbor by a pier.",
+    "A picture of a boat marina full of sail boats. ",
+    "a number of small boats in a large body of water ",
+    "A crowded harbor with sailboats under a cloudy sky."
+   ]
+  },
+  {
+   "query_caption_id": 58662,
+   "gold_image_id": 81431,
+   "top_nongold_image_id": 187683,
+   "top_nongold_jaccard": 0.25,
+   "top_nongold_captions": [
+    "A vase of flowers is displayed on a table.",
+    "A vase sitting on a table with a cloth underneath it.",
+    "a vase with some pretty roses in it sitting on a table",
+    "Some pink roses in a glass vase on top of a white cloth",
+    "A vase that has pink roses and babies breath in it."
+   ]
+  },
+  {
+   "query_caption_id": 591972,
+   "gold_image_id": 418634,
+   "top_nongold_image_id": 458894,
+   "top_nongold_jaccard": 0.2581,
+   "top_nongold_captions": [
+    "A man with a surfboard wades into the foam.",
+    "A person is walking through the water holding a surfboard.",
+    "A surfer in a wet suit carrying a surfboard as he walks into the water.",
+    "A male surfer standing in the water in a wet suit holding his board.",
+    "A man standing in foamy surf with a surf board."
+   ]
+  },
+  {
+   "query_caption_id": 714570,
+   "gold_image_id": 178933,
+   "top_nongold_image_id": 506999,
+   "top_nongold_jaccard": 0.2308,
+   "top_nongold_captions": [
+    "A man smiling while wearing a jacket and a tie.",
+    "A middle-aged man in a suit with messy black hair.",
+    "A man wearing a suite is looking up and smiling. ",
+    "A well dressed man smiling while he looks upward.",
+    "A man wearing a tie is looking up and smiling."
+   ]
+  },
+  {
+   "query_caption_id": 612741,
+   "gold_image_id": 239706,
+   "top_nongold_image_id": 381186,
+   "top_nongold_jaccard": 0.2143,
+   "top_nongold_captions": [
+    "A puddle of water filled with little birds.",
+    "A flock of seagulls in a puddle of water on the beach.",
+    "Birds are drinking water from a large puddle.",
+    "Birds are standing in a puddle on the sand.",
+    "A group of seagulls standing in small pools of water in the sand."
+   ]
+  },
+  {
+   "query_caption_id": 196542,
+   "gold_image_id": 379980,
+   "top_nongold_image_id": 366022,
+   "top_nongold_jaccard": 0.25,
+   "top_nongold_captions": [
+    "A man who is sitting at a bar.",
+    "a man sitting at a bar with a bottle of beer ",
+    "A man is sitting at a bar with a bottle of beer.",
+    "A man sitting near a bar with a beer bottle.",
+    "A man sitting at a bar with a bottle of beer."
+   ]
+  },
+  {
+   "query_caption_id": 161769,
+   "gold_image_id": 172156,
+   "top_nongold_image_id": 540479,
+   "top_nongold_jaccard": 0.1538,
+   "top_nongold_captions": [
+    "A skier skiing on a snowy hill during the day.",
+    "A person in the snow on some skis.",
+    "a skier skis down hill of a mountain",
+    "A man is going down a hill on snow skis.",
+    "A man is skiing down a snowy slope."
+   ]
+  },
+  {
+   "query_caption_id": 285538,
+   "gold_image_id": 400440,
+   "top_nongold_image_id": 12379,
+   "top_nongold_jaccard": 0.25,
+   "top_nongold_captions": [
+    "A man holding a tennis racquet during a tennis match on a tennis court.",
+    "A man playing tennis taking a swing with his racket.",
+    "A person being down on one knee playing tennis.",
+    "A man is playing tennis on a tennis court.",
+    "A man playing tennis on a tennis court at a park."
+   ]
+  },
+  {
+   "query_caption_id": 628172,
+   "gold_image_id": 413232,
+   "top_nongold_image_id": 547528,
+   "top_nongold_jaccard": 0.2414,
+   "top_nongold_captions": [
+    "A lamp pole with clock on a downtown street.",
+    "A cloudy sky street scene cars and a cafe.",
+    "Several cars are parked at the curb of a sidewalk.",
+    "A telephone pole with a clock in a city.",
+    "Cars are parked in a city with a clock on a pole."
+   ]
+  },
+  {
+   "query_caption_id": 442590,
+   "gold_image_id": 381533,
+   "top_nongold_image_id": 485907,
+   "top_nongold_jaccard": 0.1562,
+   "top_nongold_captions": [
+    "A baby girl kneeling on the grass covered ground while holding an open umbrella.",
+    "a little girl playing with an umbrella in the grass",
+    "A child sitting in the grass holding an umbrella over her head.",
+    "a young child holding a large umbrella ",
+    "A small girl on the ground holding an umbrella."
+   ]
+  },
+  {
+   "query_caption_id": 610857,
+   "gold_image_id": 110002,
+   "top_nongold_image_id": 81431,
+   "top_nongold_jaccard": 0.2308,
+   "top_nongold_captions": [
+    "There are pink flowers in a vase by a window.",
+    "a vase with many flowers in it on a window sil",
+    "A glass vase of flowers is in the window.",
+    "Pink tulips are in a pitcher full of water.",
+    "A glass vase full of tulips by a window."
+   ]
+  },
+  {
+   "query_caption_id": 551837,
+   "gold_image_id": 308496,
+   "top_nongold_image_id": 56118,
+   "top_nongold_jaccard": 0.1071,
+   "top_nongold_captions": [
+    "A man doing skateboard tricks on a railing",
+    "A man riding a rail with a skateboard.",
+    "Man on skate board riding a stair rail up.",
+    "A skateboard doing a trick on the railing to some steps.",
+    "a man grinding his skateboard down a handrail"
+   ]
+  },
+  {
+   "query_caption_id": 751571,
+   "gold_image_id": 51750,
+   "top_nongold_image_id": 82766,
+   "top_nongold_jaccard": 0.1935,
+   "top_nongold_captions": [
+    "A group of skiers in action on a snowy hill.",
+    "A man in yellow vest skiing on a snowy slope.",
+    "a person on skies with a hat and ski poles",
+    "People on a snowy slope in ski gear",
+    "Three people on skis on a snowy slope. "
+   ]
+  },
+  {
+   "query_caption_id": 470294,
+   "gold_image_id": 356253,
+   "top_nongold_image_id": 68712,
+   "top_nongold_jaccard": 0.1875,
+   "top_nongold_captions": [
+    "a kitchen with a stove and many cupboards ",
+    "A kitchen with lots of counter top space and cupboards.",
+    "A large empty kitchen with a counter between it and another room ",
+    "A commercial kitchen with a large pass-through and multiple ovens and dishwashers. ",
+    "this kitchen is very big and has many large appliances\n"
+   ]
+  },
+  {
+   "query_caption_id": 396486,
+   "gold_image_id": 141986,
+   "top_nongold_image_id": 470613,
+   "top_nongold_jaccard": 0.1818,
+   "top_nongold_captions": [
+    "A large elephant standing in a grass field.",
+    "A baby elephant standing on a lush green field.",
+    "there is a baby elephant standing in a field with tall grass",
+    "A elephant that is standing in the grass.",
+    "A baby elephant is standing in a field. "
+   ]
+  },
+  {
+   "query_caption_id": 349347,
+   "gold_image_id": 232718,
+   "top_nongold_image_id": 460446,
+   "top_nongold_jaccard": 0.375,
+   "top_nongold_captions": [
+    "A slice of pizza sits on a plate with a knife.",
+    "A plate that has a half eaten pizza on it.",
+    "A piece of pizza on a plate with a knife, set on a table.",
+    "White plate sitting on a table with pizza and a knife on it. ",
+    "A couple of slices of pizza that are on a plate."
+   ]
+  },
+  {
+   "query_caption_id": 130161,
+   "gold_image_id": 217645,
+   "top_nongold_image_id": 392186,
+   "top_nongold_jaccard": 0.25,
+   "top_nongold_captions": [
+    "A dog laying on the bed next to a book.",
+    "A small dog sits on a bed with striped sheets.",
+    "A dog laying on a bed with a book with a picture of a bear.",
+    "a dog on a bed with a book",
+    "A dog laying on a bed with a large book."
+   ]
+  },
+  {
+   "query_caption_id": 60969,
+   "gold_image_id": 511580,
+   "top_nongold_image_id": 346678,
+   "top_nongold_jaccard": 0.1333,
+   "top_nongold_captions": [
+    "Two bears in a river looking for fish.",
+    "Two bears that are looking for fish to eat. ",
+    "A bear in the water has a fish in it's mouth.",
+    "Two grizzly bears catching fish in the water.",
+    "Brown bears in the water feasting on prey."
+   ]
+  },
+  {
+   "query_caption_id": 32482,
+   "gold_image_id": 353400,
+   "top_nongold_image_id": 117636,
+   "top_nongold_jaccard": 0.1034,
+   "top_nongold_captions": [
+    "Three woman sitting at a dinner table smiling.",
+    "Three women sitting at a table together eating food.",
+    "three women are sitting at a table with food and drinks",
+    "Three women posing for a picture in a dinning hall.",
+    "Three women sitting at a table with plates of food."
+   ]
+  },
+  {
+   "query_caption_id": 321321,
+   "gold_image_id": 325654,
+   "top_nongold_image_id": 323462,
+   "top_nongold_jaccard": 0.2917,
+   "top_nongold_captions": [
+    "A cup of coffee sitting next to a keyboard ",
+    "A cup on a desk with a keyboard and mouse.",
+    "a cup with coffee sitting by a keyboard",
+    "A computer mouse and a  plate on a desk.",
+    "a table with a mouse and a keyboard on it"
+   ]
+  },
+  {
+   "query_caption_id": 359936,
+   "gold_image_id": 263036,
+   "top_nongold_image_id": 80090,
+   "top_nongold_jaccard": 0.1379,
+   "top_nongold_captions": [
+    "A red train passing by a  train crossing and a building.",
+    "A red streetcar crosses over a street intersection. ",
+    "A red train traveling past a building with a train signal.",
+    "A big red train on a street near a big building.",
+    "A city train traveling down the railroad tracks."
+   ]
+  },
+  {
+   "query_caption_id": 357834,
+   "gold_image_id": 328203,
+   "top_nongold_image_id": 245425,
+   "top_nongold_jaccard": 0.1429,
+   "top_nongold_captions": [
+    "A baseball player is standing on a base.",
+    "A man standing on top of a base on a baseball field.",
+    "a baseball player stepping off the base during a game",
+    "A baseball player stepping on the first base bag.",
+    "Man comes to a stop by a base on a baseball field"
+   ]
+  },
+  {
+   "query_caption_id": 695079,
+   "gold_image_id": 94351,
+   "top_nongold_image_id": 139397,
+   "top_nongold_jaccard": 0.2069,
+   "top_nongold_captions": [
+    "A car is parked next to a park.",
+    "a grass covered park filled with jungle gyms",
+    "A car parked at the side of a road near a street sign.",
+    "Corner of a street with a park and a parked car.",
+    "A car parked on the side of the road."
+   ]
+  },
+  {
+   "query_caption_id": 546218,
+   "gold_image_id": 228119,
+   "top_nongold_image_id": 52128,
+   "top_nongold_jaccard": 0.2069,
+   "top_nongold_captions": [
+    "A person holding a baby bottle feeding a small cat.",
+    "A person feeding a kitten from a bottle",
+    "a small kitten is being fed with a small bottle",
+    "Someone holding a cat and giving the cat some medicine.",
+    "Someone is feeding milk in a bottle to a kitten. "
+   ]
+  },
+  {
+   "query_caption_id": 738416,
+   "gold_image_id": 96315,
+   "top_nongold_image_id": 399534,
+   "top_nongold_jaccard": 0.25,
+   "top_nongold_captions": [
+    "A view of a tall building with a clock on it.",
+    " The cars are parked on the side of the road.",
+    "A large clock tower looms above a city street.",
+    "Cars are parked along a street with buildings of old architecture",
+    "There are vehicles driving down the city street."
+   ]
+  },
+  {
+   "query_caption_id": 585861,
+   "gold_image_id": 113561,
+   "top_nongold_image_id": 262495,
+   "top_nongold_jaccard": 0.2069,
+   "top_nongold_captions": [
+    "A child standing by a fridge holding a bottle",
+    "A small child is standing in front of a refrigerator. ",
+    "A young child with a cup standing next to a refrigerator",
+    "A toddler standing in a kitchen leaning on the refrigerator.",
+    "A young child standing in a kitchen on one leg in front of a refrigerator."
+   ]
+  },
+  {
+   "query_caption_id": 502250,
+   "gold_image_id": 506999,
+   "top_nongold_image_id": 379980,
+   "top_nongold_jaccard": 0.2381,
+   "top_nongold_captions": [
+    "A young man laying down while reading a book.",
+    "A man is laying in bed reading a book.",
+    "a male with long hair reading a book in bed",
+    "A man sitting in bed is reading a book.",
+    "A man with long hair in bed with a book."
+   ]
+  },
+  {
+   "query_caption_id": 141537,
+   "gold_image_id": 26645,
+   "top_nongold_image_id": 224128,
+   "top_nongold_jaccard": 0.2069,
+   "top_nongold_captions": [
+    "A dog looking out a car window in a black and white photo.",
+    "A dog hanging out of the passenger side window.",
+    "A small dog looks out the window of   a vehicle.",
+    "a close up of a dog in the driver side window",
+    "A small dog leaning out of a car window."
+   ]
+  },
+  {
+   "query_caption_id": 171692,
+   "gold_image_id": 271930,
+   "top_nongold_image_id": 495122,
+   "top_nongold_jaccard": 0.2593,
+   "top_nongold_captions": [
+    " a kitchen full of cabinets sink fridge on a tiled floor",
+    "A very large kitchen with all white cabinets and counter tops.",
+    "white cabinets a refrigerator a sink a light and window",
+    "A kitchen with cabinets, refrigerator and other appliances. ",
+    "A refrigerator and some cabinets in a kitchen."
+   ]
+  },
+  {
+   "query_caption_id": 717921,
+   "gold_image_id": 164094,
+   "top_nongold_image_id": 30820,
+   "top_nongold_jaccard": 0.2,
+   "top_nongold_captions": [
+    "A sink, wall hanging and mirror in the room",
+    "a bathroom with a sink, mirror, and picture on the wall.",
+    "a bathroom with a sink, mirror, and picture, on a tiled wall",
+    "A small bathroom with art on the wall",
+    "A sink and mirror are in a bathroom."
+   ]
+  },
+  {
+   "query_caption_id": 748490,
+   "gold_image_id": 135041,
+   "top_nongold_image_id": 559490,
+   "top_nongold_jaccard": 0.2609,
+   "top_nongold_captions": [
+    "A cat that is sitting down near a bag.",
+    "A black cat sits on a table beside a bag.",
+    "a black cat sitting on a counter next to a purse",
+    "A cat sitting on a counter near a bag.",
+    "A black cat sitting on top of papers near a bag. "
+   ]
+  },
+  {
+   "query_caption_id": 245049,
+   "gold_image_id": 186611,
+   "top_nongold_image_id": 307432,
+   "top_nongold_jaccard": 0.2286,
+   "top_nongold_captions": [
+    "a baseball player holding a bat on a field",
+    "A person with a bat stands at a base.",
+    "A man holding a baseball bat as another holds a glove.",
+    "A baseball teams stands by as the batter and catcher prepare for a pitch.",
+    "A batter getting ready to hit the ball."
+   ]
+  },
+  {
+   "query_caption_id": 240131,
+   "gold_image_id": 516487,
+   "top_nongold_image_id": 424368,
+   "top_nongold_jaccard": 0.2258,
+   "top_nongold_captions": [
+    "A woman pushing a stroller and looking at a cellphone.",
+    "A woman pushing a stroller and looking at her cellphone walking down the street with people walking or riding bicycles behind her.",
+    "A woman pushes a stroller while looking at her cellphone. ",
+    "A woman pushing a baby stroller checking her cell phone.",
+    "a person walking with a baby stroller "
+   ]
+  },
+  {
+   "query_caption_id": 304036,
+   "gold_image_id": 3321,
+   "top_nongold_image_id": 78089,
+   "top_nongold_jaccard": 0.2414,
+   "top_nongold_captions": [
+    "A dog with a herd of cows on a hillside.",
+    "some brown white and black cows and a dog",
+    "Agreen pasture of cows and a brown dog",
+    "a number of animals behind a fence with mountains in the background",
+    "A group of animals standing on a lush green hillside."
+   ]
+  },
+  {
+   "query_caption_id": 235343,
+   "gold_image_id": 432037,
+   "top_nongold_image_id": 379980,
+   "top_nongold_jaccard": 0.25,
+   "top_nongold_captions": [
+    "A young man laying down while reading a book.",
+    "A man is laying in bed reading a book.",
+    "a male with long hair reading a book in bed",
+    "A man sitting in bed is reading a book.",
+    "A man with long hair in bed with a book."
+   ]
+  },
+  {
+   "query_caption_id": 757046,
+   "gold_image_id": 301045,
+   "top_nongold_image_id": 77432,
+   "top_nongold_jaccard": 0.2069,
+   "top_nongold_captions": [
+    "A picture of a person taking a picture.",
+    "A man is taking a picture of a messy batheroom.",
+    "A person takes a picture of themselves in a mirror.",
+    "a bathroom with a ratchet ass dirty mirror",
+    "A bathroom sink has toilet paper and a hair dryer on it."
+   ]
+  },
+  {
+   "query_caption_id": 527640,
+   "gold_image_id": 289158,
+   "top_nongold_image_id": 470613,
+   "top_nongold_jaccard": 0.2273,
+   "top_nongold_captions": [
+    "A large elephant standing in a grass field.",
+    "A baby elephant standing on a lush green field.",
+    "there is a baby elephant standing in a field with tall grass",
+    "A elephant that is standing in the grass.",
+    "A baby elephant is standing in a field. "
+   ]
+  },
+  {
+   "query_caption_id": 584304,
+   "gold_image_id": 392629,
+   "top_nongold_image_id": 458083,
+   "top_nongold_jaccard": 0.24,
+   "top_nongold_captions": [
+    "A cat sits next to several different stuffed animals.",
+    "A cat is sitting with a stuffed pig",
+    "A cat sitting on a pile of stuffed animals.",
+    "A cat is sitting next to two stuffed animals. ",
+    "A cat sitting in the middle of several stuffed animals."
+   ]
+  },
+  {
+   "query_caption_id": 642245,
+   "gold_image_id": 195137,
+   "top_nongold_image_id": 245746,
+   "top_nongold_jaccard": 0.2222,
+   "top_nongold_captions": [
+    "Two brown elephants passing by a row of cars. ",
+    "Two elephants are walking toward a road with cars. ",
+    "People sitting in cars watching two elephants eating.",
+    "A couple of elephants are standing by some cars",
+    "A couple of elephants walking across a grass field."
+   ]
+  },
+  {
+   "query_caption_id": 232074,
+   "gold_image_id": 439970,
+   "top_nongold_image_id": 30681,
+   "top_nongold_jaccard": 0.2609,
+   "top_nongold_captions": [
+    "Two people siting on a park bench in a park.",
+    "A man and a woman sitting on a bench in a park. ",
+    "A couple sitting on a bench with arms around each other",
+    "A couple hugging on a bench in a park.",
+    "A couple are embracing each other on a bench."
+   ]
+  },
+  {
+   "query_caption_id": 362977,
+   "gold_image_id": 71880,
+   "top_nongold_image_id": 326750,
+   "top_nongold_jaccard": 0.1852,
+   "top_nongold_captions": [
+    "A commuter train on tracks is at a train station with only one of its two lights on",
+    "a yellow and white passenger train stopped on the tracks",
+    "A commuter train pulling into a train station.",
+    "A train is pulled up to the train station. ",
+    "Yellow and white train pulling into a train station. "
+   ]
+  },
+  {
+   "query_caption_id": 369255,
+   "gold_image_id": 400200,
+   "top_nongold_image_id": 149774,
+   "top_nongold_jaccard": 0.2,
+   "top_nongold_captions": [
+    "A woman smiling while holding a tennis racket.",
+    "A woman on a court with a tennis racket.",
+    "A woman smiling while holding a tennis racquet.",
+    "A smiling brunette woman holding a tennis racquet.",
+    "A woman is smiling and holding a tennis racket."
+   ]
+  },
+  {
+   "query_caption_id": 675144,
+   "gold_image_id": 236744,
+   "top_nongold_image_id": 431009,
+   "top_nongold_jaccard": 0.2258,
+   "top_nongold_captions": [
+    "A laptop computer sitting on top of a wooden desk.",
+    "A table containing two computers on it, one of them being a laptop.",
+    "Desktop and laptop computers on tables in a room.",
+    "a desk with laptop and desk top computers",
+    "Several computers left running on a wooden table."
+   ]
+  },
+  {
+   "query_caption_id": 36478,
+   "gold_image_id": 466839,
+   "top_nongold_image_id": 312465,
+   "top_nongold_jaccard": 0.2308,
+   "top_nongold_captions": [
+    "three zebras standing together in a field with one looking the opposite way",
+    "A group of zebras in grassy field with trees in the background.",
+    "A field with three zebra standing in the grass.",
+    "Image of three zebra standing together on the savannah.",
+    "Three adult zebras standing in the tall grass."
+   ]
+  },
+  {
+   "query_caption_id": 715171,
+   "gold_image_id": 211445,
+   "top_nongold_image_id": 37396,
+   "top_nongold_jaccard": 0.1935,
+   "top_nongold_captions": [
+    "A merchant is guiding a cart of fruit along a street.",
+    "A bunch of bananas that are stacked in a cart.",
+    "A cart packed full of bananas on a street.",
+    "some people a street and a cart with green bananas",
+    "A cart that has a large number of bananas in it."
+   ]
+  },
+  {
+   "query_caption_id": 20041,
+   "gold_image_id": 193011,
+   "top_nongold_image_id": 341511,
+   "top_nongold_jaccard": 0.24,
+   "top_nongold_captions": [
+    "The beer is walking by himself in the field.",
+    "A brown bear trudges through thick grass and flowers.",
+    "The bear is walking alone in the field. ",
+    "A brown bear walking through low scrub bushes",
+    "a bear in a field on tall grass "
+   ]
+  },
+  {
+   "query_caption_id": 340592,
+   "gold_image_id": 562461,
+   "top_nongold_image_id": 534331,
+   "top_nongold_jaccard": 0.2667,
+   "top_nongold_captions": [
+    "In the background a red tree flourishes behind a yellow fire hydrant.",
+    "A fire-hydrant that is yellow and near a road.",
+    "A yellow fire hydrant sitting on the side of a road.",
+    "A yellow fire hydrant stands in front of a tree with red leaves.",
+    "The tall red, orange tree is  looking like fall."
+   ]
+  },
+  {
+   "query_caption_id": 98468,
+   "gold_image_id": 10097,
+   "top_nongold_image_id": 166163,
+   "top_nongold_jaccard": 0.1935,
+   "top_nongold_captions": [
+    "a person jumping a skate board in the air",
+    "A boy on a skateboard in a skate park performing a trick.",
+    "A guy riding a skateboard on a skateboard ramp.",
+    "Skateboarder in midair performing a stunt at an indoor facility.",
+    "A skateboarder performing a trick in mid air off of a half-pipe- ramp inside an indoor skate park"
+   ]
+  },
+  {
+   "query_caption_id": 80707,
+   "gold_image_id": 515066,
+   "top_nongold_image_id": 207584,
+   "top_nongold_jaccard": 0.1935,
+   "top_nongold_captions": [
+    "A man flying through the air riding a skateboard.",
+    "a guy in the air with his skateboard by some stairs ",
+    "Guy jumping a skate board down concrete stairs.",
+    "A skateboarder does a trick in mid air.",
+    "A MAN IS JUMPING OFF THE STREET ON A SKATE BOARD"
+   ]
+  },
+  {
+   "query_caption_id": 69241,
+   "gold_image_id": 565047,
+   "top_nongold_image_id": 460446,
+   "top_nongold_jaccard": 0.3478,
+   "top_nongold_captions": [
+    "A slice of pizza sits on a plate with a knife.",
+    "A plate that has a half eaten pizza on it.",
+    "A piece of pizza on a plate with a knife, set on a table.",
+    "White plate sitting on a table with pizza and a knife on it. ",
+    "A couple of slices of pizza that are on a plate."
+   ]
+  },
+  {
+   "query_caption_id": 60399,
+   "gold_image_id": 354716,
+   "top_nongold_image_id": 411745,
+   "top_nongold_jaccard": 0.1852,
+   "top_nongold_captions": [
+    "a purple snowboard is sitting on a glass coffee table",
+    "there is a snowboard that is purple with letters on it",
+    "A snow board sitting on top of a glass table.",
+    "A purple snowboard resting on a glass coffee table.",
+    "A snow board is sitting on a living room table. "
+   ]
+  },
+  {
+   "query_caption_id": 693397,
+   "gold_image_id": 292112,
+   "top_nongold_image_id": 403534,
+   "top_nongold_jaccard": 0.2609,
+   "top_nongold_captions": [
+    "A group of motorcycles parked in front of a school bus.",
+    "Motorcycles are parked in front of a yellow bus.",
+    "Motorcycles parked in a row in front of a school bus.",
+    "Parked motorcycles and an old yellow school bus",
+    "Fancy motorcycles parked in a row near a bus."
+   ]
+  },
+  {
+   "query_caption_id": 601980,
+   "gold_image_id": 178053,
+   "top_nongold_image_id": 23250,
+   "top_nongold_jaccard": 0.1613,
+   "top_nongold_captions": [
+    "A man holding a baseball bat wearing a baseball uniform.",
+    "A baseball player grips the bat and waits for the ball.",
+    "A baseball player taking a swing at a ball",
+    "A baseball player in uniform waiting for a pitch.",
+    "an image of a baseball player getting ready to hit the ball"
+   ]
+  },
+  {
+   "query_caption_id": 407067,
+   "gold_image_id": 322468,
+   "top_nongold_image_id": 84829,
+   "top_nongold_jaccard": 0.1739,
+   "top_nongold_captions": [
+    "A girl on the tennis court holding a racquet.",
+    "The blonde girl stands on the tennis court holding a racket.",
+    "A girl is playing tennis by herself in a fenced area",
+    "A girl on a tennis court holding a racket. ",
+    "A young girl is on a tennis court"
+   ]
+  },
+  {
+   "query_caption_id": 270888,
+   "gold_image_id": 448397,
+   "top_nongold_image_id": 228119,
+   "top_nongold_jaccard": 0.2308,
+   "top_nongold_captions": [
+    "A man that is giving a baby a bottle.",
+    "A man feeding a baby her bottle with a smile.",
+    "a male in a gray shirt is bottle feeding a baby",
+    "a man laying on a bed holding a small child and feeding her a bottle",
+    "A man is giving a bottle to a baby"
+   ]
+  },
+  {
+   "query_caption_id": 609993,
+   "gold_image_id": 428477,
+   "top_nongold_image_id": 434493,
+   "top_nongold_jaccard": 0.3333,
+   "top_nongold_captions": [
+    "Two men standing on a field playing a game of frisbee.",
+    "People are playing in the grass with a frisbee.",
+    "A man and a boy playing frisbee on a field.",
+    "Two men in shorts playing frisbee in a grassy field.",
+    "Two men playing a Frisbee game in a field."
+   ]
+  },
+  {
+   "query_caption_id": 271046,
+   "gold_image_id": 515204,
+   "top_nongold_image_id": 271051,
+   "top_nongold_jaccard": 0.1562,
+   "top_nongold_captions": [
+    "A bedroom with two beds and a bag of luggage sitting between them.",
+    "There is an open suitcase in a room with three beds. ",
+    "A suitcase that is sitting on the floor.",
+    "A room with three beds and luggage on the floor and a backpack on one of the beds.",
+    "A room with beds and suitcases and other items"
+   ]
+  },
+  {
+   "query_caption_id": 755986,
+   "gold_image_id": 65859,
+   "top_nongold_image_id": 8187,
+   "top_nongold_jaccard": 0.1852,
+   "top_nongold_captions": [
+    "A train that is sitting on the tracks.",
+    "A train runs along a track by a man on a bicycle.",
+    "A train on the tracks near a building and someone on a bicycle.",
+    "a red train that is on a old track",
+    "A man on a bicycle rides along by a parked train. "
+   ]
+  },
+  {
+   "query_caption_id": 130889,
+   "gold_image_id": 219527,
+   "top_nongold_image_id": 458083,
+   "top_nongold_jaccard": 0.2083,
+   "top_nongold_captions": [
+    "A cat sits next to several different stuffed animals.",
+    "A cat is sitting with a stuffed pig",
+    "A cat sitting on a pile of stuffed animals.",
+    "A cat is sitting next to two stuffed animals. ",
+    "A cat sitting in the middle of several stuffed animals."
+   ]
+  },
+  {
+   "query_caption_id": 160063,
+   "gold_image_id": 52128,
+   "top_nongold_image_id": 228119,
+   "top_nongold_jaccard": 0.2308,
+   "top_nongold_captions": [
+    "A man that is giving a baby a bottle.",
+    "A man feeding a baby her bottle with a smile.",
+    "a male in a gray shirt is bottle feeding a baby",
+    "a man laying on a bed holding a small child and feeding her a bottle",
+    "A man is giving a bottle to a baby"
+   ]
+  },
+  {
+   "query_caption_id": 572638,
+   "gold_image_id": 255554,
+   "top_nongold_image_id": 436802,
+   "top_nongold_jaccard": 0.1935,
+   "top_nongold_captions": [
+    "A black and white dog on a grass field jumping up to get a frisbee.",
+    "A dog tries to catch a frisbee with paws.",
+    "A shaggy black and white dog tries to catch a Frisbee with its paws. ",
+    "A dog jumping into the air catching a frisbee.",
+    "A dog is leaping front legs into the air to catch a frisbee."
+   ]
+  },
+  {
+   "query_caption_id": 1457,
+   "gold_image_id": 547528,
+   "top_nongold_image_id": 42849,
+   "top_nongold_jaccard": 0.25,
+   "top_nongold_captions": [
+    "cars parked in the sand and people flying kites",
+    "a bunch of cars are parked out on the sand ",
+    "Several kites seen in the sky over the ground.",
+    "A group of kites are flying over a parking lot.",
+    "Several kits are flying over a large parking lot."
+   ]
+  },
+  {
+   "query_caption_id": 222990,
+   "gold_image_id": 456224,
+   "top_nongold_image_id": 137730,
+   "top_nongold_jaccard": 0.1923,
+   "top_nongold_captions": [
+    "Two zebras standing side by side in the grass.",
+    "A couple of zebra on the side of the street.",
+    "A couple of zebra's looking down in a field of grass.",
+    "Two zebra standing out in a field of grass.",
+    "Two zebras standing in a meadow on a sunny day."
+   ]
+  },
+  {
+   "query_caption_id": 333046,
+   "gold_image_id": 137583,
+   "top_nongold_image_id": 237622,
+   "top_nongold_jaccard": 0.25,
+   "top_nongold_captions": [
+    "A cow that is standing in the grass.",
+    "An animal standing in the grass near trees.",
+    "Black cow standing on a hill with grass on it. ",
+    "This is a black cow standing in a grassy field.",
+    "a cow standing in a field with trees in the background "
+   ]
+  },
+  {
+   "query_caption_id": 247688,
+   "gold_image_id": 399317,
+   "top_nongold_image_id": 118167,
+   "top_nongold_jaccard": 0.1613,
+   "top_nongold_captions": [
+    "A young boy with a shirt and bow tie is posing in the forest.",
+    "A little boy posing for a photograph in the woods.",
+    "a young person wearing a shirt and tie",
+    "A smiling little boy has a checkered shirt.",
+    "a little boy in a checkered shirt and a tie "
+   ]
+  },
+  {
+   "query_caption_id": 240785,
+   "gold_image_id": 119139,
+   "top_nongold_image_id": 418634,
+   "top_nongold_jaccard": 0.1379,
+   "top_nongold_captions": [
+    "a surfer carrying his surf board walking into the water",
+    "A man holding a surfboard while standing in the ocean.",
+    "a person in the ocean holding a surfboard in the water",
+    "A person in a wet suit carrying a surfboard out to the ocean.",
+    "A surfer with surf board walking into the ocean."
+   ]
+  },
+  {
+   "query_caption_id": 414862,
+   "gold_image_id": 75585,
+   "top_nongold_image_id": 434493,
+   "top_nongold_jaccard": 0.28,
+   "top_nongold_captions": [
+    "Two men standing on a field playing a game of frisbee.",
+    "People are playing in the grass with a frisbee.",
+    "A man and a boy playing frisbee on a field.",
+    "Two men in shorts playing frisbee in a grassy field.",
+    "Two men playing a Frisbee game in a field."
+   ]
+  },
+  {
+   "query_caption_id": 574144,
+   "gold_image_id": 350681,
+   "top_nongold_image_id": 403534,
+   "top_nongold_jaccard": 0.2609,
+   "top_nongold_captions": [
+    "A group of motorcycles parked in front of a school bus.",
+    "Motorcycles are parked in front of a yellow bus.",
+    "Motorcycles parked in a row in front of a school bus.",
+    "Parked motorcycles and an old yellow school bus",
+    "Fancy motorcycles parked in a row near a bus."
+   ]
+  },
+  {
+   "query_caption_id": 516686,
+   "gold_image_id": 549650,
+   "top_nongold_image_id": 399378,
+   "top_nongold_jaccard": 0.3333,
+   "top_nongold_captions": [
+    "a clock tower in the middle of a park ",
+    "A clock tower in the middle of walkways. ",
+    "A clock tower built in the center of a pathway in a park.",
+    "A clock tower sitting on the side of a walkway.",
+    "A clock tower with a steeple and a bell on it in a town square."
+   ]
+  },
+  {
+   "query_caption_id": 1233,
+   "gold_image_id": 261431,
+   "top_nongold_image_id": 543000,
+   "top_nongold_jaccard": 0.2222,
+   "top_nongold_captions": [
+    "A train is sitting on the tracks with the lights on.",
+    "A train is coming down the track approaching a curve.",
+    "A train moving along train tracks in an industrial area.",
+    "A train is parked on a track in the city. ",
+    "A train moves along a curved railroad track."
+   ]
+  },
+  {
+   "query_caption_id": 79742,
+   "gold_image_id": 187709,
+   "top_nongold_image_id": 477106,
+   "top_nongold_jaccard": 0.2,
+   "top_nongold_captions": [
+    "a close up of a cat on top of a refrigerator ",
+    "A multicolored cat sitting on top of a fridge. ",
+    "a cat is standing on top of a white fridge",
+    "A cat on top of a fridge with notes sticking to the side of the fridge.",
+    "A cat standing on top of a refrigerator."
+   ]
+  },
+  {
+   "query_caption_id": 584312,
+   "gold_image_id": 75230,
+   "top_nongold_image_id": 37396,
+   "top_nongold_jaccard": 0.2333,
+   "top_nongold_captions": [
+    "A merchant is guiding a cart of fruit along a street.",
+    "A bunch of bananas that are stacked in a cart.",
+    "A cart packed full of bananas on a street.",
+    "some people a street and a cart with green bananas",
+    "A cart that has a large number of bananas in it."
+   ]
+  },
+  {
+   "query_caption_id": 789622,
+   "gold_image_id": 58403,
+   "top_nongold_image_id": 195137,
+   "top_nongold_jaccard": 0.1379,
+   "top_nongold_captions": [
+    "A couple of zebra walking across a dirt road.",
+    "Two zebras crossing a dirt road near some trees.",
+    "Two zebras running across a dirt road in front of the cameraman.",
+    "Two zebras are leaving brush to crossing a dirt path.",
+    "Two zebras are walking across a dirt road."
+   ]
+  },
+  {
+   "query_caption_id": 481507,
+   "gold_image_id": 212712,
+   "top_nongold_image_id": 71880,
+   "top_nongold_jaccard": 0.2581,
+   "top_nongold_captions": [
+    "A train engine pulling several carts down a track.",
+    "A  bright yellow, high-speed train sits on the tracks.",
+    "A yellow train on tracks with lines overhead",
+    "A train that is going by some rocks.",
+    "A train is coming into a train station."
+   ]
+  },
+  {
+   "query_caption_id": 244528,
+   "gold_image_id": 350560,
+   "top_nongold_image_id": 359207,
+   "top_nongold_jaccard": 0.1562,
+   "top_nongold_captions": [
+    "An assortment of street signs on a street in mexico.",
+    "A freeway sign directs people where to go",
+    "A street scene with focus on several street signs.",
+    "A picture of some signs and a street.",
+    "many street signs on an open road with a sky background"
+   ]
+  },
+  {
+   "query_caption_id": 772358,
+   "gold_image_id": 434270,
+   "top_nongold_image_id": 350560,
+   "top_nongold_jaccard": 0.3235,
+   "top_nongold_captions": [
+    "many people sitting at different tables with laptops",
+    "A room full of people on cellphones and laptops.",
+    "A very large group of people are sitting at tables.",
+    "Many people gathered in a dining hall, many with laptops",
+    "A large crowd of people are sitting down in the banquet hall. "
+   ]
+  },
+  {
+   "query_caption_id": 565478,
+   "gold_image_id": 371814,
+   "top_nongold_image_id": 517690,
+   "top_nongold_jaccard": 0.32,
+   "top_nongold_captions": [
+    "A pizza sitting on top of a metal rack in an oven.",
+    "A cooked pepperoni pizza on an oven rack.  ",
+    "The peperoni pizza is in the oven cooking.",
+    "q pepperoni pizza baking in the oven till done",
+    "A view of a pizza cooking in an oven."
+   ]
+  },
+  {
+   "query_caption_id": 679316,
+   "gold_image_id": 507570,
+   "top_nongold_image_id": 460446,
+   "top_nongold_jaccard": 0.28,
+   "top_nongold_captions": [
+    "A slice of pizza sits on a plate with a knife.",
+    "A plate that has a half eaten pizza on it.",
+    "A piece of pizza on a plate with a knife, set on a table.",
+    "White plate sitting on a table with pizza and a knife on it. ",
+    "A couple of slices of pizza that are on a plate."
+   ]
+  },
+  {
+   "query_caption_id": 769623,
+   "gold_image_id": 542458,
+   "top_nongold_image_id": 91536,
+   "top_nongold_jaccard": 0.28,
+   "top_nongold_captions": [
+    "A bus covered in graffiti sitting in front of a building.",
+    "a graffiti covered broken down bus on the side of the street",
+    "A colorful bus is parked on the side of the street.",
+    "A bus is being painted in a lot of colors.",
+    "A graffiti covered bus parked on the side of the road "
+   ]
+  },
+  {
+   "query_caption_id": 827806,
+   "gold_image_id": 500226,
+   "top_nongold_image_id": 448303,
+   "top_nongold_jaccard": 0.3,
+   "top_nongold_captions": [
+    "A woman skiing down hill on a ski slope ",
+    "A woman skiing down a ski slope in a ski competition.",
+    "A woman skiing down a snowy slope. ",
+    "A woman is skiing down a hill at a high speed.",
+    "A woman who is skiing down a snowy hill."
+   ]
+  },
+  {
+   "query_caption_id": 498225,
+   "gold_image_id": 480153,
+   "top_nongold_image_id": 426915,
+   "top_nongold_jaccard": 0.2222,
+   "top_nongold_captions": [
+    "A group of boats sitting next to very large ships.",
+    "A harbor with many small boats in the water.",
+    "A bunch of small boats in a harbor",
+    "Many small boats are docked near a large sail boat.",
+    "A variety of boats are docked in a harbour. "
+   ]
+  },
+  {
+   "query_caption_id": 304253,
+   "gold_image_id": 75450,
+   "top_nongold_image_id": 240358,
+   "top_nongold_jaccard": 0.2917,
+   "top_nongold_captions": [
+    "A man on a court with a tennis racket.",
+    "Man holding tennis racket on cement tennis court.",
+    "The tennis player is getting ready to hit the ball.",
+    "A man swinging his tennis racquet on a court.",
+    "A man is playing tennis with his racket in his hand. "
+   ]
+  },
+  {
+   "query_caption_id": 735704,
+   "gold_image_id": 331222,
+   "top_nongold_image_id": 458083,
+   "top_nongold_jaccard": 0.1739,
+   "top_nongold_captions": [
+    "A cat sits next to several different stuffed animals.",
+    "A cat is sitting with a stuffed pig",
+    "A cat sitting on a pile of stuffed animals.",
+    "A cat is sitting next to two stuffed animals. ",
+    "A cat sitting in the middle of several stuffed animals."
+   ]
+  },
+  {
+   "query_caption_id": 760350,
+   "gold_image_id": 238196,
+   "top_nongold_image_id": 2623,
+   "top_nongold_jaccard": 0.1944,
+   "top_nongold_captions": [
+    "Row boats moored at a pier on a lake surrounded by mountains.",
+    "A group of boats sitting up against a dock on a lake.",
+    "A motor boat in the waters near some hills",
+    "Three motor boats are in the water and tied to the prier.",
+    "Two boats that are sitting in the water."
+   ]
+  },
+  {
+   "query_caption_id": 118680,
+   "gold_image_id": 380752,
+   "top_nongold_image_id": 482634,
+   "top_nongold_jaccard": 0.2308,
+   "top_nongold_captions": [
+    "a young baseball player holding a bat on a field",
+    "A young man holding a bat on a baseball field.",
+    "A boy holds a bat and waits for the incoming pitch.",
+    "A child on a field with a baseball bat.",
+    "A young guy is playing baseball on the field in the gate."
+   ]
+  },
+  {
+   "query_caption_id": 729089,
+   "gold_image_id": 394974,
+   "top_nongold_image_id": 264722,
+   "top_nongold_jaccard": 0.1923,
+   "top_nongold_captions": [
+    "The two zebras are eating from the ground.",
+    "Two Zebra eating grass in a wide open field.",
+    "Two zebras in the wild grazing in a sparse field.",
+    "Two zebras are both eating grass at the same time.",
+    "Two zebras that are standing in the grass."
+   ]
+  },
+  {
+   "query_caption_id": 590737,
+   "gold_image_id": 488686,
+   "top_nongold_image_id": 423829,
+   "top_nongold_jaccard": 0.1471,
+   "top_nongold_captions": [
+    "A red umbrella sitting in the middle of a walkway.",
+    "A red umbrella on the ground in front of brick building.",
+    "An umbrella laying abandoned on the street with a small group of women in the background. ",
+    "An upside down, opened, red umbrella outside a building.",
+    "A red umbrella sits on a paved stone walkway."
+   ]
+  },
+  {
+   "query_caption_id": 697701,
+   "gold_image_id": 406034,
+   "top_nongold_image_id": 149774,
+   "top_nongold_jaccard": 0.2632,
+   "top_nongold_captions": [
+    "A woman smiling while holding a tennis racket.",
+    "A woman on a court with a tennis racket.",
+    "A woman smiling while holding a tennis racquet.",
+    "A smiling brunette woman holding a tennis racquet.",
+    "A woman is smiling and holding a tennis racket."
+   ]
+  },
+  {
+   "query_caption_id": 819499,
+   "gold_image_id": 543000,
+   "top_nongold_image_id": 8187,
+   "top_nongold_jaccard": 0.16,
+   "top_nongold_captions": [
+    "A train that is sitting on the tracks.",
+    "A train runs along a track by a man on a bicycle.",
+    "A train on the tracks near a building and someone on a bicycle.",
+    "a red train that is on a old track",
+    "A man on a bicycle rides along by a parked train. "
+   ]
+  },
+  {
+   "query_caption_id": 661412,
+   "gold_image_id": 68712,
+   "top_nongold_image_id": 174889,
+   "top_nongold_jaccard": 0.2381,
+   "top_nongold_captions": [
+    "A kitchen with a refrigerator and a stove with brown cabinets.",
+    "A refrigerator next to a stove with an oven beneath it.",
+    "A kitchen focused on the oven and refrigerator.. ",
+    "A refrigerator and an oven and stove combination.",
+    "A kitchen area with a stove next to a refrigerator."
+   ]
+  },
+  {
+   "query_caption_id": 682821,
+   "gold_image_id": 91541,
+   "top_nongold_image_id": 42476,
+   "top_nongold_jaccard": 0.1923,
+   "top_nongold_captions": [
+    "A cow grazing on a steep hill in a mountain range.",
+    "A large cow standing on a grassy hill.",
+    "A white cow is eating grass on a field on a hill.",
+    "A white horse grazing on a lush green hillside.",
+    "A cow is grazing on a steep mountain slope."
+   ]
+  },
+  {
+   "query_caption_id": 471187,
+   "gold_image_id": 110665,
+   "top_nongold_image_id": 285074,
+   "top_nongold_jaccard": 0.2632,
+   "top_nongold_captions": [
+    "A bathroom with a sink, toilet, mirror and tub.",
+    "A bathroom area with a tub, sink and toilet.",
+    "a bathroom with a brown cabinet and sink, a toilet and a tub",
+    "A sink, toilet, tub and shower in a bathroom.",
+    "A bathroom has a large mirror over a sink."
+   ]
+  },
+  {
+   "query_caption_id": 644852,
+   "gold_image_id": 137278,
+   "top_nongold_image_id": 392186,
+   "top_nongold_jaccard": 0.1739,
+   "top_nongold_captions": [
+    "A dog laying on the bed next to a book.",
+    "A small dog sits on a bed with striped sheets.",
+    "A dog laying on a bed with a book with a picture of a bear.",
+    "a dog on a bed with a book",
+    "A dog laying on a bed with a large book."
+   ]
+  },
+  {
+   "query_caption_id": 668250,
+   "gold_image_id": 2402,
+   "top_nongold_image_id": 392186,
+   "top_nongold_jaccard": 0.2609,
+   "top_nongold_captions": [
+    "A dog laying on the bed next to a book.",
+    "A small dog sits on a bed with striped sheets.",
+    "A dog laying on a bed with a book with a picture of a bear.",
+    "a dog on a bed with a book",
+    "A dog laying on a bed with a large book."
+   ]
+  },
+  {
+   "query_caption_id": 245062,
+   "gold_image_id": 313129,
+   "top_nongold_image_id": 323462,
+   "top_nongold_jaccard": 0.2857,
+   "top_nongold_captions": [
+    "A cup of coffee sitting next to a keyboard ",
+    "A cup on a desk with a keyboard and mouse.",
+    "a cup with coffee sitting by a keyboard",
+    "A computer mouse and a  plate on a desk.",
+    "a table with a mouse and a keyboard on it"
+   ]
+  },
+  {
+   "query_caption_id": 122468,
+   "gold_image_id": 516432,
+   "top_nongold_image_id": 322847,
+   "top_nongold_jaccard": 0.2414,
+   "top_nongold_captions": [
+    "A bunch of stuffed bears inside a basket of some sort.",
+    "Brown teddy bears sitting on a black iron basket in  store.",
+    "Pile of teddy bears on a wired basket in the produce section.",
+    "Stuffed teddy bears on sale a t the supermarket.",
+    "Teddy bears in a basket in the produce section of a market."
+   ]
+  },
+  {
+   "query_caption_id": 161224,
+   "gold_image_id": 86065,
+   "top_nongold_image_id": 399208,
+   "top_nongold_jaccard": 0.2222,
+   "top_nongold_captions": [
+    "Plates full of variety of foods and drinks on the table. ",
+    "A table of plates of food and glasses of beer.",
+    "A close up of several plates of food and drink on a table.",
+    "A table filled with plates of food and glasses of beer.",
+    "People are eating and and drinking at a table."
+   ]
+  },
+  {
+   "query_caption_id": 646815,
+   "gold_image_id": 566899,
+   "top_nongold_image_id": 429227,
+   "top_nongold_jaccard": 0.2174,
+   "top_nongold_captions": [
+    "A couple of zebra standing on top of a green field.",
+    "Two zebras standing beside each other on the grass.",
+    "Two zebras that are standing in the grass.",
+    "Two zebras that are standing in a field.",
+    "Two zebras standing together on a grassy field."
+   ]
+  },
+  {
+   "query_caption_id": 107410,
+   "gold_image_id": 16525,
+   "top_nongold_image_id": 120744,
+   "top_nongold_jaccard": 0.1852,
+   "top_nongold_captions": [
+    "A large dresser on top of a bed. ",
+    "a bed room with a dresser on top of a bed ",
+    "A bed with an oak dress thrown on top of it.",
+    "A bed with a chest of drawers on top of it and debris on the floor.",
+    "A bed with a wooden chest of drawers on it"
+   ]
+  },
+  {
+   "query_caption_id": 63322,
+   "gold_image_id": 14769,
+   "top_nongold_image_id": 8187,
+   "top_nongold_jaccard": 0.1786,
+   "top_nongold_captions": [
+    "A train that is sitting on the tracks.",
+    "A train runs along a track by a man on a bicycle.",
+    "A train on the tracks near a building and someone on a bicycle.",
+    "a red train that is on a old track",
+    "A man on a bicycle rides along by a parked train. "
+   ]
+  },
+  {
+   "query_caption_id": 479262,
+   "gold_image_id": 396354,
+   "top_nongold_image_id": 227903,
+   "top_nongold_jaccard": 0.1923,
+   "top_nongold_captions": [
+    "A man standing on top of a baseball field.",
+    "A baseball player is standing in a field.",
+    "Outfielder with hand in baseball glove walking across field",
+    "a baseball player is standing in a field",
+    "A baseball player stands in front of advertising signs."
+   ]
+  },
+  {
+   "query_caption_id": 551144,
+   "gold_image_id": 459673,
+   "top_nongold_image_id": 81431,
+   "top_nongold_jaccard": 0.2308,
+   "top_nongold_captions": [
+    "There are pink flowers in a vase by a window.",
+    "a vase with many flowers in it on a window sil",
+    "A glass vase of flowers is in the window.",
+    "Pink tulips are in a pitcher full of water.",
+    "A glass vase full of tulips by a window."
+   ]
+  },
+  {
+   "query_caption_id": 149153,
+   "gold_image_id": 39078,
+   "top_nongold_image_id": 350681,
+   "top_nongold_jaccard": 0.1875,
+   "top_nongold_captions": [
+    "A white and purple bus parked in a parking lot.",
+    "Modern commuter bus with large windshield parked in lot.",
+    "A bus that is sitting near a brick wall.",
+    "A grey and pink bus with yellow mirrors parked near a brick wall. ",
+    "The large tour bus is parked near other cars."
+   ]
+  },
+  {
+   "query_caption_id": 427482,
+   "gold_image_id": 535655,
+   "top_nongold_image_id": 551972,
+   "top_nongold_jaccard": 0.1935,
+   "top_nongold_captions": [
+    "A man making a sexual face wearing a suit and tie.",
+    "A young man with tongue sticking out posing for the camera",
+    "A man is making a silly face while posing for the camera. ",
+    "a male is wearing a white shirt and black jacket",
+    "A male model poses with his tongue out."
+   ]
+  }
+ ]
+}
