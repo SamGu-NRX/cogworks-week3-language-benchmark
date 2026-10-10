@@ -1,0 +1,132 @@
+{
+  "keywords": {
+    "collision_groups": {},
+    "collision_query_count": 0,
+    "note": "queries sharing a rewrite byte string are indistinguishable to any token-level system on that rung; they are reported, not dropped, and their gold candidates cannot be told apart.",
+    "same_as_verbatim_query_indices": []
+  },
+  "truncated": {
+    "collision_groups": {
+      "blue circle above": [
+        1,
+        33
+      ],
+      "blue circle below": [
+        12,
+        15
+      ],
+      "blue circle inside": [
+        7,
+        38
+      ],
+      "blue circle left": [
+        27,
+        29
+      ],
+      "blue triangle above": [
+        6,
+        9
+      ],
+      "blue triangle below": [
+        16,
+        34
+      ],
+      "blue triangle inside": [
+        18,
+        39
+      ],
+      "blue triangle left": [
+        17,
+        19
+      ],
+      "red circle above": [
+        0,
+        30
+      ],
+      "red circle below": [
+        3,
+        13
+      ],
+      "red circle inside": [
+        8,
+        11
+      ],
+      "red circle left": [
+        22,
+        25
+      ],
+      "red square above": [
+        2,
+        21
+      ],
+      "red square below": [
+        20,
+        24
+      ],
+      "red square inside": [
+        32,
+        37
+      ],
+      "red square left": [
+        5,
+        31
+      ]
+    },
+    "collision_query_count": 32,
+    "note": "queries sharing a rewrite byte string are indistinguishable to any token-level system on that rung; they are reported, not dropped, and their gold candidates cannot be told apart.",
+    "same_as_verbatim_query_indices": []
+  },
+  "typo": {
+    "collision_groups": {},
+    "collision_query_count": 0,
+    "note": "queries sharing a rewrite byte string are indistinguishable to any token-level system on that rung; they are reported, not dropped, and their gold candidates cannot be told apart.",
+    "same_as_verbatim_query_indices": []
+  },
+  "verbatim": {
+    "collision_groups": {},
+    "collision_query_count": 0,
+    "note": "queries sharing a rewrite byte string are indistinguishable to any token-level system on that rung; they are reported, not dropped, and their gold candidates cannot be told apart.",
+    "same_as_verbatim_query_indices": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24,
+      25,
+      26,
+      27,
+      28,
+      29,
+      30,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39
+    ]
+  }
+}

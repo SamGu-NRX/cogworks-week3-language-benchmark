@@ -1,0 +1,6 @@
+{
+  "group": "cogworks.submissions.v2",
+  "ran": [],
+  "reason_not_run": "baseline not run: no adapters registered in this environment",
+  "registered": []
+}

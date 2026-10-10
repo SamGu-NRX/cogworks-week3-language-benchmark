@@ -1,0 +1,62 @@
+{
+  "exact-grammar": {
+    "keywords": {
+      "decoder": "grammar",
+      "justified": 40,
+      "rate": 1.0,
+      "total": 40,
+      "unjustified_query_indices": []
+    },
+    "truncated": {
+      "decoder": "grammar",
+      "justified": 40,
+      "rate": 1.0,
+      "total": 40,
+      "unjustified_query_indices": []
+    },
+    "typo": {
+      "decoder": "grammar",
+      "justified": 40,
+      "rate": 1.0,
+      "total": 40,
+      "unjustified_query_indices": []
+    },
+    "verbatim": {
+      "decoder": "grammar",
+      "justified": 40,
+      "rate": 1.0,
+      "total": 40,
+      "unjustified_query_indices": []
+    }
+  },
+  "lexical-idf": {
+    "keywords": {
+      "decoder": "lexical",
+      "justified": 40,
+      "rate": 1.0,
+      "total": 40,
+      "unjustified_query_indices": []
+    },
+    "truncated": {
+      "decoder": "lexical",
+      "justified": 40,
+      "rate": 1.0,
+      "total": 40,
+      "unjustified_query_indices": []
+    },
+    "typo": {
+      "decoder": "lexical",
+      "justified": 40,
+      "rate": 1.0,
+      "total": 40,
+      "unjustified_query_indices": []
+    },
+    "verbatim": {
+      "decoder": "lexical",
+      "justified": 40,
+      "rate": 1.0,
+      "total": 40,
+      "unjustified_query_indices": []
+    }
+  }
+}

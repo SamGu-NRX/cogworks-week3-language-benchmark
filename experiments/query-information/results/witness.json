@@ -1,0 +1,12 @@
+{
+  "files": {
+    "identifiability.json": "6d48d52ac9ea8bbed5e5be267dc29ba31fecbdca291511d91e70316edcf65a97",
+    "justified_coverage.json": "f37134a779065aab7a909cb203c41a67fd190c955b7458edc1ed473530c3d4c4",
+    "raw_ranks.json": "c2787630482d63e80af397c760ab51f3cb1bfe541d0fd7d5fbb381bc304308a1",
+    "rewrite_ambiguities.json": "9fbb912ef3c7c7fc765cc0d09d5b77dca8986b2a394b135f6c76a4af65a23a79",
+    "summary.json": "c322484ffd8aec22e456ec9f48579d68361a86531d8bbfaf10862978f82dea75",
+    "systems.json": "47bf852af8c3ca3eb82cfc4e795352f1179b1f95b692516c48924ffb1ad028f5"
+  },
+  "manifest_sha256": "c7047a0a69f335868253a35e40b9742d9211f810e698ec887916ea7ca563b265",
+  "witness_scope": "content hashes of the six results artifacts and the manifest; the replay compares against these"
+}
