@@ -1,0 +1,2668 @@
+{
+  "pool_order": [
+    "scene-009",
+    "scene-013",
+    "scene-011",
+    "scene-017",
+    "scene-038",
+    "scene-003",
+    "scene-014",
+    "scene-029",
+    "scene-025",
+    "scene-015",
+    "scene-033",
+    "scene-024",
+    "scene-020",
+    "scene-016",
+    "scene-036",
+    "scene-021",
+    "scene-023",
+    "scene-007",
+    "scene-030",
+    "scene-006",
+    "scene-018",
+    "scene-010",
+    "scene-000",
+    "scene-039",
+    "scene-019",
+    "scene-001",
+    "scene-035",
+    "scene-005",
+    "scene-032",
+    "scene-004",
+    "scene-008",
+    "scene-002",
+    "scene-027",
+    "scene-012",
+    "scene-022",
+    "scene-034",
+    "scene-037",
+    "scene-026",
+    "scene-028",
+    "scene-031"
+  ],
+  "queries_verbatim": [
+    "the red circle is above the green diamond",
+    "the blue circle is above the green diamond",
+    "the red square is above the green diamond",
+    "the red circle is below the green diamond",
+    "the blue triangle is near the blue square",
+    "the red square is left of the green diamond",
+    "the blue triangle is above the blue square",
+    "the blue circle is inside the green diamond",
+    "the red circle is inside the green diamond",
+    "the blue triangle is above the green diamond",
+    "the red circle is near the green diamond",
+    "the red circle is inside the blue square",
+    "the blue circle is below the blue square",
+    "the red circle is below the blue square",
+    "the blue circle is near the blue square",
+    "the blue circle is below the green diamond",
+    "the blue triangle is below the green diamond",
+    "the blue triangle is left of the green diamond",
+    "the blue triangle is inside the blue square",
+    "the blue triangle is left of the blue square",
+    "the red square is below the blue square",
+    "the red square is above the blue square",
+    "the red circle is left of the blue square",
+    "the blue triangle is near the green diamond",
+    "the red square is below the green diamond",
+    "the red circle is left of the green diamond",
+    "the red square is near the green diamond",
+    "the blue circle is left of the green diamond",
+    "the red circle is near the blue square",
+    "the blue circle is left of the blue square",
+    "the red circle is above the blue square",
+    "the red square is left of the blue square",
+    "the red square is inside the green diamond",
+    "the blue circle is above the blue square",
+    "the blue triangle is below the blue square",
+    "the red square is near the blue square",
+    "the blue circle is near the green diamond",
+    "the red square is inside the blue square",
+    "the blue circle is inside the blue square",
+    "the blue triangle is inside the green diamond"
+  ],
+  "systems": {
+    "exact-grammar": {
+      "keywords": [
+        {
+          "compat_size": 1,
+          "query_index": 0,
+          "rank_of_gold": 1,
+          "scene_id": "scene-009",
+          "top1": "scene-009",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 1,
+          "rank_of_gold": 1,
+          "scene_id": "scene-013",
+          "top1": "scene-013",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 2,
+          "rank_of_gold": 1,
+          "scene_id": "scene-011",
+          "top1": "scene-011",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 3,
+          "rank_of_gold": 1,
+          "scene_id": "scene-017",
+          "top1": "scene-017",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 4,
+          "rank_of_gold": 2,
+          "scene_id": "scene-038",
+          "top1": "scene-030",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 5,
+          "rank_of_gold": 1,
+          "scene_id": "scene-003",
+          "top1": "scene-003",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 6,
+          "rank_of_gold": 1,
+          "scene_id": "scene-014",
+          "top1": "scene-014",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 7,
+          "rank_of_gold": 1,
+          "scene_id": "scene-029",
+          "top1": "scene-029",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 8,
+          "rank_of_gold": 1,
+          "scene_id": "scene-025",
+          "top1": "scene-025",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 9,
+          "rank_of_gold": 1,
+          "scene_id": "scene-015",
+          "top1": "scene-015",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 10,
+          "rank_of_gold": 3,
+          "scene_id": "scene-033",
+          "top1": "scene-001",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 11,
+          "rank_of_gold": 1,
+          "scene_id": "scene-024",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 12,
+          "rank_of_gold": 1,
+          "scene_id": "scene-020",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 13,
+          "rank_of_gold": 1,
+          "scene_id": "scene-016",
+          "top1": "scene-016",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 14,
+          "rank_of_gold": 4,
+          "scene_id": "scene-036",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 15,
+          "rank_of_gold": 1,
+          "scene_id": "scene-021",
+          "top1": "scene-021",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 16,
+          "rank_of_gold": 1,
+          "scene_id": "scene-023",
+          "top1": "scene-023",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 17,
+          "rank_of_gold": 1,
+          "scene_id": "scene-007",
+          "top1": "scene-007",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 18,
+          "rank_of_gold": 1,
+          "scene_id": "scene-030",
+          "top1": "scene-030",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 19,
+          "rank_of_gold": 1,
+          "scene_id": "scene-006",
+          "top1": "scene-006",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 20,
+          "rank_of_gold": 1,
+          "scene_id": "scene-018",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 21,
+          "rank_of_gold": 1,
+          "scene_id": "scene-010",
+          "top1": "scene-010",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 22,
+          "rank_of_gold": 1,
+          "scene_id": "scene-000",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 23,
+          "rank_of_gold": 4,
+          "scene_id": "scene-039",
+          "top1": "scene-015",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 24,
+          "rank_of_gold": 1,
+          "scene_id": "scene-019",
+          "top1": "scene-019",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 25,
+          "rank_of_gold": 1,
+          "scene_id": "scene-001",
+          "top1": "scene-001",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 26,
+          "rank_of_gold": 5,
+          "scene_id": "scene-035",
+          "top1": "scene-027",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 27,
+          "rank_of_gold": 1,
+          "scene_id": "scene-005",
+          "top1": "scene-005",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 28,
+          "rank_of_gold": 2,
+          "scene_id": "scene-032",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 29,
+          "rank_of_gold": 1,
+          "scene_id": "scene-004",
+          "top1": "scene-004",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 30,
+          "rank_of_gold": 1,
+          "scene_id": "scene-008",
+          "top1": "scene-008",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 31,
+          "rank_of_gold": 1,
+          "scene_id": "scene-002",
+          "top1": "scene-002",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 32,
+          "rank_of_gold": 1,
+          "scene_id": "scene-027",
+          "top1": "scene-027",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 33,
+          "rank_of_gold": 1,
+          "scene_id": "scene-012",
+          "top1": "scene-012",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 34,
+          "rank_of_gold": 1,
+          "scene_id": "scene-022",
+          "top1": "scene-022",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 35,
+          "rank_of_gold": 4,
+          "scene_id": "scene-034",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 36,
+          "rank_of_gold": 1,
+          "scene_id": "scene-037",
+          "top1": "scene-037",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 37,
+          "rank_of_gold": 1,
+          "scene_id": "scene-026",
+          "top1": "scene-026",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 38,
+          "rank_of_gold": 1,
+          "scene_id": "scene-028",
+          "top1": "scene-028",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 39,
+          "rank_of_gold": 1,
+          "scene_id": "scene-031",
+          "top1": "scene-031",
+          "top1_justified": true
+        }
+      ],
+      "truncated": [
+        {
+          "compat_size": 2,
+          "query_index": 0,
+          "rank_of_gold": 1,
+          "scene_id": "scene-009",
+          "top1": "scene-009",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 1,
+          "rank_of_gold": 1,
+          "scene_id": "scene-013",
+          "top1": "scene-013",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 2,
+          "rank_of_gold": 2,
+          "scene_id": "scene-011",
+          "top1": "scene-010",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 3,
+          "rank_of_gold": 1,
+          "scene_id": "scene-017",
+          "top1": "scene-017",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 4,
+          "rank_of_gold": 2,
+          "scene_id": "scene-038",
+          "top1": "scene-030",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 5,
+          "rank_of_gold": 2,
+          "scene_id": "scene-003",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 6,
+          "rank_of_gold": 2,
+          "scene_id": "scene-014",
+          "top1": "scene-015",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 7,
+          "rank_of_gold": 2,
+          "scene_id": "scene-029",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 8,
+          "rank_of_gold": 2,
+          "scene_id": "scene-025",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 9,
+          "rank_of_gold": 1,
+          "scene_id": "scene-015",
+          "top1": "scene-015",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 10,
+          "rank_of_gold": 3,
+          "scene_id": "scene-033",
+          "top1": "scene-001",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 11,
+          "rank_of_gold": 1,
+          "scene_id": "scene-024",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 12,
+          "rank_of_gold": 2,
+          "scene_id": "scene-020",
+          "top1": "scene-021",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 13,
+          "rank_of_gold": 2,
+          "scene_id": "scene-016",
+          "top1": "scene-017",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 14,
+          "rank_of_gold": 4,
+          "scene_id": "scene-036",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 15,
+          "rank_of_gold": 1,
+          "scene_id": "scene-021",
+          "top1": "scene-021",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 16,
+          "rank_of_gold": 1,
+          "scene_id": "scene-023",
+          "top1": "scene-023",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 17,
+          "rank_of_gold": 1,
+          "scene_id": "scene-007",
+          "top1": "scene-007",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 18,
+          "rank_of_gold": 1,
+          "scene_id": "scene-030",
+          "top1": "scene-030",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 19,
+          "rank_of_gold": 2,
+          "scene_id": "scene-006",
+          "top1": "scene-007",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 20,
+          "rank_of_gold": 1,
+          "scene_id": "scene-018",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 21,
+          "rank_of_gold": 1,
+          "scene_id": "scene-010",
+          "top1": "scene-010",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 22,
+          "rank_of_gold": 1,
+          "scene_id": "scene-000",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 23,
+          "rank_of_gold": 4,
+          "scene_id": "scene-039",
+          "top1": "scene-015",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 24,
+          "rank_of_gold": 2,
+          "scene_id": "scene-019",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 25,
+          "rank_of_gold": 2,
+          "scene_id": "scene-001",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 26,
+          "rank_of_gold": 5,
+          "scene_id": "scene-035",
+          "top1": "scene-027",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 27,
+          "rank_of_gold": 3,
+          "scene_id": "scene-005",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 28,
+          "rank_of_gold": 2,
+          "scene_id": "scene-032",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 29,
+          "rank_of_gold": 2,
+          "scene_id": "scene-004",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 30,
+          "rank_of_gold": 2,
+          "scene_id": "scene-008",
+          "top1": "scene-009",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 31,
+          "rank_of_gold": 3,
+          "scene_id": "scene-002",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 32,
+          "rank_of_gold": 2,
+          "scene_id": "scene-027",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 33,
+          "rank_of_gold": 2,
+          "scene_id": "scene-012",
+          "top1": "scene-013",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 34,
+          "rank_of_gold": 2,
+          "scene_id": "scene-022",
+          "top1": "scene-023",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 10,
+          "query_index": 35,
+          "rank_of_gold": 7,
+          "scene_id": "scene-034",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 36,
+          "rank_of_gold": 1,
+          "scene_id": "scene-037",
+          "top1": "scene-037",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 37,
+          "rank_of_gold": 3,
+          "scene_id": "scene-026",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 38,
+          "rank_of_gold": 3,
+          "scene_id": "scene-028",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 39,
+          "rank_of_gold": 2,
+          "scene_id": "scene-031",
+          "top1": "scene-030",
+          "top1_justified": true
+        }
+      ],
+      "typo": [
+        {
+          "compat_size": 1,
+          "query_index": 0,
+          "rank_of_gold": 1,
+          "scene_id": "scene-009",
+          "top1": "scene-009",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 1,
+          "rank_of_gold": 1,
+          "scene_id": "scene-013",
+          "top1": "scene-013",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 2,
+          "rank_of_gold": 1,
+          "scene_id": "scene-011",
+          "top1": "scene-011",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 3,
+          "rank_of_gold": 1,
+          "scene_id": "scene-017",
+          "top1": "scene-017",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 4,
+          "rank_of_gold": 1,
+          "scene_id": "scene-038",
+          "top1": "scene-038",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 5,
+          "rank_of_gold": 1,
+          "scene_id": "scene-003",
+          "top1": "scene-003",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 6,
+          "rank_of_gold": 1,
+          "scene_id": "scene-014",
+          "top1": "scene-014",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 7,
+          "rank_of_gold": 1,
+          "scene_id": "scene-029",
+          "top1": "scene-029",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 8,
+          "rank_of_gold": 1,
+          "scene_id": "scene-025",
+          "top1": "scene-025",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 9,
+          "rank_of_gold": 1,
+          "scene_id": "scene-015",
+          "top1": "scene-015",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 10,
+          "rank_of_gold": 1,
+          "scene_id": "scene-033",
+          "top1": "scene-033",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 11,
+          "rank_of_gold": 1,
+          "scene_id": "scene-024",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 12,
+          "rank_of_gold": 1,
+          "scene_id": "scene-020",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 13,
+          "rank_of_gold": 1,
+          "scene_id": "scene-016",
+          "top1": "scene-016",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 14,
+          "rank_of_gold": 1,
+          "scene_id": "scene-036",
+          "top1": "scene-036",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 15,
+          "rank_of_gold": 1,
+          "scene_id": "scene-021",
+          "top1": "scene-021",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 16,
+          "rank_of_gold": 1,
+          "scene_id": "scene-023",
+          "top1": "scene-023",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 17,
+          "rank_of_gold": 1,
+          "scene_id": "scene-007",
+          "top1": "scene-007",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 18,
+          "rank_of_gold": 1,
+          "scene_id": "scene-030",
+          "top1": "scene-030",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 19,
+          "rank_of_gold": 1,
+          "scene_id": "scene-006",
+          "top1": "scene-006",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 20,
+          "rank_of_gold": 1,
+          "scene_id": "scene-018",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 21,
+          "rank_of_gold": 1,
+          "scene_id": "scene-010",
+          "top1": "scene-010",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 22,
+          "rank_of_gold": 1,
+          "scene_id": "scene-000",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 23,
+          "rank_of_gold": 1,
+          "scene_id": "scene-039",
+          "top1": "scene-039",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 24,
+          "rank_of_gold": 1,
+          "scene_id": "scene-019",
+          "top1": "scene-019",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 25,
+          "rank_of_gold": 1,
+          "scene_id": "scene-001",
+          "top1": "scene-001",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 26,
+          "rank_of_gold": 1,
+          "scene_id": "scene-035",
+          "top1": "scene-035",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 27,
+          "rank_of_gold": 1,
+          "scene_id": "scene-005",
+          "top1": "scene-005",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 28,
+          "rank_of_gold": 1,
+          "scene_id": "scene-032",
+          "top1": "scene-032",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 29,
+          "rank_of_gold": 1,
+          "scene_id": "scene-004",
+          "top1": "scene-004",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 30,
+          "rank_of_gold": 1,
+          "scene_id": "scene-008",
+          "top1": "scene-008",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 31,
+          "rank_of_gold": 1,
+          "scene_id": "scene-002",
+          "top1": "scene-002",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 32,
+          "rank_of_gold": 1,
+          "scene_id": "scene-027",
+          "top1": "scene-027",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 33,
+          "rank_of_gold": 1,
+          "scene_id": "scene-012",
+          "top1": "scene-012",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 34,
+          "rank_of_gold": 1,
+          "scene_id": "scene-022",
+          "top1": "scene-022",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 35,
+          "rank_of_gold": 1,
+          "scene_id": "scene-034",
+          "top1": "scene-034",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 36,
+          "rank_of_gold": 1,
+          "scene_id": "scene-037",
+          "top1": "scene-037",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 37,
+          "rank_of_gold": 1,
+          "scene_id": "scene-026",
+          "top1": "scene-026",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 38,
+          "rank_of_gold": 1,
+          "scene_id": "scene-028",
+          "top1": "scene-028",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 39,
+          "rank_of_gold": 1,
+          "scene_id": "scene-031",
+          "top1": "scene-031",
+          "top1_justified": true
+        }
+      ],
+      "verbatim": [
+        {
+          "compat_size": 1,
+          "query_index": 0,
+          "rank_of_gold": 1,
+          "scene_id": "scene-009",
+          "top1": "scene-009",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 1,
+          "rank_of_gold": 1,
+          "scene_id": "scene-013",
+          "top1": "scene-013",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 2,
+          "rank_of_gold": 1,
+          "scene_id": "scene-011",
+          "top1": "scene-011",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 3,
+          "rank_of_gold": 1,
+          "scene_id": "scene-017",
+          "top1": "scene-017",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 4,
+          "rank_of_gold": 1,
+          "scene_id": "scene-038",
+          "top1": "scene-038",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 5,
+          "rank_of_gold": 1,
+          "scene_id": "scene-003",
+          "top1": "scene-003",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 6,
+          "rank_of_gold": 1,
+          "scene_id": "scene-014",
+          "top1": "scene-014",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 7,
+          "rank_of_gold": 1,
+          "scene_id": "scene-029",
+          "top1": "scene-029",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 8,
+          "rank_of_gold": 1,
+          "scene_id": "scene-025",
+          "top1": "scene-025",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 9,
+          "rank_of_gold": 1,
+          "scene_id": "scene-015",
+          "top1": "scene-015",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 10,
+          "rank_of_gold": 1,
+          "scene_id": "scene-033",
+          "top1": "scene-033",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 11,
+          "rank_of_gold": 1,
+          "scene_id": "scene-024",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 12,
+          "rank_of_gold": 1,
+          "scene_id": "scene-020",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 13,
+          "rank_of_gold": 1,
+          "scene_id": "scene-016",
+          "top1": "scene-016",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 14,
+          "rank_of_gold": 1,
+          "scene_id": "scene-036",
+          "top1": "scene-036",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 15,
+          "rank_of_gold": 1,
+          "scene_id": "scene-021",
+          "top1": "scene-021",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 16,
+          "rank_of_gold": 1,
+          "scene_id": "scene-023",
+          "top1": "scene-023",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 17,
+          "rank_of_gold": 1,
+          "scene_id": "scene-007",
+          "top1": "scene-007",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 18,
+          "rank_of_gold": 1,
+          "scene_id": "scene-030",
+          "top1": "scene-030",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 19,
+          "rank_of_gold": 1,
+          "scene_id": "scene-006",
+          "top1": "scene-006",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 20,
+          "rank_of_gold": 1,
+          "scene_id": "scene-018",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 21,
+          "rank_of_gold": 1,
+          "scene_id": "scene-010",
+          "top1": "scene-010",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 22,
+          "rank_of_gold": 1,
+          "scene_id": "scene-000",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 23,
+          "rank_of_gold": 1,
+          "scene_id": "scene-039",
+          "top1": "scene-039",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 24,
+          "rank_of_gold": 1,
+          "scene_id": "scene-019",
+          "top1": "scene-019",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 25,
+          "rank_of_gold": 1,
+          "scene_id": "scene-001",
+          "top1": "scene-001",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 26,
+          "rank_of_gold": 1,
+          "scene_id": "scene-035",
+          "top1": "scene-035",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 27,
+          "rank_of_gold": 1,
+          "scene_id": "scene-005",
+          "top1": "scene-005",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 28,
+          "rank_of_gold": 1,
+          "scene_id": "scene-032",
+          "top1": "scene-032",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 29,
+          "rank_of_gold": 1,
+          "scene_id": "scene-004",
+          "top1": "scene-004",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 30,
+          "rank_of_gold": 1,
+          "scene_id": "scene-008",
+          "top1": "scene-008",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 31,
+          "rank_of_gold": 1,
+          "scene_id": "scene-002",
+          "top1": "scene-002",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 32,
+          "rank_of_gold": 1,
+          "scene_id": "scene-027",
+          "top1": "scene-027",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 33,
+          "rank_of_gold": 1,
+          "scene_id": "scene-012",
+          "top1": "scene-012",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 34,
+          "rank_of_gold": 1,
+          "scene_id": "scene-022",
+          "top1": "scene-022",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 35,
+          "rank_of_gold": 1,
+          "scene_id": "scene-034",
+          "top1": "scene-034",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 36,
+          "rank_of_gold": 1,
+          "scene_id": "scene-037",
+          "top1": "scene-037",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 37,
+          "rank_of_gold": 1,
+          "scene_id": "scene-026",
+          "top1": "scene-026",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 38,
+          "rank_of_gold": 1,
+          "scene_id": "scene-028",
+          "top1": "scene-028",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 39,
+          "rank_of_gold": 1,
+          "scene_id": "scene-031",
+          "top1": "scene-031",
+          "top1_justified": true
+        }
+      ]
+    },
+    "lexical-idf": {
+      "keywords": [
+        {
+          "compat_size": 1,
+          "query_index": 0,
+          "rank_of_gold": 1,
+          "scene_id": "scene-009",
+          "top1": "scene-009",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 1,
+          "rank_of_gold": 1,
+          "scene_id": "scene-013",
+          "top1": "scene-013",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 2,
+          "rank_of_gold": 1,
+          "scene_id": "scene-011",
+          "top1": "scene-011",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 3,
+          "rank_of_gold": 1,
+          "scene_id": "scene-017",
+          "top1": "scene-017",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 4,
+          "rank_of_gold": 2,
+          "scene_id": "scene-038",
+          "top1": "scene-030",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 5,
+          "rank_of_gold": 1,
+          "scene_id": "scene-003",
+          "top1": "scene-003",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 6,
+          "rank_of_gold": 1,
+          "scene_id": "scene-014",
+          "top1": "scene-014",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 7,
+          "rank_of_gold": 1,
+          "scene_id": "scene-029",
+          "top1": "scene-029",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 8,
+          "rank_of_gold": 1,
+          "scene_id": "scene-025",
+          "top1": "scene-025",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 9,
+          "rank_of_gold": 1,
+          "scene_id": "scene-015",
+          "top1": "scene-015",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 10,
+          "rank_of_gold": 2,
+          "scene_id": "scene-033",
+          "top1": "scene-009",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 11,
+          "rank_of_gold": 1,
+          "scene_id": "scene-024",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 12,
+          "rank_of_gold": 1,
+          "scene_id": "scene-020",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 13,
+          "rank_of_gold": 1,
+          "scene_id": "scene-016",
+          "top1": "scene-016",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 14,
+          "rank_of_gold": 4,
+          "scene_id": "scene-036",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 15,
+          "rank_of_gold": 1,
+          "scene_id": "scene-021",
+          "top1": "scene-021",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 16,
+          "rank_of_gold": 1,
+          "scene_id": "scene-023",
+          "top1": "scene-023",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 17,
+          "rank_of_gold": 1,
+          "scene_id": "scene-007",
+          "top1": "scene-007",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 18,
+          "rank_of_gold": 1,
+          "scene_id": "scene-030",
+          "top1": "scene-030",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 19,
+          "rank_of_gold": 1,
+          "scene_id": "scene-006",
+          "top1": "scene-006",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 20,
+          "rank_of_gold": 1,
+          "scene_id": "scene-018",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 21,
+          "rank_of_gold": 1,
+          "scene_id": "scene-010",
+          "top1": "scene-010",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 22,
+          "rank_of_gold": 1,
+          "scene_id": "scene-000",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 23,
+          "rank_of_gold": 3,
+          "scene_id": "scene-039",
+          "top1": "scene-015",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 24,
+          "rank_of_gold": 1,
+          "scene_id": "scene-019",
+          "top1": "scene-019",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 25,
+          "rank_of_gold": 1,
+          "scene_id": "scene-001",
+          "top1": "scene-001",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 26,
+          "rank_of_gold": 4,
+          "scene_id": "scene-035",
+          "top1": "scene-027",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 27,
+          "rank_of_gold": 1,
+          "scene_id": "scene-005",
+          "top1": "scene-005",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 28,
+          "rank_of_gold": 1,
+          "scene_id": "scene-032",
+          "top1": "scene-032",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 29,
+          "rank_of_gold": 1,
+          "scene_id": "scene-004",
+          "top1": "scene-004",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 30,
+          "rank_of_gold": 1,
+          "scene_id": "scene-008",
+          "top1": "scene-008",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 31,
+          "rank_of_gold": 1,
+          "scene_id": "scene-002",
+          "top1": "scene-002",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 32,
+          "rank_of_gold": 1,
+          "scene_id": "scene-027",
+          "top1": "scene-027",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 33,
+          "rank_of_gold": 1,
+          "scene_id": "scene-012",
+          "top1": "scene-012",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 34,
+          "rank_of_gold": 1,
+          "scene_id": "scene-022",
+          "top1": "scene-022",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 35,
+          "rank_of_gold": 4,
+          "scene_id": "scene-034",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 36,
+          "rank_of_gold": 1,
+          "scene_id": "scene-037",
+          "top1": "scene-037",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 37,
+          "rank_of_gold": 1,
+          "scene_id": "scene-026",
+          "top1": "scene-026",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 38,
+          "rank_of_gold": 1,
+          "scene_id": "scene-028",
+          "top1": "scene-028",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 39,
+          "rank_of_gold": 1,
+          "scene_id": "scene-031",
+          "top1": "scene-031",
+          "top1_justified": true
+        }
+      ],
+      "truncated": [
+        {
+          "compat_size": 2,
+          "query_index": 0,
+          "rank_of_gold": 2,
+          "scene_id": "scene-009",
+          "top1": "scene-008",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 1,
+          "rank_of_gold": 3,
+          "scene_id": "scene-013",
+          "top1": "scene-012",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 2,
+          "rank_of_gold": 3,
+          "scene_id": "scene-011",
+          "top1": "scene-010",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 3,
+          "rank_of_gold": 2,
+          "scene_id": "scene-017",
+          "top1": "scene-016",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 4,
+          "rank_of_gold": 2,
+          "scene_id": "scene-038",
+          "top1": "scene-030",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 5,
+          "rank_of_gold": 3,
+          "scene_id": "scene-003",
+          "top1": "scene-002",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 6,
+          "rank_of_gold": 1,
+          "scene_id": "scene-014",
+          "top1": "scene-014",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 7,
+          "rank_of_gold": 3,
+          "scene_id": "scene-029",
+          "top1": "scene-028",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 8,
+          "rank_of_gold": 2,
+          "scene_id": "scene-025",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 9,
+          "rank_of_gold": 2,
+          "scene_id": "scene-015",
+          "top1": "scene-014",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 10,
+          "rank_of_gold": 2,
+          "scene_id": "scene-033",
+          "top1": "scene-009",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 11,
+          "rank_of_gold": 1,
+          "scene_id": "scene-024",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 12,
+          "rank_of_gold": 1,
+          "scene_id": "scene-020",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 13,
+          "rank_of_gold": 1,
+          "scene_id": "scene-016",
+          "top1": "scene-016",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 14,
+          "rank_of_gold": 4,
+          "scene_id": "scene-036",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 15,
+          "rank_of_gold": 3,
+          "scene_id": "scene-021",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 16,
+          "rank_of_gold": 2,
+          "scene_id": "scene-023",
+          "top1": "scene-022",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 17,
+          "rank_of_gold": 2,
+          "scene_id": "scene-007",
+          "top1": "scene-006",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 18,
+          "rank_of_gold": 1,
+          "scene_id": "scene-030",
+          "top1": "scene-030",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 19,
+          "rank_of_gold": 1,
+          "scene_id": "scene-006",
+          "top1": "scene-006",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 20,
+          "rank_of_gold": 1,
+          "scene_id": "scene-018",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 21,
+          "rank_of_gold": 1,
+          "scene_id": "scene-010",
+          "top1": "scene-010",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 22,
+          "rank_of_gold": 1,
+          "scene_id": "scene-000",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 23,
+          "rank_of_gold": 3,
+          "scene_id": "scene-039",
+          "top1": "scene-015",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 24,
+          "rank_of_gold": 3,
+          "scene_id": "scene-019",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 25,
+          "rank_of_gold": 2,
+          "scene_id": "scene-001",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 26,
+          "rank_of_gold": 4,
+          "scene_id": "scene-035",
+          "top1": "scene-027",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 27,
+          "rank_of_gold": 3,
+          "scene_id": "scene-005",
+          "top1": "scene-004",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 28,
+          "rank_of_gold": 1,
+          "scene_id": "scene-032",
+          "top1": "scene-032",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 29,
+          "rank_of_gold": 1,
+          "scene_id": "scene-004",
+          "top1": "scene-004",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 30,
+          "rank_of_gold": 1,
+          "scene_id": "scene-008",
+          "top1": "scene-008",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 31,
+          "rank_of_gold": 1,
+          "scene_id": "scene-002",
+          "top1": "scene-002",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 32,
+          "rank_of_gold": 3,
+          "scene_id": "scene-027",
+          "top1": "scene-026",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 33,
+          "rank_of_gold": 1,
+          "scene_id": "scene-012",
+          "top1": "scene-012",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 34,
+          "rank_of_gold": 1,
+          "scene_id": "scene-022",
+          "top1": "scene-022",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 10,
+          "query_index": 35,
+          "rank_of_gold": 4,
+          "scene_id": "scene-034",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 5,
+          "query_index": 36,
+          "rank_of_gold": 1,
+          "scene_id": "scene-037",
+          "top1": "scene-037",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 37,
+          "rank_of_gold": 1,
+          "scene_id": "scene-026",
+          "top1": "scene-026",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 3,
+          "query_index": 38,
+          "rank_of_gold": 1,
+          "scene_id": "scene-028",
+          "top1": "scene-028",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 39,
+          "rank_of_gold": 2,
+          "scene_id": "scene-031",
+          "top1": "scene-030",
+          "top1_justified": true
+        }
+      ],
+      "typo": [
+        {
+          "compat_size": 1,
+          "query_index": 0,
+          "rank_of_gold": 1,
+          "scene_id": "scene-009",
+          "top1": "scene-009",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 1,
+          "rank_of_gold": 1,
+          "scene_id": "scene-013",
+          "top1": "scene-013",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 2,
+          "rank_of_gold": 1,
+          "scene_id": "scene-011",
+          "top1": "scene-011",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 3,
+          "rank_of_gold": 1,
+          "scene_id": "scene-017",
+          "top1": "scene-017",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 4,
+          "rank_of_gold": 4,
+          "scene_id": "scene-038",
+          "top1": "scene-036",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 5,
+          "rank_of_gold": 1,
+          "scene_id": "scene-003",
+          "top1": "scene-003",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 6,
+          "rank_of_gold": 4,
+          "scene_id": "scene-014",
+          "top1": "scene-012",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 7,
+          "rank_of_gold": 1,
+          "scene_id": "scene-029",
+          "top1": "scene-029",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 8,
+          "rank_of_gold": 1,
+          "scene_id": "scene-025",
+          "top1": "scene-025",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 9,
+          "rank_of_gold": 4,
+          "scene_id": "scene-015",
+          "top1": "scene-013",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 10,
+          "rank_of_gold": 1,
+          "scene_id": "scene-033",
+          "top1": "scene-033",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 11,
+          "rank_of_gold": 2,
+          "scene_id": "scene-024",
+          "top1": "scene-026",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 12,
+          "rank_of_gold": 1,
+          "scene_id": "scene-020",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 13,
+          "rank_of_gold": 2,
+          "scene_id": "scene-016",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 14,
+          "rank_of_gold": 1,
+          "scene_id": "scene-036",
+          "top1": "scene-036",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 15,
+          "rank_of_gold": 1,
+          "scene_id": "scene-021",
+          "top1": "scene-021",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 16,
+          "rank_of_gold": 4,
+          "scene_id": "scene-023",
+          "top1": "scene-021",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 17,
+          "rank_of_gold": 4,
+          "scene_id": "scene-007",
+          "top1": "scene-005",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 18,
+          "rank_of_gold": 4,
+          "scene_id": "scene-030",
+          "top1": "scene-028",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 19,
+          "rank_of_gold": 4,
+          "scene_id": "scene-006",
+          "top1": "scene-004",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 20,
+          "rank_of_gold": 1,
+          "scene_id": "scene-018",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 21,
+          "rank_of_gold": 1,
+          "scene_id": "scene-010",
+          "top1": "scene-010",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 22,
+          "rank_of_gold": 2,
+          "scene_id": "scene-000",
+          "top1": "scene-002",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 23,
+          "rank_of_gold": 4,
+          "scene_id": "scene-039",
+          "top1": "scene-037",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 24,
+          "rank_of_gold": 1,
+          "scene_id": "scene-019",
+          "top1": "scene-019",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 25,
+          "rank_of_gold": 1,
+          "scene_id": "scene-001",
+          "top1": "scene-001",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 26,
+          "rank_of_gold": 1,
+          "scene_id": "scene-035",
+          "top1": "scene-035",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 27,
+          "rank_of_gold": 1,
+          "scene_id": "scene-005",
+          "top1": "scene-005",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 28,
+          "rank_of_gold": 2,
+          "scene_id": "scene-032",
+          "top1": "scene-034",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 29,
+          "rank_of_gold": 1,
+          "scene_id": "scene-004",
+          "top1": "scene-004",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 30,
+          "rank_of_gold": 2,
+          "scene_id": "scene-008",
+          "top1": "scene-010",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 31,
+          "rank_of_gold": 1,
+          "scene_id": "scene-002",
+          "top1": "scene-002",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 32,
+          "rank_of_gold": 1,
+          "scene_id": "scene-027",
+          "top1": "scene-027",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 33,
+          "rank_of_gold": 1,
+          "scene_id": "scene-012",
+          "top1": "scene-012",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 34,
+          "rank_of_gold": 4,
+          "scene_id": "scene-022",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 35,
+          "rank_of_gold": 1,
+          "scene_id": "scene-034",
+          "top1": "scene-034",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 36,
+          "rank_of_gold": 1,
+          "scene_id": "scene-037",
+          "top1": "scene-037",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 37,
+          "rank_of_gold": 1,
+          "scene_id": "scene-026",
+          "top1": "scene-026",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 38,
+          "rank_of_gold": 1,
+          "scene_id": "scene-028",
+          "top1": "scene-028",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 2,
+          "query_index": 39,
+          "rank_of_gold": 4,
+          "scene_id": "scene-031",
+          "top1": "scene-029",
+          "top1_justified": true
+        }
+      ],
+      "verbatim": [
+        {
+          "compat_size": 1,
+          "query_index": 0,
+          "rank_of_gold": 1,
+          "scene_id": "scene-009",
+          "top1": "scene-009",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 1,
+          "rank_of_gold": 1,
+          "scene_id": "scene-013",
+          "top1": "scene-013",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 2,
+          "rank_of_gold": 1,
+          "scene_id": "scene-011",
+          "top1": "scene-011",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 3,
+          "rank_of_gold": 1,
+          "scene_id": "scene-017",
+          "top1": "scene-017",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 4,
+          "rank_of_gold": 1,
+          "scene_id": "scene-038",
+          "top1": "scene-038",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 5,
+          "rank_of_gold": 1,
+          "scene_id": "scene-003",
+          "top1": "scene-003",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 6,
+          "rank_of_gold": 1,
+          "scene_id": "scene-014",
+          "top1": "scene-014",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 7,
+          "rank_of_gold": 1,
+          "scene_id": "scene-029",
+          "top1": "scene-029",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 8,
+          "rank_of_gold": 1,
+          "scene_id": "scene-025",
+          "top1": "scene-025",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 9,
+          "rank_of_gold": 1,
+          "scene_id": "scene-015",
+          "top1": "scene-015",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 10,
+          "rank_of_gold": 1,
+          "scene_id": "scene-033",
+          "top1": "scene-033",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 11,
+          "rank_of_gold": 1,
+          "scene_id": "scene-024",
+          "top1": "scene-024",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 12,
+          "rank_of_gold": 1,
+          "scene_id": "scene-020",
+          "top1": "scene-020",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 13,
+          "rank_of_gold": 1,
+          "scene_id": "scene-016",
+          "top1": "scene-016",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 14,
+          "rank_of_gold": 1,
+          "scene_id": "scene-036",
+          "top1": "scene-036",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 15,
+          "rank_of_gold": 1,
+          "scene_id": "scene-021",
+          "top1": "scene-021",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 16,
+          "rank_of_gold": 1,
+          "scene_id": "scene-023",
+          "top1": "scene-023",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 17,
+          "rank_of_gold": 1,
+          "scene_id": "scene-007",
+          "top1": "scene-007",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 18,
+          "rank_of_gold": 1,
+          "scene_id": "scene-030",
+          "top1": "scene-030",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 19,
+          "rank_of_gold": 1,
+          "scene_id": "scene-006",
+          "top1": "scene-006",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 20,
+          "rank_of_gold": 1,
+          "scene_id": "scene-018",
+          "top1": "scene-018",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 21,
+          "rank_of_gold": 1,
+          "scene_id": "scene-010",
+          "top1": "scene-010",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 22,
+          "rank_of_gold": 1,
+          "scene_id": "scene-000",
+          "top1": "scene-000",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 23,
+          "rank_of_gold": 1,
+          "scene_id": "scene-039",
+          "top1": "scene-039",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 24,
+          "rank_of_gold": 1,
+          "scene_id": "scene-019",
+          "top1": "scene-019",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 25,
+          "rank_of_gold": 1,
+          "scene_id": "scene-001",
+          "top1": "scene-001",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 26,
+          "rank_of_gold": 1,
+          "scene_id": "scene-035",
+          "top1": "scene-035",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 27,
+          "rank_of_gold": 1,
+          "scene_id": "scene-005",
+          "top1": "scene-005",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 28,
+          "rank_of_gold": 1,
+          "scene_id": "scene-032",
+          "top1": "scene-032",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 29,
+          "rank_of_gold": 1,
+          "scene_id": "scene-004",
+          "top1": "scene-004",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 30,
+          "rank_of_gold": 1,
+          "scene_id": "scene-008",
+          "top1": "scene-008",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 31,
+          "rank_of_gold": 1,
+          "scene_id": "scene-002",
+          "top1": "scene-002",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 32,
+          "rank_of_gold": 1,
+          "scene_id": "scene-027",
+          "top1": "scene-027",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 33,
+          "rank_of_gold": 1,
+          "scene_id": "scene-012",
+          "top1": "scene-012",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 34,
+          "rank_of_gold": 1,
+          "scene_id": "scene-022",
+          "top1": "scene-022",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 35,
+          "rank_of_gold": 1,
+          "scene_id": "scene-034",
+          "top1": "scene-034",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 36,
+          "rank_of_gold": 1,
+          "scene_id": "scene-037",
+          "top1": "scene-037",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 37,
+          "rank_of_gold": 1,
+          "scene_id": "scene-026",
+          "top1": "scene-026",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 38,
+          "rank_of_gold": 1,
+          "scene_id": "scene-028",
+          "top1": "scene-028",
+          "top1_justified": true
+        },
+        {
+          "compat_size": 1,
+          "query_index": 39,
+          "rank_of_gold": 1,
+          "scene_id": "scene-031",
+          "top1": "scene-031",
+          "top1_justified": true
+        }
+      ]
+    }
+  }
+}

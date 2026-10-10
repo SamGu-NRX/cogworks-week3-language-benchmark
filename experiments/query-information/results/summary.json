@@ -1,0 +1,70 @@
+{
+  "ceiling_gap": {
+    "keywords": {
+      "exact-grammar_gap_to_grammar_ceiling": 0.009250000000000091,
+      "grammar_expected_mrr": 0.8913333333333334,
+      "lexical-idf_gap_to_lexical_ceiling": -0.010749999999999926,
+      "lexical_expected_mrr": 0.8913333333333334
+    },
+    "truncated": {
+      "exact-grammar_gap_to_grammar_ceiling": 0.018945436507936453,
+      "grammar_expected_mrr": 0.6316835317460316,
+      "lexical-idf_gap_to_lexical_ceiling": -0.03706646825396831,
+      "lexical_expected_mrr": 0.6316835317460316
+    },
+    "typo": {
+      "exact-grammar_gap_to_grammar_ceiling": 0.0,
+      "grammar_expected_mrr": 1.0,
+      "lexical-idf_gap_to_lexical_ceiling": 0.09375,
+      "lexical_expected_mrr": 0.84375
+    },
+    "verbatim": {
+      "exact-grammar_gap_to_grammar_ceiling": 0.0,
+      "grammar_expected_mrr": 1.0,
+      "lexical-idf_gap_to_lexical_ceiling": 0.0,
+      "lexical_expected_mrr": 1.0
+    }
+  },
+  "systems": {
+    "exact-grammar": {
+      "keywords": {
+        "justified_rate": 1.0,
+        "mrr": 0.8820833333333333
+      },
+      "scored_mean": 0.8316071428571429,
+      "truncated": {
+        "justified_rate": 1.0,
+        "mrr": 0.6127380952380952
+      },
+      "typo": {
+        "justified_rate": 1.0,
+        "mrr": 1.0
+      },
+      "verbatim": {
+        "justified_rate": 1.0,
+        "mrr": 1.0
+      },
+      "verbatim_reported": 1.0
+    },
+    "lexical-idf": {
+      "keywords": {
+        "justified_rate": 1.0,
+        "mrr": 0.9020833333333333
+      },
+      "scored_mean": 0.7736111111111111,
+      "truncated": {
+        "justified_rate": 1.0,
+        "mrr": 0.66875
+      },
+      "typo": {
+        "justified_rate": 1.0,
+        "mrr": 0.75
+      },
+      "verbatim": {
+        "justified_rate": 1.0,
+        "mrr": 1.0
+      },
+      "verbatim_reported": 1.0
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "decoders": {
+    "grammar": {
+      "keywords": {
+        "expected_mrr_ceiling": 0.8913333333333334,
+        "size_distribution": {
+          "1": 32,
+          "5": 8
+        },
+        "unique_identifiable": 32
+      },
+      "truncated": {
+        "expected_mrr_ceiling": 0.6316835317460316,
+        "size_distribution": {
+          "10": 1,
+          "2": 16,
+          "3": 16,
+          "5": 7
+        },
+        "unique_identifiable": 0
+      },
+      "typo": {
+        "expected_mrr_ceiling": 1.0,
+        "size_distribution": {
+          "1": 40
+        },
+        "unique_identifiable": 40
+      },
+      "verbatim": {
+        "expected_mrr_ceiling": 1.0,
+        "size_distribution": {
+          "1": 40
+        },
+        "unique_identifiable": 40
+      }
+    },
+    "lexical": {
+      "keywords": {
+        "expected_mrr_ceiling": 0.8913333333333334,
+        "size_distribution": {
+          "1": 32,
+          "5": 8
+        },
+        "unique_identifiable": 32
+      },
+      "truncated": {
+        "expected_mrr_ceiling": 0.6316835317460316,
+        "size_distribution": {
+          "10": 1,
+          "2": 16,
+          "3": 16,
+          "5": 7
+        },
+        "unique_identifiable": 0
+      },
+      "typo": {
+        "expected_mrr_ceiling": 0.84375,
+        "size_distribution": {
+          "1": 15,
+          "2": 25
+        },
+        "unique_identifiable": 15
+      },
+      "verbatim": {
+        "expected_mrr_ceiling": 1.0,
+        "size_distribution": {
+          "1": 40
+        },
+        "unique_identifiable": 40
+      }
+    }
+  },
+  "rungs": {
+    "typo_grammar_vs_lexical": "the grammar-aware decoder restores unique identification on every typo query (all corrections are unique in-vocabulary substitutions), so the whole lexical typo gap is recoverable system-side."
+  },
+  "typo_correction_log": {
+    "per_corrupted_token_correction_counts": {
+      "ciecle": 1,
+      "circke": 1,
+      "cirxle": 1,
+      "curcle": 1,
+      "diamind": 1,
+      "diamobd": 1,
+      "dianond": 1,
+      "dismond": 1,
+      "duamond": 1,
+      "is": 0,
+      "of": 0,
+      "squaee": 1,
+      "sqyare": 1,
+      "swuare": 1,
+      "teiangle": 1,
+      "the": 0,
+      "triabgle": 1,
+      "trianfle": 1,
+      "triangke": 1,
+      "truangle": 1
+    },
+    "template_stopwords_uncorrectable": [
+      "the",
+      "is",
+      "of"
+    ]
+  }
+}
