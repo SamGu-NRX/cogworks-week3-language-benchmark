@@ -47,15 +47,29 @@ Rung detail (evaluation tier, lookup-derived vs lookup-exact, paired bootstrap):
 
 Interpretive outputs (agent-judged shortlists, Jaccard bands) are reported separately in `results/audit/` and are **not** independent human truth.
 
+## Validation gate
+
+Independent validation (commit `77df427`, `study/validate_metrics.py`, pure-python reference implementations, no dependency on the metric code under test) — **7/7 families PASS** at full scale (`python -m study.validate_metrics --scale full` → `study/validation_results.json`), with 5 recorded discrepancies, all at noise scale:
+
+| # | family | result |
+|---|---|---|
+| 1 | Per-rung MRR/bit-reproducibility | PASS — pairwise replica matches the np.mean-based implementation bit-for-bit through n=5000, beyond the locked 1024 bound |
+| 2 | Rung-grid mean summation | PASS with caveat — `metrics.py:479,574` uses CPython≥3.12 compensated builtin `sum`, not np.mean; last-bit diffs (≤2.2e-16) on 4/50 random 3-rung grids, so grid means reproduce bits only on the same CPython |
+| 3 | Tie semantics | PASS — ties, −0.0, and −inf agree with tuple sort on all 21 probe cases |
+| 4 | Chance floors | PASS — rational vs published floor differ at ~2.4e-16 relative ([6,2,2,2]: 0.4717471561627406 vs …405); comparisons need ~1e-12 tolerance |
+| 5 | 5-dp rounding noise | PASS — flips are bounded by the rounding noise bound with a constructible near-tie counterexample (gold rank 1→2); float32 error (~4e-8) is 3 orders below payload rounding noise |
+
+The rounding-flip probe inside the recorded run additionally showed 0 actual flips on both tiers (20 test / 150 evaluation queries). Two bugs in the validation harness itself were found and fixed during construction (first-relevant reference looked up self instead of first same-group; two inverted probe expectations). 17 validation tests added; full suite: **187 passed, 35 skipped**. Study files lint clean (`ruff check study/ experiments/` + new test files: all pass; 5 pre-existing findings remain in baseline test files, untouched).
+
+All family results PASS, so the variant differences above stand as interpreted under the locked analysis plan.
+
 ## Deviations from lock
 
 - `study/arms.py` stopword list was corrected after initial runs (the list now covers the benchmark rewrite filter's dropped words, so rewritten queries resolve against the lookup index). Affected arms were rerun; all results in this report come from the fixed code. No other lock changes.
 - The staff reference submission is not in this repository. The reference arm is a reimplementation; quoted historical numbers (0.6925/0.6594 test) come from the unavailable implementation and are cited, not reproduced.
 
-## Validation gate
 
-Independent validation of ranking, ties, truncation, precision, and chance metrics (pure-python reference implementations compared against `language_search_benchmark.metrics` on hand cases, seeded matrices, Monte Carlo floor checks, tie/permutation probes, and the rounding-flip probe) is tracked as a separate module; the validation table will be appended here before any variant difference is treated as interpreted. The rounding-flip probe above already passed inside the recorded run (0 flips, both tiers).
 
 ## Environment
 
-Locked environment was Python 3.13.14 / NumPy 2.3.5 (outside the package's declared ranges; the source was run directly). The full repository suite additionally passes on Python 3.8.20 (the package's declared floor): **170 passed, 35 skipped** with the study and experiment tests included.
+Locked environment was Python 3.13.14 / NumPy 2.3.5 (outside the package's declared ranges; the source was run directly). The full repository suite additionally passes on the package's declared floor: **187 passed, 35 skipped** under Python 3.8.20, with all study, experiment, and validation tests included.
